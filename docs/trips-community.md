@@ -21,3 +21,14 @@ Quatro abas: Explorar, Como chegar, Minha viagem, Comunidade. Mapa contextual co
 
 ## Verificação
 `node --test tests/tripLedger.test.js`: moeda, centavos, compensação cruzada, categorias, divisão personalizada, consistência de restauração e média diária. Build/lint, seguidos de revisão visual no navegador.
+
+### Resultados da revisão interativa
+- Criação de viagem e participante, duas despesas com pagadores diferentes, centavos e acerto conferidos no navegador.
+- Edição rejeitou soma personalizada incorreta; divisão igual recalculou o valor atualizado.
+- Backup baixado de fato, arquivo validado com o mesmo validador e restaurado pela interface; registros persistiram após recarregar.
+- Cadastro de indicação rejeitou URL que não era um perfil do Instagram; rascunho local salvo sem publicação.
+- Consulta Rio de Janeiro → Galeão preservou os pontos nos quatro links do painel externo. Mapa contextual abriu com filtros de praias/embarques; filtro Embarques acionado.
+- Layout revisado em 320, 390, 768 e 1440 px. Cabeçalho de tablet ajustado após detectar excesso de largura. Sem teste em aparelho físico ou de sincronização comunitária com banco real.
+- Botão de impressão acionado; o ambiente não exibiu uma prévia de impressão verificável. A geração final do PDF depende da janela de impressão do navegador do usuário.
+
+- Revisão final: rascunho editado pela interface; 320/390 sem excesso horizontal após compactar o resumo. Em 320, botões inferiores medidos em 67,5 × 68,6 px. Página temporária de revisão removida da publicação.
