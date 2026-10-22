@@ -1,45 +1,53 @@
-import React, { useState, useEffect } from 'react';
-import confetti from 'canvas-confetti';
-import { 
-  ArrowLeft, 
-  ArrowRight, 
-  Clock, 
-  Coins, 
-  Download, 
-  CheckCircle2, 
-  Map, 
-  Ship, 
-  Bus, 
+import React, { useState, useEffect } from "react";
+import confetti from "canvas-confetti";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Clock,
+  Coins,
+  Download,
+  CheckCircle2,
+  Map,
+  Ship,
+  Bus,
   Compass,
   Footprints,
-  Check, 
+  Check,
   X,
   ShieldCheck,
   ShieldAlert,
-  Lightbulb
-} from 'lucide-react';
-import { toggleSaveRouteOffline, getOfflineStorage } from '../lib/supabase';
+  Lightbulb,
+} from "lucide-react";
+import { toggleSaveRouteOffline, getOfflineStorage } from "../lib/supabase";
 
 export default function RouteDetailView({
   route,
   origin,
   destination,
   onBack,
-  onOpenMapWithRoute
+  onOpenMapWithRoute,
 }) {
-  useEffect(() => {window.scrollTo({top:0,behavior:'instant'});}, [route]);
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [route]);
   // Dados dinâmicos ou fallback
-  const originName = route?.originName || origin || 'Porto Seguro';
-  const destName = route?.destName || destination || 'Caraíva';
+  const originName = route?.originName || origin || "Porto Seguro";
+  const destName = route?.destName || destination || "Caraíva";
   const routeId = route?.id || `route-${originName}-${destName}`;
-  const totalTime = route?.totalTime || route?.selectedOption?.totalTime || 'A confirmar';
-  const totalCost = route?.totalCost || route?.selectedOption?.totalCostFormatted || 'A confirmar';
+  const totalTime =
+    route?.totalTime || route?.selectedOption?.totalTime || "A confirmar";
+  const totalCost =
+    route?.totalCost ||
+    route?.selectedOption?.totalCostFormatted ||
+    "A confirmar";
   const steps = route?.steps || route?.selectedOption?.steps || [];
   const hasUnconfirmed = route?.selectedOption?.hasUnconfirmed ?? true;
   const hasTideDependent = route?.selectedOption?.hasTideDependent ?? false;
 
   const { routes: savedRoutes } = getOfflineStorage();
-  const [isSavedOffline, setIsSavedOffline] = useState(savedRoutes.includes(routeId));
+  const [isSavedOffline, setIsSavedOffline] = useState(
+    savedRoutes.includes(routeId),
+  );
   const [showBanner, setShowBanner] = useState(false);
 
   const handleToggleOffline = () => {
@@ -52,7 +60,7 @@ export default function RouteDetailView({
         particleCount: 45,
         spread: 60,
         origin: { y: 0.8 },
-        colors: ['#c2461f', '#2f5d3a', '#e9b62f']
+        colors: ["#c2461f", "#2f5d3a", "#e9b62f"],
       });
     } else {
       setShowBanner(false);
@@ -60,9 +68,11 @@ export default function RouteDetailView({
   };
 
   const getTransportIcon = (mode) => {
-    if (mode === 'ferry') return <Ship size={18} className="text-[#0284c7]" />;
-    if (mode === 'canoe') return <Compass size={18} className="text-[#2f5d3a]" />;
-    if (mode === 'walk') return <Footprints size={18} className="text-[#59413b]" />;
+    if (mode === "ferry") return <Ship size={18} className="text-[#0284c7]" />;
+    if (mode === "canoe")
+      return <Compass size={18} className="text-[#2f5d3a]" />;
+    if (mode === "walk")
+      return <Footprints size={18} className="text-[#59413b]" />;
     return <Bus size={18} className="text-[#ea580c]" />;
   };
 
@@ -74,7 +84,8 @@ export default function RouteDetailView({
           <div className="flex items-center gap-2">
             <CheckCircle2 size={18} />
             <span className="text-xs font-medium">
-              Roteiro marcado nos salvos deste navegador. O fundo do mapa precisa de conexão.
+              Roteiro marcado nos salvos deste navegador. O fundo do mapa
+              precisa de conexão.
             </span>
           </div>
           <button
@@ -101,13 +112,15 @@ export default function RouteDetailView({
             <button
               onClick={handleToggleOffline}
               className={`min-h-[44px] px-3.5 rounded-xl flex items-center gap-1.5 text-xs font-bold border transition-all ${
-                isSavedOffline 
-                  ? 'bg-[#2f5d3a] text-white border-[#2f5d3a]' 
-                  : 'bg-[#ffffff] text-[#2f5d3a] border-[#e0d5c1] hover:bg-[#f7ece2]'
+                isSavedOffline
+                  ? "bg-[#2f5d3a] text-white border-[#2f5d3a]"
+                  : "bg-[#ffffff] text-[#2f5d3a] border-[#e0d5c1] hover:bg-[#f7ece2]"
               }`}
             >
               {isSavedOffline ? <Check size={16} /> : <Download size={16} />}
-              <span>{isSavedOffline ? 'Salvo no Dispositivo' : 'Salvar Offline'}</span>
+              <span>
+                {isSavedOffline ? "Roteiro marcado" : "Marcar roteiro"}
+              </span>
             </button>
 
             <button
@@ -240,9 +253,13 @@ export default function RouteDetailView({
 
                 <div className="text-[11px] text-[#59413b]">
                   {step.confirmed ? (
-                    <span className="text-[#2f5d3a] font-bold">✓ Confirmado em campo</span>
+                    <span className="text-[#2f5d3a] font-bold">
+                      ✓ Confirmado em campo
+                    </span>
                   ) : (
-                    <span className="text-amber-700 font-medium">⚠️ Valor estimado (sujeito a variação)</span>
+                    <span className="text-amber-700 font-medium">
+                      ⚠️ Valor estimado (sujeito a variação)
+                    </span>
                   )}
                 </div>
               </div>
@@ -250,7 +267,10 @@ export default function RouteDetailView({
               {/* Practical Notes */}
               {step.notes && (
                 <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-2">
-                  <Lightbulb size={16} className="text-amber-600 shrink-0 mt-0.5" />
+                  <Lightbulb
+                    size={16}
+                    className="text-amber-600 shrink-0 mt-0.5"
+                  />
                   <p className="leading-relaxed">{step.notes}</p>
                 </div>
               )}
@@ -258,7 +278,6 @@ export default function RouteDetailView({
           ))}
         </div>
       </section>
-
     </div>
   );
 }
