@@ -1,0 +1,109 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --primary: #c2461f;              /* Terracota */
+    --primary-hover: #a02e06;
+    --on-primary: #ffffff;
+    --primary-container: #ffdbd1;
+    --on-primary-container: #3b0a00;
+
+    --secondary: #2f5d3a;            /* Verde-Mato */
+    --secondary-hover: #22502e;
+    --on-secondary: #ffffff;
+    --secondary-container: #bbefc1;
+    --on-secondary-container: #00210b;
+
+    --tertiary: #6f5300;             /* Amarelo-Van */
+    --tertiary-container: #e9b62f;
+    --tertiary-fixed: #ffdf9b;
+    --on-tertiary-fixed: #251a00;
+
+    --surface: #fff8f4;              /* Areia Suave */
+    --surface-container-lowest: #ffffff;
+    --surface-container-low: #fdf2e7;
+    --surface-container: #f7ece2;
+    --surface-container-high: #f1e6dc;
+    --surface-container-highest: #ece1d7;
+
+    --on-surface: #201b15;          /* Terra Escura */
+    --on-surface-variant: #59413b;  /* Argila Seca */
+    --border-color: #e0d5c1;        /* Taipa */
+
+    --font-headline: 'Bricolage Grotesque', system-ui, -apple-system, sans-serif;
+    --font-body: 'DM Sans', system-ui, -apple-system, sans-serif;
+  }
+
+  body {
+    background-color: #f5ede1;
+    color: var(--on-surface);
+    font-family: var(--font-body);
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4, h5 {
+    font-family: var(--font-headline);
+  }
+}
+
+/* Custom Utilities and Aesthetic Tweaks */
+.font-headline {
+  font-family: var(--font-headline);
+}
+
+.font-body {
+  font-family: var(--font-body);
+}
+
+/* Glassmorphism & Card Styles */
+.bg-surface-canvas {
+  background-color: var(--surface);
+}
+
+.card-raiz {
+  background-color: var(--surface-container-lowest);
+  border: 1px solid var(--border-color);
+  border-radius: 1rem;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card-raiz:hover {
+  border-color: #c9b99e;
+  box-shadow: 0 4px 16px rgba(32, 27, 21, 0.06);
+}
+
+/* Hard Stamp Elevation */
+.stamp-shadow {
+  box-shadow: 2px 2px 0px #1f1a14;
+}
+
+.stamp-shadow-sm {
+  box-shadow: 1.5px 1.5px 0px #1f1a14;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--on-surface-variant);
+}
+
+/* Leaflet map styles */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  border-radius: 1rem;
+  font-family: var(--font-body) !important;
+  z-index: 10;
+}
