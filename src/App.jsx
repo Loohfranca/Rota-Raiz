@@ -34,6 +34,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('routes');
   const [selectedRoute, setSelectedRoute] = useState(null);
   const [selectedTour, setSelectedTour] = useState(null);
+  const [mapDestination, setMapDestination] = useState(null);
   const [selectedRouteLegsForMap, setSelectedRouteLegsForMap] = useState(null);
   const [prefilledDestination, setPrefilledDestination] = useState('');
 
@@ -89,13 +90,16 @@ export default function App() {
   };
 
   const handleOpenMapWithRoute = (route) => {
+    setMapDestination(null);
     setSelectedRouteLegsForMap(route?.legs || null);
     setSelectedRoute(null);
     setSelectedTour(null);
     setActiveTab('map');
   };
 
-  const handleOpenMapWithTour = () => {
+  const handleOpenMapWithTour = (tour) => {
+    setMapDestination(tour);
+    setSelectedRouteLegsForMap(null);
     setSelectedTour(null);
     setSelectedRoute(null);
     setActiveTab('map');
@@ -126,7 +130,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F5EDE1] flex flex-col text-[#201B15] overflow-x-hidden">
+    <div className="min-h-screen bg-[#F5EDE1] flex flex-col text-[#201B15]">
       <Navbar
         activeTab={activeTab}
         onChangeTab={handleTabChange}
@@ -146,6 +150,7 @@ export default function App() {
         ) : selectedTour ? (
           <TourDetailView
             tour={selectedTour}
+            home={home}
             onBack={() => setSelectedTour(null)}
             onOpenMapWithTour={handleOpenMapWithTour}
             onSwitchToRoute={goToRoutesWith}
@@ -164,6 +169,7 @@ export default function App() {
         ) : activeTab === 'map' ? (
           <MapView
             home={home}
+            destination={mapDestination}
             routeLegsToDraw={selectedRouteLegsForMap}
             onSelectPinRoute={goToRoutesWith}
           />

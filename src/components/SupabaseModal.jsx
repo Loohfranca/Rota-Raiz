@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { Database, Copy, Check, ExternalLink, RefreshCw, AlertCircle, X, FileCode } from 'lucide-react';
-import { 
-  updateSupabaseConnection, 
-  isSupabaseConfigured, 
-  SUPABASE_SQL_SCHEMA 
+import {
+  updateSupabaseConnection,
+  isSupabaseConfigured,
+  SUPABASE_SQL_SCHEMA
 } from '../lib/supabase';
 
 export default function SupabaseModal({ isOpen, onClose }) {
   const isConnected = isSupabaseConfigured();
-  
+
   const savedConfig = localStorage.getItem('rotaraiz_supabase_config');
   const parsed = savedConfig ? JSON.parse(savedConfig) : {};
 
@@ -41,15 +41,15 @@ export default function SupabaseModal({ isOpen, onClose }) {
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div 
-        className="modal-content p-5 flex flex-col gap-4" 
+    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={onClose}>
+      <div
+        className="w-full max-w-lg max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-2xl bg-[#fff8f4] p-4 sm:p-5 flex flex-col gap-4"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between pb-3 border-b" style={{ borderColor: 'var(--border-color)' }}>
+        <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b" style={{ borderColor: 'var(--border-color)' }}>
           <div className="flex items-center gap-2">
-            <div 
+            <div
               className="w-8 h-8 rounded-xl flex items-center justify-center text-white"
               style={{ backgroundColor: isConnected ? 'var(--secondary)' : 'var(--tertiary)' }}
             >
@@ -65,7 +65,7 @@ export default function SupabaseModal({ isOpen, onClose }) {
             </div>
           </div>
 
-          <button 
+          <button
             onClick={onClose}
             className="w-8 h-8 rounded-full flex items-center justify-center text-[#201b15] hover:bg-[#f7ece2]"
           >
@@ -74,21 +74,21 @@ export default function SupabaseModal({ isOpen, onClose }) {
         </div>
 
         {/* Status Callout */}
-        <div 
+        <div
           className="p-3 rounded-xl flex items-start gap-2.5 text-xs"
-          style={{ 
+          style={{
             backgroundColor: isConnected ? 'rgba(47, 93, 58, 0.12)' : 'rgba(233, 182, 47, 0.2)',
-            border: '1px solid var(--border-color)' 
+            border: '1px solid var(--border-color)'
           }}
         >
-          <span 
-            className="w-2.5 h-2.5 rounded-full mt-1 shrink-0" 
-            style={{ backgroundColor: isConnected ? '#22c55e' : '#f59e0b' }} 
+          <span
+            className="w-2.5 h-2.5 rounded-full mt-1 shrink-0"
+            style={{ backgroundColor: isConnected ? '#22c55e' : '#f59e0b' }}
           />
           <div className="flex flex-col">
             <span className="font-bold text-on-surface">
-              {isConnected 
-                ? 'Conectado ao seu projeto Supabase!' 
+              {isConnected
+                ? 'Conectado ao seu projeto Supabase!'
                 : 'Operando em Modo Híbrido / Local (Sem necessidade de login)'}
             </span>
             <p className="text-on-surface-variant mt-0.5 leading-relaxed">
@@ -160,14 +160,14 @@ export default function SupabaseModal({ isOpen, onClose }) {
         </form>
 
         {/* SQL Schema Creator Box */}
-        <div 
+        <div
           className="rounded-xl p-3.5 flex flex-col gap-2 mt-1"
-          style={{ 
+          style={{
             backgroundColor: 'var(--surface-container-low)',
-            border: '1px solid var(--border-color)' 
+            border: '1px solid var(--border-color)'
           }}
         >
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-1.5">
               <FileCode size={16} className="text-[#c2461f]" />
               <span className="font-headline font-bold text-xs text-on-surface">
@@ -178,10 +178,10 @@ export default function SupabaseModal({ isOpen, onClose }) {
               onClick={handleCopySQL}
               type="button"
               className="flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg transition-all"
-              style={{ 
-                backgroundColor: copied ? 'var(--secondary)' : 'var(--surface-container)', 
+              style={{
+                backgroundColor: copied ? 'var(--secondary)' : 'var(--surface-container)',
                 color: copied ? '#ffffff' : 'var(--on-surface)',
-                border: '1px solid var(--border-color)' 
+                border: '1px solid var(--border-color)'
               }}
             >
               {copied ? <Check size={13} /> : <Copy size={13} />}
