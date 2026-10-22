@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/api/rotas",
+      "destination": "/api/rotas"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
