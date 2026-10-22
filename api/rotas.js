@@ -42,6 +42,8 @@ const parseStep = (step) => {
       to: transit.stopDetails?.arrivalStop?.name || null,
       departure: transit.stopDetails?.departureTime || null,
       arrival: transit.stopDetails?.arrivalTime || null,
+      departureLocal: transit.localizedValues?.departureTime?.time?.text || null,
+      arrivalLocal: transit.localizedValues?.arrivalTime?.time?.text || null,
       durationMinutes: asMinutes(step.staticDuration),
     };
   }
