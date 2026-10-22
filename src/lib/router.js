@@ -50,15 +50,19 @@ export const findClosestStop = (lat, lng, stops = []) => {
 export const searchLocations = (query, stops = [], places = [], cities = []) => {
   const normalizedQuery = normalizeText(query);
   if (!normalizedQuery) {
-    // Retorna os principais destinos padrão
-    return [
-      { id: 'stop-balsa-ps', name: 'Porto Seguro (Balsa)', type: 'stop', stopId: 'stop-balsa-ps' },
-      { id: 'stop-balsa-arraial', name: "Arraial d'Ajuda (Balsa)", type: 'stop', stopId: 'stop-balsa-arraial' },
-      { id: 'stop-trevo-trancoso', name: 'Trancoso (Quadrado / Trevo)', type: 'stop', stopId: 'stop-trevo-trancoso' },
-      { id: 'stop-curuipe-espelho', name: 'Praia do Espelho (Curuípe)', type: 'place', stopId: 'stop-curuipe-espelho' },
-      { id: 'stop-vila-caraiva', name: 'Caraíva (Vila de Areia)', type: 'place', stopId: 'stop-vila-caraiva' },
-      { id: 'stop-ponta-corumbau', name: 'Ponta do Corumbau', type: 'place', stopId: 'stop-ponta-corumbau' },
-    ];
+    // Sem texto: sugere as cidades cadastradas (dados reais do banco, nada fixo no código)
+    return cities.slice(0, 6).map((city) => {
+      const mainStop = stops.find((st) => st.city_id === city.id);
+      return {
+        id: `city-${city.id}`,
+        name: city.name,
+        subtitle: 'Cidade',
+        type: 'city',
+        stopId: mainStop?.id,
+        lat: city.lat,
+        lng: city.lng,
+      };
+    });
   }
 
   const results = [];
@@ -68,7 +72,7 @@ export const searchLocations = (query, stops = [], places = [], cities = []) => 
   cities.forEach((city) => {
     if (normalizeText(city.name).includes(normalizedQuery)) {
       // Pega a parada principal da cidade
-      const mainStop = stops.find((s) => s.city_id === city.id) || stops[0];
+      const mainStop = stops.find((s) => s.city_id === city.id);
       const item = {
         id: `city-${city.id}`,
         name: city.name,
@@ -125,55 +129,47 @@ export const searchLocations = (query, stops = [], places = [], cities = []) => 
   return results.slice(0, 8);
 };
 
-// Resolução de um texto livre de busca para o nó de parada correspondente
-export const resolveToStop = (textOrId, stops = [], places = [], cities = []) => {
-  if (!textOrId) return null;
-  
-  // Se for ID direto de stop
-  const directStop = stops.find((s) => s.id === textOrId);
-  if (directStop) return directStop;
+// Distância máxima (km) para considerar que um ponto "é" uma parada cadastrada
+export const NEAR_STOP_KM = 2;
 
-  // Se for ID de place
-  const directPlace = places.find((p) => p.id === textOrId || `place-${p.id}` === textOrId);
-  if (directPlace) {
-    const associatedStop = stops.find((s) => s.id === directPlace.closest_stop_id);
-    if (associatedStop) return associatedStop;
-  }
+// Resolve um ponto escolhido pelo usuário ({ name, lat, lng, stopId }) para uma parada do grafo.
+// Retorna { stop, distanceKm, exact } ou null se o lugar não for reconhecido.
+export const resolvePoint = (point, stops = [], places = [], cities = []) => {
+  if (!point) return null;
 
-  const queryNorm = normalizeText(textOrId);
-
-  // Busca exata ou por inclusão nos nomes de cidades conhecidas
-  if (queryNorm.includes('porto') || queryNorm.includes('seguro')) {
-    return stops.find((s) => s.id === 'stop-balsa-ps') || stops[0];
-  }
-  if (queryNorm.includes('arraial') || queryNorm.includes('ajuda')) {
-    return stops.find((s) => s.id === 'stop-balsa-arraial') || stops.find((s) => s.city_id === 'arraial-dajuda');
-  }
-  if (queryNorm.includes('trancoso') || queryNorm.includes('quadrado')) {
-    return stops.find((s) => s.id === 'stop-trevo-trancoso') || stops.find((s) => s.id === 'stop-quadrado-trancoso');
-  }
-  if (queryNorm.includes('espelho') || queryNorm.includes('curuipe')) {
-    return stops.find((s) => s.id === 'stop-curuipe-espelho');
-  }
-  if (queryNorm.includes('caraiva')) {
-    return stops.find((s) => s.id === 'stop-vila-caraiva') || stops.find((s) => s.id === 'stop-nova-caraiva');
-  }
-  if (queryNorm.includes('corumbau')) {
-    return stops.find((s) => s.id === 'stop-ponta-corumbau');
-  }
-  if (queryNorm.includes('taipe')) {
-    return stops.find((s) => s.id === 'stop-taipe-entrada');
-  }
-  if (queryNorm.includes('jaqueira')) {
-    return stops.find((s) => s.id === 'stop-aldeia-jaqueira');
+  // 1. Parada escolhida diretamente
+  if (point.stopId) {
+    const direct = stops.find((s) => s.id === point.stopId);
+    if (direct) return { stop: direct, distanceKm: 0, exact: true };
   }
 
-  // Fallback: busca por substring nos stops
-  const matchingStop = stops.find((s) => {
-    return normalizeText(s.name).includes(queryNorm) || normalizeText(s.short_name).includes(queryNorm);
-  });
+  // 2. Coordenadas (GPS, passeio, cidade ou lugar do mapa): parada mais próxima
+  if (point.lat != null && point.lng != null) {
+    const closest = findClosestStop(point.lat, point.lng, stops);
+    if (!closest) return null;
+    return { stop: closest, distanceKm: closest.distanceKm, exact: closest.distanceKm <= NEAR_STOP_KM };
+  }
 
-  return matchingStop || stops[0];
+  // 3. Texto digitado sem escolher da lista: tenta casar exatamente com algo cadastrado
+  const q = normalizeText(point.name);
+  if (!q) return null;
+
+  const stop = stops.find((s) => normalizeText(s.name) === q || normalizeText(s.short_name) === q);
+  if (stop) return { stop, distanceKm: 0, exact: true };
+
+  const city = cities.find((c) => normalizeText(c.name) === q);
+  if (city) {
+    const cityStop = stops.find((s) => s.city_id === city.id);
+    if (cityStop) return { stop: cityStop, distanceKm: 0, exact: true };
+  }
+
+  const place = places.find((p) => normalizeText(p.title) === q);
+  if (place) {
+    const placeStop = stops.find((s) => s.id === place.closest_stop_id);
+    if (placeStop) return { stop: placeStop, distanceKm: 0, exact: true };
+  }
+
+  return null;
 };
 
 // Algoritmo de Dijkstra para calcular o caminho ótimo no grafo
@@ -281,22 +277,79 @@ const formatPrice = (minPrice, maxPrice) => {
 };
 
 // Função Principal: Planejar Rota Multimodal Completa
-export const calculateRoute = (originInput, destInput, stops = [], legs = []) => {
-  const startStop = resolveToStop(originInput, stops);
-  const endStop = resolveToStop(destInput, stops);
+export const calculateRoute = (originPoint, destPoint, stops = [], legs = [], places = [], cities = []) => {
+  const origin = resolvePoint(originPoint, stops, places, cities);
+  const dest = resolvePoint(destPoint, stops, places, cities);
 
-  if (!startStop || !endStop) {
+  if (!origin) {
+    return { found: false, reason: 'unknown', side: 'origin', message: `Não encontrei "${originPoint?.name || ''}". Escolha uma opção da lista.` };
+  }
+  if (!dest) {
+    return { found: false, reason: 'unknown', side: 'dest', message: `Não encontrei "${destPoint?.name || ''}". Escolha uma opção da lista.` };
+  }
+
+  // Lugar existe no mapa, mas não há transporte cadastrado por perto
+  if (!origin.exact || !dest.exact) {
+    const side = !origin.exact ? 'origin' : 'dest';
+    const info = side === 'origin' ? origin : dest;
+    const name = side === 'origin' ? originPoint.name : destPoint.name;
     return {
       found: false,
-      message: 'Não foi possível identificar a origem ou o destino.',
+      reason: 'no-coverage',
+      side,
+      placeName: name,
+      nearestStop: info.stop,
+      nearestKm: info.distanceKm,
+      message: `Ainda não temos transporte cadastrado em ${name}.`,
     };
+  }
+
+  if (origin.stop.id === dest.stop.id) {
+    return {
+      found: false,
+      reason: 'same',
+      message: 'A origem e o destino são o mesmo local.',
+      startStop: origin.stop,
+      endStop: dest.stop,
+    };
+  }
+
+  // Pontos por coordenada (GPS, cidade) podem estar perto de mais de uma parada: testa as próximas
+  const nearbyCandidates = (point, resolved) => {
+    if (point.stopId || point.lat == null || point.lng == null) return [resolved.stop];
+    const list = stops
+      .map((st) => ({ st, d: haversineDistance(point.lat, point.lng, st.lat, st.lng) }))
+      .filter((x) => x.d <= NEAR_STOP_KM)
+      .sort((a, b) => a.d - b.d)
+      .slice(0, 4)
+      .map((x) => x.st);
+    return list.length ? list : [resolved.stop];
+  };
+
+  let startStop = origin.stop;
+  let endStop = dest.stop;
+  {
+    let bestMinutes = Infinity;
+    for (const a of nearbyCandidates(originPoint, origin)) {
+      for (const b of nearbyCandidates(destPoint, dest)) {
+        if (a.id === b.id) continue;
+        const path = dijkstra(a.id, b.id, stops, legs, 'duration_min');
+        if (!path || path.length === 0) continue;
+        const minutes = path.reduce((sum, l) => sum + (l.duration_min || 0), 0);
+        if (minutes < bestMinutes) {
+          bestMinutes = minutes;
+          startStop = a;
+          endStop = b;
+        }
+      }
+    }
   }
 
   if (startStop.id === endStop.id) {
     return {
       found: false,
-      sameLocation: true,
-      message: 'A origem e o destino selecionados são o mesmo local!',
+      reason: 'same',
+      message: 'A origem e o destino são o mesmo local.',
       startStop,
       endStop,
     };
@@ -311,7 +364,8 @@ export const calculateRoute = (originInput, destInput, stops = [], legs = []) =>
   if (!fastestLegs || fastestLegs.length === 0) {
     return {
       found: false,
-      message: `Ainda não temos essa rota cadastrada no Litoral Sul da Bahia entre ${startStop.name} e ${endStop.name}.`,
+      reason: 'no-route',
+      message: `Ainda não temos rota cadastrada entre ${startStop.name} e ${endStop.name}.`,
       originName: startStop.name,
       destName: endStop.name,
       startStop,
