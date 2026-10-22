@@ -1,4 +1,4 @@
-export const hasCoordinates = point => point && Number.isFinite(Number(point.lat)) && Number.isFinite(Number(point.lng)) && Math.abs(Number(point.lat)) <= 90 && Math.abs(Number(point.lng)) <= 180;
+export const hasCoordinates = point => point && point.lat != null && point.lng != null && point.lat !== '' && point.lng !== '' && Number.isFinite(Number(point.lat)) && Number.isFinite(Number(point.lng)) && Math.abs(Number(point.lat)) <= 90 && Math.abs(Number(point.lng)) <= 180;
 export const walkingKey = (from, to) => `rotaraiz_walk_${Number(from.lat).toFixed(6)},${Number(from.lng).toFixed(6)}_${Number(to.lat).toFixed(6)},${Number(to.lng).toFixed(6)}`;
 export function decodeShape(encoded) {
   const points = []; let index = 0, lat = 0, lng = 0;
@@ -21,7 +21,7 @@ export async function fetchWalk(from, to, signal) {
   if (!response.ok) throw new Error('Não foi possível calcular a caminhada agora. Tente novamente com internet.');
   const data = await response.json();
   if (data.trip?.status !== 0 || !data.trip?.legs?.length) throw new Error('Não encontramos um percurso a pé para esses pontos.');
-  const result = { from, to, km: data.trip.summary.length, seconds: data.trip.summary.time, points: data.trip.legs.flatMap(leg => decodeShape(leg.shape)), instructions: data.trip.legs.flatMap(leg => leg.maneuvers.map(m => ({ text: m.instruction, km: m.length }))), calculatedAt: new Date().toISOString() };
+  const result = { from, to, hasFerry: !!data.trip.summary.has_ferry, km: data.trip.summary.length, seconds: data.trip.summary.time, points: data.trip.legs.flatMap(leg => decodeShape(leg.shape)), instructions: data.trip.legs.flatMap(leg => leg.maneuvers.map(m => ({ text: m.instruction, km: m.length }))), calculatedAt: new Date().toISOString() };
   return result;
 }
 export function saveWalk(result) { localStorage.setItem(walkingKey(result.from, result.to), JSON.stringify(result)); }

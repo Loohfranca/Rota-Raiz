@@ -1,261 +1,57 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Search, 
-  MapPin, 
-  CheckCircle2, 
-  Download, 
-  ChevronRight, 
-  Clock, 
-  Coins, 
-  Star, 
-  Lightbulb, 
-  Check, 
-  Cloud,
-  Navigation,
-  ArrowRight
-} from 'lucide-react';
-import { getPlaces, getStops, getCities } from '../lib/supabase';
-import PlaceInput from './PlaceInput';
-import { toggleSaveTourOffline, getOfflineStorage } from '../lib/supabase';
-import { getSavedTours } from '../lib/supabase';
-import { haversineDistance } from '../lib/router';
-
-export default function ToursView({
-  home,
-  onChangeHome,
-  onSelectTour
-}) {
-  const [places, setPlaces] = useState([]);
+import { Waves, MapPin, ArrowRight, Bookmark, Search } from 'lucide-react';
+import { getPlaces, getStops, getCities, getSavedTours, toggleSaveTourOffline } from '../lib/supabase';
+import OriginPicker from './OriginPicker';
+import { BEACHES, LODGINGS } from '../data/beachCatalog';
+import { selectBeaches, nearestRegion, REGIONS } from '../lib/nearby';
+import { hasCoordinates } from '../lib/walking';
+export default function ToursView({ home, onChangeHome, onSelectTour }) {
+  const [places, setPlaces] = useState(BEACHES);
   const [stops, setStops] = useState([]);
-  const [cities, setCities] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('Todos');
+  const [cities, setCities] = useState(REGIONS);
+  const [query, setQuery] = useState('');
+  const [region, setRegion] = useState('auto');
   const [onlySaved, setOnlySaved] = useState(false);
-  const [saveError, setSaveError] = useState('');
-  const { tours: savedTours } = getOfflineStorage();
-  const [offlineSavedList, setOfflineSavedList] = useState(savedTours);
-
-  const categories = ['Todos', 'Praias', 'Trilhas & Rios', 'Histórico'];
-
+  const [saved, setSaved] = useState(getSavedTours);
+  const [error, setError] = useState('');
   useEffect(() => {
-    async function loadPlacesData() {
-      const [data, stopsData, citiesData] = await Promise.all([getPlaces(), getStops(), getCities()]);
-      setPlaces([...data.filter(p => !getSavedTours()[p.id]), ...Object.values(getSavedTours())]);
-      setStops(stopsData);
-      setCities(citiesData);
-    }
-    loadPlacesData();
+    let active = true;
+    Promise.all([getPlaces(), getStops(), getCities()]).then(([data,s,c]) => {
+      if (!active) return;
+      // Curated entries replace old versions with the same ID; custom destinations remain available.
+      const byId = new Map(data.filter(item => item.id !== 'caraiva-prainha').map(item => [item.id,item]));
+      BEACHES.forEach(item => byId.set(item.id,{...byId.get(item.id),...item}));
+      setPlaces([...byId.values()]); setStops(s); setCities(c);
+    }).catch(() => active && setError('Usando o catálogo disponível neste aparelho.'));
+    return () => { active = false; };
   }, []);
-
-  const filteredPlaces = places.filter((place) => {
-    const titleMatch = (place.title || '').toLowerCase().includes(searchTerm.toLowerCase());
-    const locMatch = (place.location || '').toLowerCase().includes(searchTerm.toLowerCase());
-    const catMatch = selectedCategory === 'Todos' || place.category === selectedCategory;
-    return (titleMatch || locMatch) && catMatch && (!onlySaved || offlineSavedList.includes(place.id));
-  });
-
-  const handleToggleOffline = (e, tourId) => {
-    e.stopPropagation();
-    let isNowSaved;
-    try { isNowSaved = toggleSaveTourOffline(tourId, { ...places.find(p => p.id === tourId), savedOrigin: home }); setSaveError(''); } catch { setSaveError('Não foi possível salvar neste dispositivo.'); return; }
-    if (isNowSaved) {
-      setOfflineSavedList([...offlineSavedList, tourId]);
-    } else {
-      setOfflineSavedList(offlineSavedList.filter((id) => id !== tourId));
-    }
-  };
-
-  return (
-    <div className="flex flex-col gap-5 max-w-4xl mx-auto w-full pb-8">
-      {/* Header */}
-      <section className="flex flex-col pt-1">
-        <div className="flex items-center justify-between">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-[#c2461f]">
-            Destinos Autênticos
-          </span>
-          <button type="button" onClick={() => setOnlySaved(!onlySaved)} aria-pressed={onlySaved} className="min-h-[44px] text-xs font-bold px-2.5 py-0.5 rounded-full bg-[#bbefc1] text-[#00210b]">
-            {onlySaved ? 'Ver todos' : `${offlineSavedList.length} Salvos`}
-          </button>
-        </div>
-        <h1 className="font-headline font-bold text-2xl sm:text-3xl text-[#201b15] tracking-tight mt-0.5">
-          Passeios & Atrativos Naturais
-        </h1>
-        <p className="text-xs sm:text-sm text-[#59413b] mt-0.5">
-          Praias e atrativos com a distância a partir de onde você está.
-        </p>
-      </section>
-
-      <p className="text-xs">“Salvos” guarda informações neste navegador. O mapa da região não é baixado. As distâncias abaixo são em linha reta; abra o passeio para calcular o caminho a pé.</p>
-      {saveError && <p role="alert">{saveError}</p>}
-      {/* Base das distâncias: o usuário escolhe de onde mede */}
-      <section className="flex flex-col gap-1.5">
-        <PlaceInput
-          label="Distâncias a partir de"
-          value={home}
-          onChange={onChangeHome}
-          placeholder="Onde você está hospedado?"
-          stops={stops}
-          places={places}
-          cities={cities}
-          accent="#2f5d3a"
-        />
-        {!(home?.lat != null && home?.lng != null) && (
-          <p className="text-xs text-[#59413b] px-1">
-            Escolha um lugar da lista para ver os km até cada passeio.
-          </p>
-        )}
-      </section>
-
-      {/* Search and Category Filters */}
-      <section className="flex flex-col gap-3">
-        <div className="relative w-full">
-          <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#59413b] pointer-events-none" />
-          <input
-            type="search"
-            placeholder="Buscar praia, falésia, reserva ou aldeia..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full h-12 pl-10 pr-4 rounded-xl text-sm text-[#201b15] placeholder:text-[#59413b]/60 bg-[#ffffff] border border-[#e0d5c1] focus:outline-none shadow-xs font-medium"
-          />
-        </div>
-
-        {/* Category Filter Chips */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
-          {categories.map((cat) => {
-            const isActive = selectedCategory === cat;
-            return (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`min-h-[44px] px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${
-                  isActive
-                    ? 'bg-[#c2461f] text-white border-[#c2461f] shadow-xs'
-                    : 'bg-[#ffffff] text-[#59413b] border-[#e0d5c1] hover:bg-[#f7ece2]'
-                }`}
-              >
-                {cat}
-              </button>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* Places Grid */}
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {filteredPlaces.map((place) => {
-          const isSaved = offlineSavedList.includes(place.id);
-          const distance = home?.lat != null && home?.lng != null
-            ? haversineDistance(home.lat, home.lng, place.lat, place.lng)
-            : null;
-
-          return (
-            <article
-              key={place.id}
-              onClick={() => { if (onlySaved && place.savedOrigin) onChangeHome(place.savedOrigin); onSelectTour(place); }}
-              role="button"
-              tabIndex={0}
-              className="rounded-2xl bg-[#ffffff] border border-[#e0d5c1] hover:border-[#c2461f] hover:shadow-xs transition-all cursor-pointer overflow-hidden flex flex-col justify-between"
-            >
-              {/* Photo Banner */}
-              <div className="relative h-48 w-full bg-[#f7ece2] overflow-hidden">
-                <img
-                  src={place.image_url}
-                  alt={place.photo_alt || place.title}
-                  loading="lazy"
-                  className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                />
-
-                {/* Salvo Offline Pill */}
-                <div className={`
-                  absolute top-3 right-3 flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold shadow-xs backdrop-blur-md
-                  ${isSaved ? 'bg-white/95 text-[#2f5d3a]' : 'bg-black/60 text-white'}
-                `}>
-                  {isSaved ? <Check size={13} /> : <Cloud size={13} />}
-                  <span className="text-[11px]">{isSaved ? 'Salvo no Dispositivo' : 'Guia não salvo'}</span>
-                </div>
-
-                {/* Location Pin */}
-                <div className="absolute bottom-3 left-3 px-2.5 py-1 rounded-lg text-xs font-bold text-white bg-black/60 backdrop-blur-md flex items-center gap-1">
-                  <MapPin size={13} />
-                  <span>{place.location.split(',')[0]}</span>
-                </div>
-              </div>
-
-              {/* Card Body */}
-              <div className="p-4 flex flex-col gap-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <h2 className="font-headline font-bold text-base sm:text-lg text-[#201b15]">
-                      {place.title}
-                    </h2>
-                    <p className="text-xs text-[#59413b] mt-0.5">
-                      {place.location}
-                    </p>
-                  </div>
-                  {distance != null && (
-                    <span className="font-headline font-bold text-sm text-[#c2461f] shrink-0">
-                      ~ {Number(distance).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} km em linha reta
-                    </span>
-                  )}
-                </div>
-
-                {/* Tide or Access Alert Pill */}
-                {place.tide_dependent ? (
-                  <div className="p-2.5 rounded-xl bg-blue-50 border border-blue-200 text-xs font-medium text-blue-900 flex items-center gap-2">
-                    <span>🌊</span>
-                    <span className="truncate">{place.tide_window || 'Melhor na maré baixa'}</span>
-                  </div>
-                ) : (
-                  <div className="p-2.5 rounded-xl bg-[#fdf2e7] border border-[#e0d5c1] text-xs font-medium text-[#201b15] flex items-center gap-2">
-                    <Clock size={14} className="text-[#c2461f] shrink-0" />
-                    <span className="truncate">{place.expense_range || 'Acesso livre e gratuito'}</span>
-                  </div>
-                )}
-
-                {/* Action Buttons */}
-                <div className="pt-2 flex items-center justify-between border-t border-[#f7ece2]">
-                  <button
-                    onClick={(e) => handleToggleOffline(e, place.id)}
-                    type="button"
-                    className={`min-h-[44px] px-3.5 rounded-xl flex items-center gap-1.5 text-xs font-bold transition-all border ${
-                      isSaved 
-                        ? 'bg-[#bbefc1] text-[#00210b] border-[#bbefc1]' 
-                        : 'bg-[#2f5d3a] text-white border-[#2f5d3a]'
-                    }`}
-                  >
-                    {isSaved ? <Check size={14} /> : <Download size={14} />}
-                    <span>{isSaved ? 'Salvo' : 'Salvar Offline'}</span>
-                  </button>
-
-                  <button
-                    onClick={() => { if (onlySaved && place.savedOrigin) onChangeHome(place.savedOrigin); onSelectTour(place); }}
-                    type="button"
-                    className="min-h-[44px] px-3.5 rounded-xl bg-[#f7ece2] hover:bg-[#ece1d7] text-[#c2461f] border border-[#e0d5c1] flex items-center gap-1 text-xs font-bold transition-colors"
-                  >
-                    <span>Ver Detalhes</span>
-                    <ChevronRight size={14} />
-                  </button>
-                </div>
-              </div>
-            </article>
-          );
-        })}
-      </section>
-
-      {/* Helpful Traveler Note */}
-      <section className="p-4 rounded-2xl bg-[#bbefc1]/30 border border-[#e0d5c1] flex items-start gap-3 shadow-xs">
-        <div className="w-9 h-9 rounded-xl bg-[#2f5d3a] text-white flex items-center justify-center shrink-0">
-          <Lightbulb size={20} />
-        </div>
-        <div className="flex flex-col">
-          <span className="font-headline font-bold text-sm text-[#201b15]">
-            Dica do Mochileiro Raiz no Sul da Bahia
-          </span>
-          <p className="text-xs text-[#59413b] mt-0.5 leading-relaxed">
-            Para passeios como Praia do Espelho e Corumbau, consulte a tábua de marés da Marinha antes de sair. As piscinas e a ponta de areia só aparecem na maré baixa (abaixo de 0.4 metros).
-          </p>
-        </div>
-      </section>
+  const near = nearestRegion(home);
+  const filtered = selectBeaches(onlySaved ? Object.values(saved).map(item => ({...item,...BEACHES.find(b => b.id === item.id)})) : places, { home, region, query, savedIds: onlySaved ? Object.keys(saved) : null });
+  const toggle = (place) => { try { toggleSaveTourOffline(place.id, {...place,savedOrigin:home}); setSaved(getSavedTours()); setError(''); } catch {setError('Não foi possível salvar neste dispositivo.');} };
+  const open = place => { if (onlySaved && place.savedOrigin) onChangeHome(place.savedOrigin); onSelectTour(place); };
+  return <div className="flex flex-col gap-5 pb-8">
+    <header><p className="text-xs uppercase tracking-widest text-[#c2461f] font-bold">Seu próximo banho de mar</p><h1 className="text-3xl font-bold mt-1">Praias & passeios</h1><p className="text-sm text-[#59413b] mt-2">Escolha sua origem, descubra as praias e calcule como chegar.</p></header>
+    <OriginPicker home={home} onChange={onChangeHome} stops={stops} cities={cities} places={[...places,...LODGINGS.map(item => ({...item,title:item.name}))]} />
+    <div className="flex flex-wrap gap-2" role="group" aria-label="Região das praias">
+      {[{id:'auto',name:'Perto da minha origem'},...REGIONS,{id:'all',name:'Todas as regiões'}].map(item => <button key={item.id} onClick={() => {setRegion(item.id);setOnlySaved(false);}} aria-pressed={!onlySaved && region===item.id} className={`min-h-[44px] px-3 rounded-xl border text-sm ${!onlySaved && region===item.id ? 'bg-[#c2461f] text-white border-[#c2461f]' : 'bg-white border-[#e0d5c1]'}`}>{item.name}</button>)}
+      <button onClick={() => setOnlySaved(!onlySaved)} aria-pressed={onlySaved} className={`min-h-[44px] px-3 rounded-xl border text-sm ${onlySaved?'bg-[#2f5d3a] text-white':'bg-white'}`}>Salvos ({Object.keys(saved).length})</button>
     </div>
-  );
+    {region==='auto' && !onlySaved && <p className="text-sm">{near ? `Praias de ${near.name}, ordenadas pela proximidade de ${home.name}.` : hasCoordinates(home) ? 'Sua origem está fora das regiões cadastradas. Ainda não há praias próximas no catálogo; explore uma das regiões acima para planejar a viagem.' : 'Escolha sua origem para ver as praias da região. Enquanto isso, explore o catálogo abaixo.'}</p>}
+    <label className="flex items-center gap-2 border bg-white rounded-xl px-3"><Search size={18}/><input aria-label="Buscar praia" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Buscar praia ou atrativo" className="min-h-[48px] w-full bg-transparent outline-none" /></label>
+    {error && <p role="status">{error}</p>}
+    {!(region==='auto' && hasCoordinates(home) && !near && !onlySaved) && <>
+    <h2 className="text-xl font-bold">{onlySaved ? 'Meus passeios salvos' : near && region==='auto' ? `Praias em ${near.name}` : 'Explore os destinos'} <span className="text-sm font-normal">({filtered.length})</span></h2>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {filtered.map(place=><article key={place.id} className="rounded-2xl border border-[#e0d5c1] bg-white overflow-hidden flex flex-col">
+        <div className="h-28 bg-gradient-to-br from-[#2f5d3a] to-[#164e63] text-white p-4 flex items-end justify-between"><div><Waves size={26}/><span className="text-xs mt-2 block">{place.location}</span></div><MapPin size={20}/></div>
+        <div className="p-4 flex flex-col gap-3 flex-1"><h3 className="text-lg font-bold">{place.title}</h3><p className="text-sm text-[#59413b]">{place.subtitle}</p>
+          <p className="text-sm font-bold text-[#2f5d3a]">{place.distanceKm != null ? `${Number(place.distanceKm).toLocaleString('pt-BR',{maximumFractionDigits:1})} km em linha reta da origem` : 'Escolha uma origem para medir a distância'}</p>
+          <p className="text-xs text-[#59413b]">Percurso a pé e minutos: calcule em “Ver detalhes”.</p>
+          <div className="mt-auto flex flex-wrap gap-2"><button onClick={()=>open(place)} className="min-h-[44px] flex-1 flex items-center justify-center gap-2 rounded-xl bg-[#c2461f] text-white px-3 font-bold text-sm">Ver detalhes <ArrowRight size={16}/></button><button aria-label={saved[place.id] ? `Remover ${place.title} dos salvos` : `Salvar ${place.title}`} onClick={()=>toggle(place)} className="min-h-[44px] px-3 border rounded-xl"><Bookmark size={18} className={saved[place.id]?'fill-[#2f5d3a] text-[#2f5d3a]':''}/></button></div>
+        </div>
+      </article>)}
+    </div>
+    {!filtered.length && <p>Nenhum destino encontrado. Altere a busca ou escolha outra região.</p>}
+    </>}
+  </div>;
 }
