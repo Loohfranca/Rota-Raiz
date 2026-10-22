@@ -16,6 +16,7 @@ import { getStops, getLegs, getPlaces, getCities } from "../lib/supabase";
 import { calculateRoute, resolvePoint } from "../lib/router";
 import PlaceInput from "./PlaceInput";
 import PageHeading from "./PageHeading";
+import NationalRoutesView from "./NationalRoutesView";
 
 const MODE_LABEL = {
   ferry: "Balsa",
@@ -49,6 +50,7 @@ export default function RoutesView({
   const [places, setPlaces] = useState([]);
   const [cities, setCities] = useState([]);
 
+  const [scope, setScope] = useState("brasil");
   const [dest, setDest] = useState(null);
   const [result, setResult] = useState(null);
   const [mode, setMode] = useState("fastest");
@@ -212,8 +214,22 @@ export default function RoutesView({
         eyebrow="De um lugar ao outro"
         title="A viagem começa"
         accent="no caminho."
-        description="Encontre as conexões de van, ônibus, balsa e canoa."
+        description="Encontre transportes pelo Brasil e conexões locais."
       />
+      <div className="flex gap-2 mb-4 rounded-2xl bg-[#f7ece2] p-1 border border-[#e0d5c1]" role="group" aria-label="Área de pesquisa">
+        <button type="button" onClick={() => setScope("brasil")} aria-pressed={scope === "brasil"}
+          className={"flex-1 rounded-xl min-h-[48px] px-3 text-sm font-bold " + (scope === "brasil" ? "bg-[#2f5d3a] text-white shadow-sm" : "text-[#59413b]")}>
+          Todo o Brasil
+        </button>
+        <button type="button" onClick={() => setScope("local")} aria-pressed={scope === "local"}
+          className={"flex-1 rounded-xl min-h-[48px] px-3 text-sm font-bold " + (scope === "local" ? "bg-[#c2461f] text-white shadow-sm" : "text-[#59413b]")}>
+          Litoral Sul da Bahia
+        </button>
+      </div>
+      {scope === "brasil" ? (
+        <NationalRoutesView />
+      ) : (
+        <>
       <div className="routes-layout">
         <div className="routes-primary">
           <section className="route-search-card">
@@ -525,6 +541,8 @@ export default function RoutesView({
         >
           Área do administrador
         </button>
+      )}
+        </>
       )}
     </div>
   );
