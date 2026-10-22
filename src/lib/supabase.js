@@ -191,7 +191,7 @@ export const saveLeg = async (legData) => {
 // ==============================================================================
 export const getOfflineStorage = () => {
   const routes = JSON.parse(localStorage.getItem('rotaraiz_saved_routes') || '[]');
-  const tours = JSON.parse(localStorage.getItem('rotaraiz_saved_tours') || '["espelho", "trancoso-quadrado", "caraiva-prainha", "jaqueira"]');
+  const tours = Object.keys(getSavedTours());
   return { routes, tours };
 };
 
@@ -207,7 +207,11 @@ export const toggleSaveRouteOffline = (routeId) => {
   return updated.includes(routeId);
 };
 
-export const toggleSaveTourOffline = (tourId) => {
+export const getSavedTours = () => {
+  try { return JSON.parse(localStorage.getItem('rotaraiz_tour_details') || '{}'); } catch { return {}; }
+};
+
+export const toggleSaveTourOffline = (tourId, tour) => {
   const { tours } = getOfflineStorage();
   let updated;
   if (tours.includes(tourId)) {
@@ -215,6 +219,10 @@ export const toggleSaveTourOffline = (tourId) => {
   } else {
     updated = [...tours, tourId];
   }
+  const details = getSavedTours();
+  if (updated.includes(tourId) && tour) details[tourId] = { ...tour, savedAt: new Date().toISOString() };
+  else delete details[tourId];
+  localStorage.setItem('rotaraiz_tour_details', JSON.stringify(details));
   localStorage.setItem('rotaraiz_saved_tours', JSON.stringify(updated));
   return updated.includes(tourId);
 };

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import WalkingPanel from './WalkingPanel';
 import confetti from 'canvas-confetti';
 import { 
   ArrowLeft, 
@@ -28,6 +29,7 @@ import { toggleSaveTourOffline, getOfflineStorage } from '../lib/supabase';
 
 export default function TourDetailView({
   tour,
+  home,
   onBack,
   onOpenMapWithTour,
   onSwitchToRoute
@@ -35,6 +37,7 @@ export default function TourDetailView({
   const { tours: savedTours } = getOfflineStorage();
   const [isSavedOffline, setIsSavedOffline] = useState(savedTours.includes(tour?.id));
   const [isBookmarked, setIsBookmarked] = useState(true);
+  const [saveError, setSaveError] = useState('');
   const [copiedShare, setCopiedShare] = useState(false);
 
   if (!tour) return null;
@@ -56,7 +59,8 @@ export default function TourDetailView({
   ];
 
   const handleToggleOffline = () => {
-    const nextSaved = toggleSaveTourOffline(tour.id);
+    let nextSaved;
+    try { nextSaved = toggleSaveTourOffline(tour.id, { ...tour, savedOrigin: home }); setSaveError(''); } catch { setSaveError('Não foi possível salvar neste dispositivo.'); return; }
     setIsSavedOffline(nextSaved);
 
     if (nextSaved) {
@@ -140,7 +144,7 @@ export default function TourDetailView({
               ${isSavedOffline ? 'bg-[#2f5d3a] text-white' : 'bg-black/60 text-white'}
             `}>
               <CheckCircle2 size={14} />
-              <span>{isSavedOffline ? 'Salvo no Dispositivo' : 'Offline Pronto'}</span>
+              <span>{isSavedOffline ? 'Salvo no Dispositivo' : 'Guia não salvo'}</span>
             </div>
 
             {tour.temperature && (
@@ -234,68 +238,7 @@ export default function TourDetailView({
         </div>
       </div>
 
-      {/* Como Chegar no Bolso Section */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-[#ffffff] border border-[#e0d5c1] shadow-xs flex flex-col gap-4">
-        <div className="flex items-center justify-between pb-2 border-b border-[#f7ece2]">
-          <div className="flex items-center gap-2">
-            <Route size={18} className="text-[#c2461f]" />
-            <h2 className="font-headline font-bold text-base text-[#201b15]">
-              Como Chegar de Transporte Público
-            </h2>
-          </div>
-          <span className="text-xs font-bold px-2 py-0.5 rounded bg-[#bbefc1] text-[#00210b]">
-            Econômico
-          </span>
-        </div>
-
-        {/* Steps */}
-        <div className="flex flex-col gap-3">
-          {steps.map((st, i) => (
-            <div key={i} className="flex gap-3 relative pb-3 last:pb-0">
-              <div className="flex flex-col items-center">
-                <div className={`
-                  w-7 h-7 rounded-full text-white flex items-center justify-center font-bold text-xs shrink-0
-                  ${i === 0 ? 'bg-[#2f5d3a]' : 'bg-[#c2461f]'}
-                `}>
-                  {st.step || (i + 1)}
-                </div>
-                {i < steps.length - 1 && (
-                  <div className="w-0.5 grow bg-[#e0d5c1] my-1 min-h-[30px]" />
-                )}
-              </div>
-
-              <div className="flex flex-col flex-1 min-w-0">
-                <div className="flex items-center justify-between">
-                  <span className="font-headline font-bold text-sm text-[#201b15]">
-                    {st.title}
-                  </span>
-                  <span className="text-xs font-bold text-[#c2461f]">
-                    {st.cost}
-                  </span>
-                </div>
-                <p className="text-xs text-[#59413b] mt-0.5 leading-relaxed">
-                  {st.desc}
-                </p>
-                {st.warning && (
-                  <div className="mt-1.5 flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold bg-[#ffdbd1] text-[#c2461f] w-fit">
-                    <Coins size={12} />
-                    <span>{st.warning}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <button
-          onClick={() => onSwitchToRoute(tour.title)}
-          type="button"
-          className="w-full min-h-[46px] flex items-center justify-center gap-2 rounded-xl text-xs sm:text-sm font-bold bg-[#c2461f] hover:bg-[#a02e06] text-white shadow-xs transition-colors"
-        >
-          <Route size={16} />
-          <span>Traçar Rota no Planejador para {tour.title}</span>
-        </button>
-      </div>
+      <WalkingPanel key={`${home?.lat},${home?.lng}:${tour.id}`} home={home} tour={tour} onSwitchToRoute={onSwitchToRoute} />
 
       {/* Dicas de Mochileiro Raiz */}
       {backpackTips.length > 0 && (
@@ -330,6 +273,8 @@ export default function TourDetailView({
         </div>
       )}
 
+      {saveError && <p role="alert">{saveError}</p>}
+      <p className="text-xs">O guia fica em Passeios → Salvos, neste navegador. Salvar o guia não baixa fotos nem o fundo do mapa.</p>
       {/* Bottom Sticky Action Buttons */}
       <section className="flex flex-col sm:flex-row gap-2.5 mt-2">
         <button
@@ -338,7 +283,7 @@ export default function TourDetailView({
           className="flex-1 min-h-[48px] rounded-xl bg-[#2f5d3a] hover:bg-[#22502e] text-white flex items-center justify-center gap-2 text-xs font-bold shadow-xs transition-transform active:scale-[0.98]"
         >
           {isSavedOffline ? <Check size={18} /> : <Download size={18} />}
-          <span>{isSavedOffline ? 'Salvo no Dispositivo (Modo Offline)' : 'Baixar Guia Offline'}</span>
+          <span>{isSavedOffline ? 'Guia salvo neste dispositivo' : 'Salvar informações do passeio'}</span>
         </button>
 
         <button
