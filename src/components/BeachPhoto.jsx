@@ -1,14 +1,16 @@
 import React, { useState } from "react";
+import { getTourPhotos } from "../lib/photos";
 import { Waves, TreePalm } from "lucide-react";
 export default function BeachPhoto({ tour, className = "" }) {
-  const [failed, setFailed] = useState(false);
+  const [failed, setFailed] = useState([]);
+  const photo = getTourPhotos(tour).find(item => !failed.includes(item.url));
   return (
     <div className={`beach-photo ${className}`}>
-      {tour.photo && !failed ? (
+      {photo ? (
         <img
-          src={tour.photo.url}
+          src={photo.url}
           alt={tour.title}
-          onError={() => setFailed(true)}
+          onError={() => setFailed(previous => [...previous, photo.url])}
           loading="lazy"
         />
       ) : (

@@ -16,6 +16,8 @@ import {
   getSavedTours,
   toggleSaveTourOffline,
 } from "../lib/supabase";
+import { getTourPhotos } from "../lib/photos";
+import { Images } from "lucide-react";
 import BeachPhoto from "./BeachPhoto";
 import OriginPicker from "./OriginPicker";
 import { BEACHES, LODGINGS } from "../data/beachCatalog";
@@ -220,7 +222,7 @@ export default function ToursView({
         )}
         {onlySaved && (
           <p className="catalog-context">
-            Seus guias ficam neste navegador. O fundo do mapa e as fotos
+            Os passeios salvos ficam neste navegador. O fundo do mapa e as fotos
             precisam de conexão.
           </p>
         )}
@@ -259,6 +261,7 @@ export default function ToursView({
                   className={`beach-card ${place.photo ? "has-photo" : "without-photo"}`}
                 >
                   <div className="beach-card-visual">
+                    {getTourPhotos(place).length > 1 && <span className="card-photo-count"><Images size={13}/>{getTourPhotos(place).length} fotos</span>}
                     <BeachPhoto tour={place} className="beach-card-photo" />
                     <span className="beach-location">
                       <MapPin size={13} />
@@ -295,7 +298,7 @@ export default function ToursView({
                       ) : (
                         <span>
                           <Compass size={14} />
-                          Explore o guia do lugar
+                          Conheça esse lugar
                         </span>
                       )}
                       {place.essentials?.[0] && (
@@ -326,7 +329,7 @@ export default function ToursView({
                 </h3>
                 <p>
                   {onlySaved
-                    ? "Toque no marcador de uma praia para guardar o guia."
+                    ? "Toque no marcador de uma praia para salvar o passeio."
                     : "Tente outro nome ou escolha outra região."}
                 </p>
                 {onlySaved && (
@@ -341,32 +344,7 @@ export default function ToursView({
             )}
           </>
         )}
-        <details className="photo-attributions">
-          <summary>Créditos das fotografias</summary>
-          <div>
-            {BEACHES.filter((i) => i.photo).map((i) => (
-              <p key={i.id}>
-                {i.title}:{" "}
-                <a
-                  href={i.photo.source}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {i.photo.author}
-                </a>{" "}
-                ·{" "}
-                <a
-                  href={i.photo.licenseUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {i.photo.license}
-                </a>{" "}
-                · enquadramento de exibição
-              </p>
-            ))}
-          </div>
-        </details>
+
       </section>
     </div>
   );

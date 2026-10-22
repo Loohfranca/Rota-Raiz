@@ -354,7 +354,7 @@ export default function MapView({
                   className="button button-primary"
                   onClick={() => onOpenTour(selected)}
                 >
-                  Ver guia e acessos <ArrowRight size={18} />
+                  Conhecer e ver acessos <ArrowRight size={18} />
                 </button>
               )}
               <button

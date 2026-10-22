@@ -1,5 +1,6 @@
 import React from "react";
 import { Compass, WifiOff, Leaf } from "lucide-react";
+import PhotoCredits from "./PhotoCredits";
 import { TABS } from "./BottomNav";
 export default function Navbar({ activeTab, onChangeTab, isOnline }) {
   return (
@@ -30,13 +31,14 @@ export default function Navbar({ activeTab, onChangeTab, isOnline }) {
             </button>
           ))}
         </nav>
+        <div className="nav-status-actions"><PhotoCredits/>
         <span
           className={`connection-status ${!isOnline ? "is-offline" : ""}`}
           role="status"
         >
           {isOnline ? <Leaf size={16} /> : <WifiOff size={16} />}
           <span>{isOnline ? "Vá no seu ritmo" : "Sem conexão"}</span>
-        </span>
+        </span></div>
       </div>
     </header>
   );

@@ -4,13 +4,11 @@ import {
   Waves,
   MapPin,
   Bookmark,
-  Map as MapIcon,
   ArrowUpRight,
   Coffee,
-  ChevronDown,
 } from "lucide-react";
 import AccessGuide from "./AccessGuide";
-import BeachPhoto from "./BeachPhoto";
+import PhotoGallery from "./PhotoGallery";
 import { getSavedTours, toggleSaveTourOffline } from "../lib/supabase";
 export default function TourDetailView({
   tour,
@@ -33,14 +31,6 @@ export default function TourDetailView({
       setError("Não foi possível salvar neste aparelho.");
     }
   };
-  const sources = [
-    ...new Map(
-      [...(tour.guide_sources || []), ...(tour.sources || [])].map((s) => [
-        s.url,
-        s,
-      ]),
-    ).values(),
-  ];
   return (
     <div className="tour-detail">
       <div className="detail-topbar">
@@ -54,35 +44,10 @@ export default function TourDetailView({
           aria-pressed={saved}
         >
           <Bookmark size={17} fill={saved ? "currentColor" : "none"} />
-          {saved ? "Guia salvo" : "Salvar guia"}
+          {saved ? "Passeio salvo" : "Salvar passeio"}
         </button>
       </div>
-      <div className="detail-hero">
-        <BeachPhoto tour={tour} className="detail-photo" />
-        <button
-          className="photo-map-button"
-          onClick={() => onOpenMapWithTour(tour)}
-        >
-          <MapIcon size={18} />
-          Ver no mapa <ArrowUpRight size={16} />
-        </button>
-      </div>
-      {tour.photo && (
-        <p className="photo-credit">
-          <a href={tour.photo.source} target="_blank" rel="noopener noreferrer">
-            {tour.photo.author}
-          </a>{" "}
-          ·{" "}
-          <a
-            href={tour.photo.licenseUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {tour.photo.license}
-          </a>{" "}
-          · foto enquadrada
-        </p>
-      )}
+      <PhotoGallery key={tour.id} tour={tour} onOpenMap={() => onOpenMapWithTour(tour)} />
       <header className="detail-intro">
         <p className="eyebrow">
           <MapPin size={14} />
@@ -143,42 +108,7 @@ export default function TourDetailView({
           {error}
         </p>
       )}
-      <details className="guide-sources">
-        <summary>
-          Sobre este guia e fontes <ChevronDown size={17} />
-        </summary>
-        <div>
-          {tour.history && <p>{tour.history}</p>}
-          {sources.map((s) => (
-            <a
-              key={s.url}
-              href={s.url}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {s.title}
-              <ArrowUpRight size={14} />
-            </a>
-          ))}
-          <a
-            href="https://www.ba.gov.br/inema/iniciativas/qualidade-das-praias"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Balneabilidade · Inema
-            <ArrowUpRight size={14} />
-          </a>
-          <p>
-            Distâncias e tempos se referem ao ponto de saída indicado. Preços
-            são referências; confirme no dia. A maré não é atualizada em tempo
-            real.
-          </p>
-          <p>
-            O guia salvo guarda os textos neste navegador. Fotos e fundo do mapa
-            precisam de conexão.
-          </p>
-        </div>
-      </details>
+
     </div>
   );
 }
