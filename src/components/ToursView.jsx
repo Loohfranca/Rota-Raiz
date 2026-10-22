@@ -14,16 +14,19 @@ import {
   Navigation,
   ArrowRight
 } from 'lucide-react';
-import { getPlaces } from '../lib/supabase';
+import { getPlaces, getStops, getCities } from '../lib/supabase';
+import PlaceInput from './PlaceInput';
 import { toggleSaveTourOffline, getOfflineStorage } from '../lib/supabase';
 import { haversineDistance } from '../lib/router';
 
 export default function ToursView({
-  currentLocation,
-  onOpenChangeCity,
+  home,
+  onChangeHome,
   onSelectTour
 }) {
   const [places, setPlaces] = useState([]);
+  const [stops, setStops] = useState([]);
+  const [cities, setCities] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todos');
   const { tours: savedTours } = getOfflineStorage();
@@ -33,8 +36,10 @@ export default function ToursView({
 
   useEffect(() => {
     async function loadPlacesData() {
-      const data = await getPlaces();
+      const [data, stopsData, citiesData] = await Promise.all([getPlaces(), getStops(), getCities()]);
       setPlaces(data);
+      setStops(stopsData);
+      setCities(citiesData);
     }
     loadPlacesData();
   }, []);
@@ -72,33 +77,27 @@ export default function ToursView({
           Passeios & Atrativos Naturais
         </h1>
         <p className="text-xs sm:text-sm text-[#59413b] mt-0.5">
-          Distâncias reais, horários de tábua de marés e transporte raiz sem intermediários.
+          Praias e atrativos com a distância a partir de onde você está.
         </p>
       </section>
 
-      {/* Base Location Reference Strip */}
-      <section className="p-3.5 rounded-2xl bg-[#ffffff] border border-[#e0d5c1] shadow-xs flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-9 h-9 rounded-xl bg-[#f7ece2] text-[#c2461f] flex items-center justify-center shrink-0 border border-[#e0d5c1]">
-            <MapPin size={18} />
-          </div>
-          <div className="flex flex-col min-w-0">
-            <span className="text-[10px] uppercase font-bold tracking-wider text-[#59413b]">
-              Ponto de Partida Base:
-            </span>
-            <span className="font-headline font-bold text-sm text-[#201b15] truncate">
-              {currentLocation?.name || 'Porto Seguro'}
-            </span>
-          </div>
-        </div>
-
-        <button
-          onClick={onOpenChangeCity}
-          type="button"
-          className="min-h-[44px] px-3.5 rounded-xl text-xs font-bold bg-[#f7ece2] hover:bg-[#ece1d7] text-[#c2461f] border border-[#e0d5c1] transition-colors shrink-0"
-        >
-          Mudar Base
-        </button>
+      {/* Base das distâncias: o usuário escolhe de onde mede */}
+      <section className="flex flex-col gap-1.5">
+        <PlaceInput
+          label="Distâncias a partir de"
+          value={home}
+          onChange={onChangeHome}
+          placeholder="Onde você está hospedado?"
+          stops={stops}
+          places={places}
+          cities={cities}
+          accent="#2f5d3a"
+        />
+        {!(home?.lat != null && home?.lng != null) && (
+          <p className="text-xs text-[#59413b] px-1">
+            Escolha um lugar da lista para ver os km até cada passeio.
+          </p>
+        )}
       </section>
 
       {/* Search and Category Filters */}
@@ -139,8 +138,8 @@ export default function ToursView({
       <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filteredPlaces.map((place) => {
           const isSaved = offlineSavedList.includes(place.id);
-          const distance = currentLocation?.lat && currentLocation?.lng
-            ? haversineDistance(currentLocation.lat, currentLocation.lng, place.lat, place.lng)
+          const distance = home?.lat != null && home?.lng != null
+            ? haversineDistance(home.lat, home.lng, place.lat, place.lng)
             : null;
 
           return (

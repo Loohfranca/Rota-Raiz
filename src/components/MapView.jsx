@@ -148,8 +148,7 @@ const createUserGpsIcon = () => {
 };
 
 export default function MapView({ 
-  currentRegion, 
-  currentLocation,
+  home,
   routeLegsToDraw, 
   onSelectPinRoute 
 }) {
@@ -179,11 +178,16 @@ export default function MapView({
     loadData();
   }, []);
 
-  // Coordenadas padrão da região (Porto Seguro / Litoral Sul)
-  const defaultCenter = [
-    currentRegion?.centerLat || -16.65,
-    currentRegion?.centerLng || -39.10
-  ];
+  // Centro do mapa: onde o usuário está; senão, o centro dos pontos cadastrados
+  const defaultCenter = React.useMemo(() => {
+    if (home?.lat != null && home?.lng != null) return [home.lat, home.lng];
+    if (stops.length > 0) {
+      const lat = stops.reduce((sum, st) => sum + st.lat, 0) / stops.length;
+      const lng = stops.reduce((sum, st) => sum + st.lng, 0) / stops.length;
+      return [lat, lng];
+    }
+    return [-14.2, -51.9]; // centro do Brasil enquanto os dados carregam
+  }, [home, stops]);
 
   // Extrair coordenadas da rota se houver `routeLegsToDraw`
   const activeRouteCoords = React.useMemo(() => {
@@ -234,17 +238,14 @@ export default function MapView({
       <section className="flex flex-col pt-1">
         <div className="flex items-center justify-between">
           <span className="text-[11px] font-bold uppercase tracking-wider text-[#c2461f]">
-            {currentRegion?.name || 'Litoral Sul da Bahia'}
-          </span>
-          <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-[#bbefc1] text-[#00210b]">
-            OpenStreetMap Sem API Key
+            Mapa
           </span>
         </div>
         <h1 className="font-headline font-bold text-2xl sm:text-3xl text-[#201b15] tracking-tight mt-0.5">
           Mapa de Conexões & Paradas
         </h1>
         <p className="text-xs sm:text-sm text-[#59413b] mt-0.5">
-          Terminais de balsa, pontos de van, paradas do ônibus Águia Azul e praias raiz.
+          Pontos de embarque e passeios cadastrados.
         </p>
       </section>
 
@@ -305,7 +306,7 @@ export default function MapView({
       )}
 
       {/* Leaflet Map Frame */}
-      <div className="w-full h-[460px] sm:h-[540px] rounded-3xl overflow-hidden shadow-xs border border-[#e0d5c1] relative bg-[#f7ece2]">
+      <div className="w-full h-[calc(100dvh-17rem)] min-h-[340px] sm:h-[540px] rounded-3xl overflow-hidden shadow-xs border border-[#e0d5c1] relative bg-[#f7ece2]">
         <MapContainer
           center={defaultCenter}
           zoom={10}
