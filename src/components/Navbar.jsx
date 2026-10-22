@@ -1,8 +1,9 @@
 import React from 'react';
 import { Compass, Database, Wifi, WifiOff } from 'lucide-react';
 import { TABS } from './BottomNav';
+import UserProfile from './UserProfile';
 
-export default function Navbar({ activeTab, onChangeTab, isOnline, dataSource }) {
+export default function Navbar({ activeTab, onChangeTab, isOnline, dataSource, user, onLogout }) {
   return (
     <header className="sticky top-0 z-40 w-full bg-[#FFF8F4]/95 backdrop-blur-md border-b border-[#E0D5C1]">
       <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between gap-3">
@@ -37,8 +38,12 @@ export default function Navbar({ activeTab, onChangeTab, isOnline, dataSource })
           })}
         </nav>
 
-        {/* Status real, discreto */}
-        <div className="flex items-center gap-2 shrink-0 text-xs font-bold">
+        {/* User Profile & Status */}
+        <div className="flex items-center gap-2 shrink-0">
+          {user && <UserProfile user={user} onLogout={onLogout} />}
+
+          {/* Status real, discreto */}
+          <div className="flex items-center gap-2 text-xs font-bold">
           <span
             title={isOnline ? 'Com internet' : 'Sem internet: usando dados salvos'}
             className={`flex items-center gap-1 ${isOnline ? 'text-[#2F5D3A]' : 'text-[#BA1A1A]'}`}
@@ -46,13 +51,14 @@ export default function Navbar({ activeTab, onChangeTab, isOnline, dataSource })
             {isOnline ? <Wifi size={16} /> : <WifiOff size={16} />}
             {!isOnline && <span>Offline</span>}
           </span>
-          <span
-            title={dataSource === 'supabase' ? 'Dados do Supabase' : 'Modo local (sem banco)'}
-            className="flex items-center gap-1 text-[#59413B]"
-          >
-            <Database size={15} className={dataSource === 'supabase' ? 'text-[#2F5D3A]' : 'text-[#E9B62F]'} />
-            <span className="hidden sm:inline">{dataSource === 'supabase' ? 'Banco' : 'Modo local'}</span>
-          </span>
+            <span
+              title={dataSource === 'supabase' ? 'Dados do Supabase' : 'Modo local (sem banco)'}
+              className="flex items-center gap-1 text-[#59413B]"
+            >
+              <Database size={15} className={dataSource === 'supabase' ? 'text-[#2F5D3A]' : 'text-[#E9B62F]'} />
+              <span className="hidden sm:inline">{dataSource === 'supabase' ? 'Banco' : 'Modo local'}</span>
+            </span>
+          </div>
         </div>
       </div>
     </header>

@@ -218,3 +218,125 @@ export const toggleSaveTourOffline = (tourId) => {
   localStorage.setItem('rotaraiz_saved_tours', JSON.stringify(updated));
   return updated.includes(tourId);
 };
+
+// ==============================================================================
+// AUTENTICAÇÃO COM SUPABASE + GOOGLE OAUTH
+// ==============================================================================
+
+/**
+ * Fazer login com Google via Supabase
+ * Retorna { user, session, error }
+ */
+export const signInWithGoogle = async () => {
+  if (!supabase) {
+    return { user: null, session: null, error: 'Supabase não está configurado' };
+  }
+
+  try {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: typeof window !== 'undefined'
+          ? `${window.location.origin}/auth/callback`
+          : undefined,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        },
+      },
+    });
+
+    if (error) {
+      console.error('Erro ao fazer login com Google:', error);
+      return { user: null, session: null, error: error.message };
+    }
+
+    return { user: data?.user, session: data?.session, error: null };
+  } catch (e) {
+    console.error('Erro na autenticação Google:', e);
+    return { user: null, session: null, error: e.message };
+  }
+};
+
+/**
+ * Fazer logout
+ */
+export const signOut = async () => {
+  if (!supabase) return false;
+
+  try {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error('Erro ao fazer logout:', error);
+      return false;
+    }
+    localStorage.removeItem('rotaraiz_user');
+    localStorage.removeItem('rotaraiz_user_session');
+    return true;
+  } catch (e) {
+    console.error('Erro no logout:', e);
+    return false;
+  }
+};
+
+/**
+ * Obter usuário atualmente logado
+ */
+export const getCurrentUser = async () => {
+  if (!supabase) return null;
+
+  try {
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data.user) {
+      return null;
+    }
+    return data.user;
+  } catch (e) {
+    console.error('Erro ao obter usuário:', e);
+    return null;
+  }
+};
+
+/**
+ * Obter sessão atual
+ */
+export const getSession = async () => {
+  if (!supabase) return null;
+
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    if (error || !data.session) {
+      return null;
+    }
+    return data.session;
+  } catch (e) {
+    console.error('Erro ao obter sessão:', e);
+    return null;
+  }
+};
+
+/**
+ * Listener para mudanças de estado de autenticação
+ * Retorna uma função para cancelar a inscrição
+ */
+export const onAuthStateChanged = (callback) => {
+  if (!supabase) return () => {};
+
+  const { data } = supabase.auth.onAuthStateChange((event, session) => {
+    const user = session?.user || null;
+
+    // Persistir usuário e sessão no localStorage
+    if (user) {
+      localStorage.setItem('rotaraiz_user', JSON.stringify(user));
+      localStorage.setItem('rotaraiz_user_session', JSON.stringify(session));
+    } else {
+      localStorage.removeItem('rotaraiz_user');
+      localStorage.removeItem('rotaraiz_user_session');
+    }
+
+    callback(user, event);
+  });
+
+  // Retornar função de cancelamento de inscrição
+  return () => data?.subscription?.unsubscribe?.();
+};
