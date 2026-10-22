@@ -83,7 +83,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5EDE1] flex flex-col text-[#201B15] overflow-x-hidden">
+    <div className="min-h-screen bg-[#F5EDE1] flex flex-col text-[#201B15]">
       <Navbar
         activeTab={activeTab}
         onChangeTab={handleTabChange}

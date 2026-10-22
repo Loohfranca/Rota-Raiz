@@ -229,7 +229,7 @@ export default function AdminView({ onBack }) {
     <div className="flex flex-col gap-5 max-w-5xl mx-auto w-full pb-12">
       {/* Toast Notification */}
       {notification && (
-        <div className="fixed top-4 right-4 z-50 bg-[#2f5d3a] text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-2 animate-fade-in text-xs font-bold">
+        <div className="fixed top-4 left-4 sm:left-auto right-4 z-50 bg-[#2f5d3a] text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-2 animate-fade-in text-xs font-bold">
           <CheckCircle2 size={18} />
           <span>{notification}</span>
         </div>
@@ -237,10 +237,10 @@ export default function AdminView({ onBack }) {
 
       {/* Top Header */}
       <header className="flex items-center justify-between gap-3 flex-wrap border-b border-[#e0d5c1] pb-3">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap min-w-0">
           <button
             onClick={onBack}
-            className="min-h-[40px] px-3 rounded-xl bg-white border border-[#e0d5c1] text-[#201b15] hover:bg-[#f7ece2] text-xs font-bold flex items-center gap-1.5 transition-colors"
+            className="min-h-[44px] px-3 rounded-xl bg-white border border-[#e0d5c1] text-[#201b15] hover:bg-[#f7ece2] text-xs font-bold flex items-center gap-1.5 transition-colors"
           >
             <ArrowLeft size={16} />
             <span>Voltar ao App</span>
@@ -255,10 +255,10 @@ export default function AdminView({ onBack }) {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap min-w-0">
           <button
             onClick={handleExportJson}
-            className="min-h-[40px] px-3 rounded-xl bg-white border border-[#e0d5c1] text-[#201b15] hover:bg-[#f7ece2] text-xs font-bold flex items-center gap-1.5"
+            className="min-h-[44px] px-3 rounded-xl bg-white border border-[#e0d5c1] text-[#201b15] hover:bg-[#f7ece2] text-xs font-bold flex items-center gap-1.5"
             title="Exportar backup dos dados em JSON"
           >
             <Download size={14} />
@@ -283,7 +283,7 @@ export default function AdminView({ onBack }) {
               });
               setIsAddingLeg(true);
             }}
-            className="min-h-[40px] px-4 rounded-xl bg-[#c2461f] text-white hover:bg-[#a02e06] text-xs font-bold flex items-center gap-1.5 shadow-xs"
+            className="min-h-[44px] px-4 rounded-xl bg-[#c2461f] text-white hover:bg-[#a02e06] text-xs font-bold flex items-center gap-1.5 shadow-xs"
           >
             <Plus size={16} />
             <span>Novo Trecho</span>
@@ -291,7 +291,7 @@ export default function AdminView({ onBack }) {
 
           <button
             onClick={handleLogout}
-            className="min-h-[40px] px-3 rounded-xl bg-white border border-[#e0d5c1] text-red-600 hover:bg-red-50 text-xs font-bold"
+            className="min-h-[44px] px-3 rounded-xl bg-white border border-[#e0d5c1] text-red-600 hover:bg-red-50 text-xs font-bold"
           >
             Sair
           </button>
@@ -456,7 +456,7 @@ export default function AdminView({ onBack }) {
               />
             </div>
 
-            <div className="sm:col-span-2 flex items-center justify-between gap-2 pt-2">
+            <div className="sm:col-span-2 flex flex-wrap items-center justify-between gap-2 pt-2">
               <label className="flex items-center gap-2 text-xs font-bold text-[#201b15] cursor-pointer">
                 <input
                   type="checkbox"
@@ -565,7 +565,7 @@ export default function AdminView({ onBack }) {
                       <button
                         onClick={() => handleConfirmLeg(leg.id)}
                         type="button"
-                        className="min-h-[36px] px-3 rounded-lg bg-[#2f5d3a] hover:bg-[#22502e] text-white text-xs font-bold flex items-center gap-1 transition-colors"
+                        className="min-h-[44px] px-3 rounded-lg bg-[#2f5d3a] hover:bg-[#22502e] text-white text-xs font-bold flex items-center gap-1 transition-colors"
                       >
                         <Check size={14} />
                         <span>Confirmado hoje</span>
@@ -575,7 +575,7 @@ export default function AdminView({ onBack }) {
                     <button
                       onClick={() => handleEditLeg(leg)}
                       type="button"
-                      className="min-h-[36px] px-3 rounded-lg bg-[#f7ece2] hover:bg-[#ece1d7] text-[#201b15] text-xs font-bold transition-colors"
+                      className="min-h-[44px] px-3 rounded-lg bg-[#f7ece2] hover:bg-[#ece1d7] text-[#201b15] text-xs font-bold transition-colors"
                     >
                       Editar
                     </button>
