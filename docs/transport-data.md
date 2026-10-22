@@ -53,3 +53,5 @@ Preços consultados: Routes Compute Routes Essentials, 10.000 eventos gratuitos/
 - Fontes de lugares: Visit Salvador da Bahia e Turismo João Pessoa (prefeitura); URLs individuais em tripPlaces.json. Fotos e licenças em photoGalleries.json e em Sobre as fotos.
 - Bicicleta é uma consulta externa por Google Maps, sujeita à cobertura. Sem rota retornada e verificada, não exibir km/tempo ou afirmar existência de ciclovia contínua. Nas praias novas, o modo mantém a origem real do viajante.
 - Mapas/transportes nacionais continuam sem um provedor integrado de rotas. Dados de voos, tarifas, vagas e partidas ao vivo não foram integrados por esta alteração.
+
+Validação visual desta alteração: formulário real em iframe de 320, 390 e 768 px, sem rolagem horizontal; nome completo do aeroporto SSA visível. Conferidos seleção offline dos cinco aeroportos, descoberta automática após escolher SSA/JPA, filtros, foto de Itapuã/Cabo Branco, modo bicicleta com origem preservada e referência 507. A página temporária de conferência foi removida após o teste.

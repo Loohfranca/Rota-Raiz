@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
   ArrowUpDown,
+  Navigation,
   ArrowRight,
   Clock,
   Coins,
@@ -199,7 +200,7 @@ export default function RoutesView({
       <div className="routes-layout">
         <div className="routes-primary">
           <section className="route-search-card" aria-label="Escolha sua viagem">
-            <div className="route-form-actions"><button type="button" onClick={handleGps} disabled={gpsLoading}><Footprints size={16}/>{gpsLoading?'Localizando…':'Usar localização'}</button><button type="button" onClick={handleSwap} aria-label="Inverter origem e destino"><ArrowUpDown size={16}/>Inverter</button></div>
+            <div className="route-form-actions"><button type="button" onClick={handleGps} disabled={gpsLoading}><Navigation size={16}/>{gpsLoading?'Localizando…':'Usar localização'}</button><button type="button" onClick={handleSwap} aria-label="Inverter origem e destino"><ArrowUpDown size={16}/>Inverter</button></div>
             <div className="route-fields">
               <PlaceInput
                 label="Origem"

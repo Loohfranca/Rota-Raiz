@@ -176,7 +176,7 @@ export default function ToursView({
           <div
             className="region-filters"
             role="group"
-            aria-label="Região das praias"
+            aria-label="Região dos lugares"
           >
             {[
               { id: "auto", name: "Perto de mim" },
@@ -202,7 +202,7 @@ export default function ToursView({
               aria-label="Buscar praia"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Encontre uma praia…"
+              placeholder="Praia ou lugar…"
             />
             {query && (
               <button
