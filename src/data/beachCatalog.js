@@ -1,3 +1,4 @@
+import tripPlaces from './tripPlaces.json';
 import { BEACH_GUIDES } from './beachGuides.js';
 // Catálogo pesquisado em 21/10/2026. Coordenadas são referências, não garantia de acesso.
 export const BEACHES = [
@@ -349,7 +350,7 @@ export const BEACHES = [
     "coordinate_note": "Ponto de referência da praia no OpenStreetMap; confirme o acesso público no mapa.",
     "reviewed_at": "2026-10-21"
   }
-].map(item => ({...item, ...BEACH_GUIDES[item.id]}));
+].map(item => ({...item, ...BEACH_GUIDES[item.id]})).concat(tripPlaces);
 export const LODGINGS = [
   {
     "id": "eco-glamping-caraiva",

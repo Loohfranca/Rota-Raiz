@@ -42,3 +42,14 @@ Documentação técnica consultada:
 - https://ai.google.dev/gemini-api/docs/pricing
 
 Preços consultados: Routes Compute Routes Essentials, 10.000 eventos gratuitos/mês e US$5/1.000 na primeira faixa paga. Recursos Pro/Enterprise e outros SKUs mudam a conta. Exemplo isolado: 15.000 requisições Essentials/mês = US$25 além da franquia, sem outros serviços/impostos/câmbio. Gemini Flash-Lite: entrada US$0,10 e saída US$0,40 por milhão de tokens na tabela Standard; grounding/busca tem franquias e cobrança próprias. Nada disso comprova cobertura de transporte em Caraíva.
+
+## Ampliação do roteiro e campos móveis — 22/10/2026
+
+- Aeroportos pesquisáveis offline por nome/código: BPS, SSA, JPA (Bayeux), GIG e SDU. São locais selecionáveis, não uma rota predefinida. Origem e destino continuam livres.
+- Catálogo: cinco praias em Salvador (Porto da Barra, Farol da Barra, Itapuã, Stella Maris e Flamengo), Pelourinho e Elevador Lacerda; Tambaú, Cabo Branco, Bessa e Farol do Cabo Branco em João Pessoa. Fotos reais licenciadas, referências geográficas aproximadas para descoberta e instruções próprias.
+- Não foram cadastrados preços ou horários como vigentes sem verificação. Linhas 507/510 em João Pessoa são referências para conferir desde a origem, não percursos completos a partir de qualquer endereço. Fonte Semob: https://servicos.semobjp.pb.gov.br/linhas-de-onibus/ e https://portal.semobjp.pb.gov.br/2025/12/semob-jp-define-planos-especiais-de-transito-e-transporte-para-os-shows-de-frei-gilson-e-convidados/.
+- SSA: operador do aeroporto e Metrô Bahia publicam shuttle gratuito até a Estação Aeroporto da Linha 2; isso não é metrô direto para cada praia. https://www.salvador-airport.com.br/index.php/pt-br/como-chegar-ao-aeroporto e https://trilhos.motiva.com.br/metrobahia/linha-2---azul/aeroporto/.
+- JPA: Aena informa linha 5601, embarque na Asa Sul; o aeroporto está em Bayeux. Não prometemos atendimento de todo voo ou ligação direta à praia. https://www.aenabrasil.com.br/pt/aeroportos/aeroporto-internacional-de-joao-pessoa-presidente-castro-pinto/Como-chegar.html.
+- Fontes de lugares: Visit Salvador da Bahia e Turismo João Pessoa (prefeitura); URLs individuais em tripPlaces.json. Fotos e licenças em photoGalleries.json e em Sobre as fotos.
+- Bicicleta é uma consulta externa por Google Maps, sujeita à cobertura. Sem rota retornada e verificada, não exibir km/tempo ou afirmar existência de ciclovia contínua. Nas praias novas, o modo mantém a origem real do viajante.
+- Mapas/transportes nacionais continuam sem um provedor integrado de rotas. Dados de voos, tarifas, vagas e partidas ao vivo não foram integrados por esta alteração.

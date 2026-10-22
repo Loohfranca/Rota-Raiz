@@ -78,17 +78,17 @@ export default function TourDetailView({
               <Waves size={23} />
             </span>
             <p className="eyebrow">Antes de sair</p>
-            <h2>De olho na maré</h2>
+            <h2>{tour.category === "Cultura" ? "Antes de visitar" : "De olho na maré"}</h2>
             <p>
-              {tour.tide_note || "Consulte a maré e os acessos antes de sair."}
+              {tour.category === "Cultura" ? "Confira horários de visita, acessibilidade e eventuais ingressos antes de sair." : (tour.tide_note || "Consulte a maré e os acessos antes de sair.")}
             </p>
-            <a
+            {tour.category !== "Cultura" && <a
               href="https://www.marinha.mil.br/chm/dados-do-segnav-publicacoes/tabuas-das-mares"
               target="_blank"
               rel="noopener noreferrer"
             >
               Consultar a tábua <ArrowUpRight size={16} />
-            </a>
+            </a>}
           </section>
           <section className="travel-note">
             <span className="note-icon">

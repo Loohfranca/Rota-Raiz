@@ -1,6 +1,8 @@
 import { haversineDistance, normalizeText } from './router.js';
 import { hasCoordinates } from './walking.js';
 export const REGIONS = [
+  {id:'salvador',name:'Salvador',lat:-12.974,lng:-38.513},
+  {id:'joao-pessoa',name:'João Pessoa',lat:-7.1195,lng:-34.845},
   { id: 'caraiva', name: 'Caraíva', lat: -16.8102, lng: -39.1454 },
   { id: 'arraial-dajuda', name: "Arraial d’Ajuda", lat: -16.492, lng: -39.073 },
   { id: 'porto-seguro', name: 'Porto Seguro', lat: -16.436, lng: -39.064 },

@@ -1,3 +1,4 @@
+import { TRAVEL_CITIES } from '../data/travelNetwork';
 import { BEACHES } from '../data/beachCatalog';
 import { createClient } from '@supabase/supabase-js';
 import { CITIES, STOPS, OPERATORS, LEGS, PLACES } from '../data/seedData';
@@ -118,7 +119,7 @@ export const getOperators = async () => {
 
 // Buscar cidades
 export const getCities = async () => {
-  return CITIES;
+  return [...CITIES, ...TRAVEL_CITIES];
 };
 
 // ==============================================================================

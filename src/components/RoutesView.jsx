@@ -18,6 +18,8 @@ import PageHeading from "./PageHeading";
 import AirportJourney from "./AirportJourney";
 import { getAirportJourney } from "../data/airportJourney";
 import JourneyLookup from "./JourneyLookup";
+import AirportAccess from "./AirportAccess";
+import { AIRPORTS } from "../data/travelNetwork";
 
 const MODE_LABEL = {
   ferry: "Balsa",
@@ -76,7 +78,7 @@ export default function RoutesView({
   // Destino enviado por outra tela (Mapa ou Passeios)
   useEffect(() => {
     if (initialDestination) {
-      setDest({ name: initialDestination });
+      setDest(typeof initialDestination === "string" ? { name: initialDestination } : initialDestination);
       setResult(null);
     }
   }, [initialDestination]);
@@ -191,51 +193,38 @@ export default function RoutesView({
     <div className="routes-page">
       <PageHeading
         eyebrow="De um lugar ao outro"
-        title="A viagem começa"
-        accent="no caminho."
-        description="Escolha de onde sair e aonde chegar. A viagem é sua."
+        title="Como chegar"
+        description="Escolha sua origem e seu próximo destino."
       />
       <div className="routes-layout">
         <div className="routes-primary">
           <section className="route-search-card" aria-label="Escolha sua viagem">
-            <div className="relative flex flex-col gap-2.5">
+            <div className="route-form-actions"><button type="button" onClick={handleGps} disabled={gpsLoading}><Footprints size={16}/>{gpsLoading?'Localizando…':'Usar localização'}</button><button type="button" onClick={handleSwap} aria-label="Inverter origem e destino"><ArrowUpDown size={16}/>Inverter</button></div>
+            <div className="route-fields">
               <PlaceInput
-                label="De onde você sai"
+                label="Origem"
                 value={origin}
                 onChange={changeOrigin}
                 placeholder="Endereço, bairro ou cidade de saída"
                 stops={stops}
-                places={places}
+                places={[...places, ...AIRPORTS]}
                 cities={cities}
                 accent="#c2461f"
-                onGps={handleGps}
-                gpsLoading={gpsLoading}
               />
 
-              <div className="flex justify-center -my-1.5 relative z-10">
-                <button
-                  type="button"
-                  onClick={handleSwap}
-                  aria-label="Inverter origem e destino"
-                  className="w-11 h-11 rounded-full bg-[#f7ece2] text-[#201b15] flex items-center justify-center border border-[#e0d5c1] shadow-xs active:rotate-180 transition-transform"
-                >
-                  <ArrowUpDown size={18} />
-                </button>
-              </div>
-
               <PlaceInput
-                label="Para onde você vai"
+                label="Destino"
                 value={dest}
                 onChange={changeDest}
                 placeholder="Endereço, praia, aeroporto ou cidade"
                 stops={stops}
-                places={places}
+                places={[...places, ...AIRPORTS]}
                 cities={cities}
                 accent="#2f5d3a"
               />
             </div>
 
-            <p className="route-search-hint">Digite qualquer origem e destino. Para localizar um endereço no mapa, use a lupa do campo.</p>
+
             {formError && (
               <p className="text-sm text-[#ba1a1a] flex items-center gap-1.5">
                 <AlertCircle size={16} className="shrink-0" />
@@ -254,6 +243,7 @@ export default function RoutesView({
           </section>
         </div>
         <div className="routes-results">
+          {result && <AirportAccess origin={origin} destination={dest} />}
           {result?.curated && <AirportJourney journey={result.curated} />}
           {/* Resultado */}
           {result && result.found && option && (

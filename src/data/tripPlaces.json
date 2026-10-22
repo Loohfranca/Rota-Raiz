@@ -1,0 +1,961 @@
+[
+  {
+    "id": "ssa-porto-barra",
+    "title": "Praia do Porto da Barra",
+    "region": "salvador",
+    "city_id": "salvador",
+    "location": "Salvador, BA",
+    "category": "Praias",
+    "lat": -13.003,
+    "lng": -38.5328,
+    "coordinate_note": "Coordenada aproximada para descobrir a região; confirme o acesso público no mapa.",
+    "subtitle": "Uma enseada entre os fortes de Santa Maria e São Diogo.",
+    "description": "A praia está ligada à história de Salvador e permite combinar mar, fortes e caminhada até o Farol.",
+    "history": "A praia está ligada à história de Salvador e permite combinar mar, fortes e caminhada até o Farol.",
+    "highlights": [
+      "Acesso urbano",
+      "Compare desde sua origem"
+    ],
+    "facilities": "Confira os serviços no trecho escolhido e combine seu retorno. A estrutura varia entre os acessos da praia.",
+    "tide_note": "Consulte condições locais e maré; nenhuma condição de banho atual foi verificada pelo app.",
+    "sources": [
+      {
+        "title": "Turismo local",
+        "url": "https://www.salvadordabahia.com/experiencias/praia-do-porto-da-barra/"
+      }
+    ],
+    "reviewed_at": "2026-10-22",
+    "access_options": [
+      {
+        "id": "walk",
+        "title": "A pé",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Sem tarifa de transporte",
+        "steps": [
+          "Chegue pela Avenida Sete de Setembro e acesse a areia junto aos fortes.",
+          "Calcule a caminhada desde a sua origem; distâncias do catálogo são em linha reta."
+        ],
+        "note": ""
+      },
+      {
+        "id": "transit",
+        "title": "Ônibus / metrô",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Consulte valores e disponibilidade",
+        "steps": [
+          "A linha depende de sua origem; consulte os pontos de embarque e desembarque antes de sair. Não há linha selecionada automaticamente para este percurso.",
+          "Confira o último retorno e possíveis trocas; consulte o trajeto com sua origem real."
+        ],
+        "note": ""
+      },
+      {
+        "id": "bike",
+        "title": "Bicicleta",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Considere eventual aluguel da bicicleta",
+        "steps": [
+          "A orla liga o Porto ao Farol da Barra; use os trechos sinalizados para bicicletas.",
+          "O modo bicicleta consulta um planejador externo. Só siga por vias permitidas e respeite a sinalização."
+        ],
+        "note": ""
+      },
+      {
+        "id": "road",
+        "title": "Táxi / carro",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Consulte valores e disponibilidade",
+        "steps": [
+          "Escolha um ponto de desembarque em via pública próximo ao acesso.",
+          "Confira a cotação e o ponto de retorno antes de iniciar a viagem."
+        ],
+        "note": ""
+      }
+    ]
+  },
+  {
+    "id": "ssa-farol-barra",
+    "title": "Praia do Farol da Barra",
+    "region": "salvador",
+    "city_id": "salvador",
+    "location": "Salvador, BA",
+    "category": "Praias",
+    "lat": -13.0091,
+    "lng": -38.5293,
+    "coordinate_note": "Coordenada aproximada para descobrir a região; confirme o acesso público no mapa.",
+    "subtitle": "Farol, museu e passeio pela orla da Barra.",
+    "description": "O Forte de Santo Antônio da Barra abriga o Museu Náutico. Os trechos da praia mudam de aspecto com a maré.",
+    "history": "O Forte de Santo Antônio da Barra abriga o Museu Náutico. Os trechos da praia mudam de aspecto com a maré.",
+    "highlights": [
+      "Acesso urbano",
+      "Compare desde sua origem"
+    ],
+    "facilities": "Confira os serviços no trecho escolhido e combine seu retorno. A estrutura varia entre os acessos da praia.",
+    "tide_note": "Consulte condições locais e maré; nenhuma condição de banho atual foi verificada pelo app.",
+    "sources": [
+      {
+        "title": "Turismo local",
+        "url": "https://www.salvadordabahia.com/experiencias/praia-do-farol-da-barra/"
+      }
+    ],
+    "reviewed_at": "2026-10-22",
+    "access_options": [
+      {
+        "id": "walk",
+        "title": "A pé",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Sem tarifa de transporte",
+        "steps": [
+          "Siga pelo calçadão da Avenida Oceânica até o Farol.",
+          "Calcule a caminhada desde a sua origem; distâncias do catálogo são em linha reta."
+        ],
+        "note": ""
+      },
+      {
+        "id": "transit",
+        "title": "Ônibus / metrô",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Consulte valores e disponibilidade",
+        "steps": [
+          "A linha depende de sua origem; consulte os pontos de embarque e desembarque antes de sair. Não há linha selecionada automaticamente para este percurso.",
+          "Confira o último retorno e possíveis trocas; consulte o trajeto com sua origem real."
+        ],
+        "note": ""
+      },
+      {
+        "id": "bike",
+        "title": "Bicicleta",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Considere eventual aluguel da bicicleta",
+        "steps": [
+          "A orla da Barra tem ciclovia; respeite os acessos e a circulação de pedestres.",
+          "O modo bicicleta consulta um planejador externo. Só siga por vias permitidas e respeite a sinalização."
+        ],
+        "note": ""
+      },
+      {
+        "id": "road",
+        "title": "Táxi / carro",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Consulte valores e disponibilidade",
+        "steps": [
+          "Escolha um ponto de desembarque em via pública próximo ao acesso.",
+          "Confira a cotação e o ponto de retorno antes de iniciar a viagem."
+        ],
+        "note": ""
+      }
+    ]
+  },
+  {
+    "id": "ssa-itapua",
+    "title": "Praia de Itapuã",
+    "region": "salvador",
+    "city_id": "salvador",
+    "location": "Salvador, BA",
+    "category": "Praias",
+    "lat": -12.9544,
+    "lng": -38.3629,
+    "coordinate_note": "Coordenada aproximada para descobrir a região; confirme o acesso público no mapa.",
+    "subtitle": "Farol, pescadores e identidade musical baiana.",
+    "description": "O bairro reúne a Sereia de Itapuã, a tradição dos pescadores e o farol que marca a paisagem.",
+    "history": "O bairro reúne a Sereia de Itapuã, a tradição dos pescadores e o farol que marca a paisagem.",
+    "highlights": [
+      "Acesso urbano",
+      "Compare desde sua origem"
+    ],
+    "facilities": "Confira os serviços no trecho escolhido e combine seu retorno. A estrutura varia entre os acessos da praia.",
+    "tide_note": "Consulte condições locais e maré; nenhuma condição de banho atual foi verificada pelo app.",
+    "sources": [
+      {
+        "title": "Turismo local",
+        "url": "https://www.salvadordabahia.com/experiencias/praia-de-itapua/"
+      }
+    ],
+    "reviewed_at": "2026-10-22",
+    "access_options": [
+      {
+        "id": "walk",
+        "title": "A pé",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Sem tarifa de transporte",
+        "steps": [
+          "Escolha o acesso na orla de Itapuã ou na região do farol; são trechos distintos da mesma praia.",
+          "Calcule a caminhada desde a sua origem; distâncias do catálogo são em linha reta."
+        ],
+        "note": ""
+      },
+      {
+        "id": "transit",
+        "title": "Ônibus / metrô",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Consulte valores e disponibilidade",
+        "steps": [
+          "A linha depende de sua origem; consulte os pontos de embarque e desembarque antes de sair. Não há linha selecionada automaticamente para este percurso.",
+          "Confira o último retorno e possíveis trocas; consulte o trajeto com sua origem real."
+        ],
+        "note": ""
+      },
+      {
+        "id": "bike",
+        "title": "Bicicleta",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Considere eventual aluguel da bicicleta",
+        "steps": [
+          "Confira a continuidade da ciclovia desde sua origem; não confunda pedalar no bairro com trajeto seguro desde o aeroporto.",
+          "O modo bicicleta consulta um planejador externo. Só siga por vias permitidas e respeite a sinalização."
+        ],
+        "note": ""
+      },
+      {
+        "id": "road",
+        "title": "Táxi / carro",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Consulte valores e disponibilidade",
+        "steps": [
+          "Escolha um ponto de desembarque em via pública próximo ao acesso.",
+          "Confira a cotação e o ponto de retorno antes de iniciar a viagem."
+        ],
+        "note": ""
+      }
+    ]
+  },
+  {
+    "id": "ssa-stella",
+    "title": "Praia de Stella Maris",
+    "region": "salvador",
+    "city_id": "salvador",
+    "location": "Salvador, BA",
+    "category": "Praias",
+    "lat": -12.939,
+    "lng": -38.332,
+    "coordinate_note": "Coordenada aproximada para descobrir a região; confirme o acesso público no mapa.",
+    "subtitle": "Faixa de areia extensa e ondas no litoral norte.",
+    "description": "Stella Maris fica na região próxima ao aeroporto, com hospedagens e serviços em diferentes acessos da orla.",
+    "history": "Stella Maris fica na região próxima ao aeroporto, com hospedagens e serviços em diferentes acessos da orla.",
+    "highlights": [
+      "Acesso urbano",
+      "Compare desde sua origem"
+    ],
+    "facilities": "Confira os serviços no trecho escolhido e combine seu retorno. A estrutura varia entre os acessos da praia.",
+    "tide_note": "Consulte condições locais e maré; nenhuma condição de banho atual foi verificada pelo app.",
+    "sources": [
+      {
+        "title": "Turismo local",
+        "url": "https://www.salvadordabahia.com/experiencias/praia-de-stella-maris/"
+      }
+    ],
+    "reviewed_at": "2026-10-22",
+    "access_options": [
+      {
+        "id": "walk",
+        "title": "A pé",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Sem tarifa de transporte",
+        "steps": [
+          "Escolha um acesso público no bairro de Stella Maris e confira a distância até o trecho desejado.",
+          "Calcule a caminhada desde a sua origem; distâncias do catálogo são em linha reta."
+        ],
+        "note": ""
+      },
+      {
+        "id": "transit",
+        "title": "Ônibus / metrô",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Consulte valores e disponibilidade",
+        "steps": [
+          "A linha depende de sua origem; consulte os pontos de embarque e desembarque antes de sair. Não há linha selecionada automaticamente para este percurso.",
+          "Confira o último retorno e possíveis trocas; consulte o trajeto com sua origem real."
+        ],
+        "note": ""
+      },
+      {
+        "id": "bike",
+        "title": "Bicicleta",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Considere eventual aluguel da bicicleta",
+        "steps": [
+          "Consulte as ruas de acesso e a infraestrutura cicloviária; não há percurso contínuo verificado no app.",
+          "O modo bicicleta consulta um planejador externo. Só siga por vias permitidas e respeite a sinalização."
+        ],
+        "note": ""
+      },
+      {
+        "id": "road",
+        "title": "Táxi / carro",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Consulte valores e disponibilidade",
+        "steps": [
+          "Escolha um ponto de desembarque em via pública próximo ao acesso.",
+          "Confira a cotação e o ponto de retorno antes de iniciar a viagem."
+        ],
+        "note": ""
+      }
+    ]
+  },
+  {
+    "id": "ssa-flamengo",
+    "title": "Praia do Flamengo",
+    "region": "salvador",
+    "city_id": "salvador",
+    "location": "Salvador, BA",
+    "category": "Praias",
+    "lat": -12.924,
+    "lng": -38.312,
+    "coordinate_note": "Coordenada aproximada para descobrir a região; confirme o acesso público no mapa.",
+    "subtitle": "Coqueiros e barracas no litoral norte de Salvador.",
+    "description": "A praia fica perto da divisa com Lauro de Freitas. Seus acessos e barracas se distribuem ao longo da faixa de areia.",
+    "history": "A praia fica perto da divisa com Lauro de Freitas. Seus acessos e barracas se distribuem ao longo da faixa de areia.",
+    "highlights": [
+      "Acesso urbano",
+      "Compare desde sua origem"
+    ],
+    "facilities": "Confira os serviços no trecho escolhido e combine seu retorno. A estrutura varia entre os acessos da praia.",
+    "tide_note": "Consulte condições locais e maré; nenhuma condição de banho atual foi verificada pelo app.",
+    "sources": [
+      {
+        "title": "Turismo local",
+        "url": "https://www.salvadordabahia.com/experiencias/loro-flamengo/"
+      }
+    ],
+    "reviewed_at": "2026-10-22",
+    "access_options": [
+      {
+        "id": "walk",
+        "title": "A pé",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Sem tarifa de transporte",
+        "steps": [
+          "Defina o acesso na Praia do Flamengo, em Salvador; existe praia homônima no Rio de Janeiro.",
+          "Calcule a caminhada desde a sua origem; distâncias do catálogo são em linha reta."
+        ],
+        "note": ""
+      },
+      {
+        "id": "transit",
+        "title": "Ônibus / metrô",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Consulte valores e disponibilidade",
+        "steps": [
+          "A linha depende de sua origem; consulte os pontos de embarque e desembarque antes de sair. Não há linha selecionada automaticamente para este percurso.",
+          "Confira o último retorno e possíveis trocas; consulte o trajeto com sua origem real."
+        ],
+        "note": ""
+      },
+      {
+        "id": "bike",
+        "title": "Bicicleta",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Considere eventual aluguel da bicicleta",
+        "steps": [
+          "Planeje pelas ruas públicas e confira os trechos cicláveis. A faixa de areia não é uma ciclovia.",
+          "O modo bicicleta consulta um planejador externo. Só siga por vias permitidas e respeite a sinalização."
+        ],
+        "note": ""
+      },
+      {
+        "id": "road",
+        "title": "Táxi / carro",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Consulte valores e disponibilidade",
+        "steps": [
+          "Escolha um ponto de desembarque em via pública próximo ao acesso.",
+          "Confira a cotação e o ponto de retorno antes de iniciar a viagem."
+        ],
+        "note": ""
+      }
+    ]
+  },
+  {
+    "id": "ssa-pelourinho",
+    "title": "Pelourinho",
+    "region": "salvador",
+    "city_id": "salvador",
+    "location": "Salvador, BA",
+    "category": "Cultura",
+    "lat": -12.9721,
+    "lng": -38.5094,
+    "coordinate_note": "Coordenada aproximada para descobrir a região; confirme o acesso público no mapa.",
+    "subtitle": "Largos, igrejas e cultura no Centro Histórico.",
+    "description": "A região reúne arquitetura, memória afro-brasileira, música e espaços culturais. A visita é melhor aproveitada caminhando entre os largos.",
+    "history": "A região reúne arquitetura, memória afro-brasileira, música e espaços culturais. A visita é melhor aproveitada caminhando entre os largos.",
+    "highlights": [
+      "Acesso urbano",
+      "Compare desde sua origem"
+    ],
+    "facilities": "Confira os serviços no trecho escolhido e combine seu retorno. Há museus e espaços culturais com horários próprios.",
+    "tide_note": "Consulte condições locais e maré; nenhuma condição de banho atual foi verificada pelo app.",
+    "sources": [
+      {
+        "title": "Turismo local",
+        "url": "https://www.salvadordabahia.com/centro-historico/"
+      }
+    ],
+    "reviewed_at": "2026-10-22",
+    "access_options": [
+      {
+        "id": "walk",
+        "title": "A pé",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Sem tarifa de transporte",
+        "steps": [
+          "Comece pelo Terreiro de Jesus e percorra os largos do Centro Histórico a pé.",
+          "Calcule a caminhada desde a sua origem; distâncias do catálogo são em linha reta."
+        ],
+        "note": ""
+      },
+      {
+        "id": "transit",
+        "title": "Ônibus / metrô",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Consulte valores e disponibilidade",
+        "steps": [
+          "A linha depende de sua origem; consulte os pontos de embarque e desembarque antes de sair. Não há linha selecionada automaticamente para este percurso.",
+          "Confira o último retorno e possíveis trocas; consulte o trajeto com sua origem real."
+        ],
+        "note": ""
+      },
+      {
+        "id": "bike",
+        "title": "Bicicleta",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Considere eventual aluguel da bicicleta",
+        "steps": [
+          "Há ladeiras e piso de pedra; considere prender a bicicleta e fazer a visita caminhando.",
+          "O modo bicicleta consulta um planejador externo. Só siga por vias permitidas e respeite a sinalização."
+        ],
+        "note": ""
+      },
+      {
+        "id": "road",
+        "title": "Táxi / carro",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Consulte valores e disponibilidade",
+        "steps": [
+          "Escolha um ponto de desembarque em via pública próximo ao acesso.",
+          "Confira a cotação e o ponto de retorno antes de iniciar a viagem."
+        ],
+        "note": ""
+      }
+    ]
+  },
+  {
+    "id": "ssa-elevador",
+    "title": "Elevador Lacerda",
+    "region": "salvador",
+    "city_id": "salvador",
+    "location": "Salvador, BA",
+    "category": "Cultura",
+    "lat": -12.9748,
+    "lng": -38.5131,
+    "coordinate_note": "Coordenada aproximada para descobrir a região; confirme o acesso público no mapa.",
+    "subtitle": "Ligação entre a Cidade Alta e o Comércio.",
+    "description": "Inaugurado em 1873, o elevador liga a Praça Tomé de Sousa à Praça Cairu. A vista da baía fica no entorno, não em uma cabine panorâmica.",
+    "history": "Inaugurado em 1873, o elevador liga a Praça Tomé de Sousa à Praça Cairu. A vista da baía fica no entorno, não em uma cabine panorâmica.",
+    "highlights": [
+      "Acesso urbano",
+      "Compare desde sua origem"
+    ],
+    "facilities": "Confira os serviços no trecho escolhido e combine seu retorno. Há museus e espaços culturais com horários próprios.",
+    "tide_note": "Consulte condições locais e maré; nenhuma condição de banho atual foi verificada pelo app.",
+    "sources": [
+      {
+        "title": "Turismo local",
+        "url": "https://www.salvadordabahia.com/os-planos-inclinados-e-elevadores-urbanos-de-salvador/"
+      }
+    ],
+    "reviewed_at": "2026-10-22",
+    "access_options": [
+      {
+        "id": "walk",
+        "title": "A pé",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Sem tarifa de transporte",
+        "steps": [
+          "Escolha o acesso da Cidade Alta, na Praça Tomé de Sousa, ou da Cidade Baixa, na Praça Cairu.",
+          "Calcule a caminhada desde a sua origem; distâncias do catálogo são em linha reta."
+        ],
+        "note": ""
+      },
+      {
+        "id": "transit",
+        "title": "Ônibus / metrô",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Consulte valores e disponibilidade",
+        "steps": [
+          "A linha depende de sua origem; consulte os pontos de embarque e desembarque antes de sair. Não há linha selecionada automaticamente para este percurso.",
+          "Confira o último retorno e possíveis trocas; consulte o trajeto com sua origem real."
+        ],
+        "note": ""
+      },
+      {
+        "id": "bike",
+        "title": "Bicicleta",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Considere eventual aluguel da bicicleta",
+        "steps": [
+          "Confirme a regra de embarque com bicicleta e o funcionamento no dia; evite descer ladeiras sem planejar o caminho.",
+          "O modo bicicleta consulta um planejador externo. Só siga por vias permitidas e respeite a sinalização."
+        ],
+        "note": ""
+      },
+      {
+        "id": "road",
+        "title": "Táxi / carro",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Consulte valores e disponibilidade",
+        "steps": [
+          "Escolha um ponto de desembarque em via pública próximo ao acesso.",
+          "Confira a cotação e o ponto de retorno antes de iniciar a viagem."
+        ],
+        "note": ""
+      }
+    ]
+  },
+  {
+    "id": "jpa-tambau",
+    "title": "Praia de Tambaú",
+    "region": "joao-pessoa",
+    "city_id": "joao-pessoa",
+    "location": "João Pessoa, PB",
+    "category": "Praias",
+    "lat": -7.115,
+    "lng": -34.823,
+    "coordinate_note": "Coordenada aproximada para descobrir a região; confirme o acesso público no mapa.",
+    "subtitle": "Orla movimentada, serviços e passeios de barco.",
+    "description": "Tambaú reúne hospedagens, gastronomia e a orla vizinha a Cabo Branco. Passeios para piscinas naturais precisam de combinação com o operador.",
+    "history": "Tambaú reúne hospedagens, gastronomia e a orla vizinha a Cabo Branco. Passeios para piscinas naturais precisam de combinação com o operador.",
+    "highlights": [
+      "Acesso urbano",
+      "Compare desde sua origem"
+    ],
+    "facilities": "Confira os serviços no trecho escolhido e combine seu retorno. A estrutura varia entre os acessos da praia.",
+    "tide_note": "Consulte condições locais e maré; nenhuma condição de banho atual foi verificada pelo app.",
+    "sources": [
+      {
+        "title": "Turismo local",
+        "url": "https://turismo.joaopessoa.pb.gov.br/praia/praia-de-tambau/"
+      }
+    ],
+    "reviewed_at": "2026-10-22",
+    "access_options": [
+      {
+        "id": "walk",
+        "title": "A pé",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Sem tarifa de transporte",
+        "steps": [
+          "Chegue ao acesso escolhido na Avenida Almirante Tamandaré.",
+          "Calcule a caminhada desde a sua origem; distâncias do catálogo são em linha reta."
+        ],
+        "note": ""
+      },
+      {
+        "id": "transit",
+        "title": "Ônibus / metrô",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Consulte valores e disponibilidade",
+        "steps": [
+          "A Semob publica a linha 510 — Tambaú via Tamandaré. Confira o sentido, os pontos e se ela atende sua origem; pode ser necessária uma conexão.",
+          "Confira o último retorno e possíveis trocas; consulte o trajeto com sua origem real."
+        ],
+        "note": ""
+      },
+      {
+        "id": "bike",
+        "title": "Bicicleta",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Considere eventual aluguel da bicicleta",
+        "steps": [
+          "Planeje a conexão pela orla entre Tambaú e Cabo Branco, respeitando a sinalização e os cruzamentos.",
+          "O modo bicicleta consulta um planejador externo. Só siga por vias permitidas e respeite a sinalização."
+        ],
+        "note": ""
+      },
+      {
+        "id": "road",
+        "title": "Táxi / carro",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Consulte valores e disponibilidade",
+        "steps": [
+          "Escolha um ponto de desembarque em via pública próximo ao acesso.",
+          "Confira a cotação e o ponto de retorno antes de iniciar a viagem."
+        ],
+        "note": ""
+      }
+    ],
+    "guide_sources": [
+      {
+        "title": "Semob João Pessoa",
+        "url": "https://servicos.semobjp.pb.gov.br/linhas-de-onibus/"
+      }
+    ]
+  },
+  {
+    "id": "jpa-cabo-branco",
+    "title": "Praia de Cabo Branco",
+    "region": "joao-pessoa",
+    "city_id": "joao-pessoa",
+    "location": "João Pessoa, PB",
+    "category": "Praias",
+    "lat": -7.131,
+    "lng": -34.822,
+    "coordinate_note": "Coordenada aproximada para descobrir a região; confirme o acesso público no mapa.",
+    "subtitle": "Orla para caminhar, pedalar e aproveitar a praia.",
+    "description": "A praia é vizinha de Tambaú e integra uma das áreas mais movimentadas da orla. O Farol fica mais ao sul, na região da barreira.",
+    "history": "A praia é vizinha de Tambaú e integra uma das áreas mais movimentadas da orla. O Farol fica mais ao sul, na região da barreira.",
+    "highlights": [
+      "Acesso urbano",
+      "Compare desde sua origem"
+    ],
+    "facilities": "Confira os serviços no trecho escolhido e combine seu retorno. A estrutura varia entre os acessos da praia.",
+    "tide_note": "Consulte condições locais e maré; nenhuma condição de banho atual foi verificada pelo app.",
+    "sources": [
+      {
+        "title": "Turismo local",
+        "url": "https://turismo.joaopessoa.pb.gov.br/praia/praia-do-cabo-branco/"
+      }
+    ],
+    "reviewed_at": "2026-10-22",
+    "access_options": [
+      {
+        "id": "walk",
+        "title": "A pé",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Sem tarifa de transporte",
+        "steps": [
+          "Escolha um acesso pela Avenida Cabo Branco; o ponto de referência não representa toda a extensão da praia.",
+          "Calcule a caminhada desde a sua origem; distâncias do catálogo são em linha reta."
+        ],
+        "note": ""
+      },
+      {
+        "id": "transit",
+        "title": "Ônibus / metrô",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Consulte valores e disponibilidade",
+        "steps": [
+          "A Semob publica a linha 507 — Cabo Branco. Confira onde embarcar e descer para o trecho da praia escolhido; a linha não atende diretamente toda origem.",
+          "Confira o último retorno e possíveis trocas; consulte o trajeto com sua origem real."
+        ],
+        "note": ""
+      },
+      {
+        "id": "bike",
+        "title": "Bicicleta",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Considere eventual aluguel da bicicleta",
+        "steps": [
+          "Use a infraestrutura sinalizada da orla e confira a ligação desde sua hospedagem.",
+          "O modo bicicleta consulta um planejador externo. Só siga por vias permitidas e respeite a sinalização."
+        ],
+        "note": ""
+      },
+      {
+        "id": "road",
+        "title": "Táxi / carro",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Consulte valores e disponibilidade",
+        "steps": [
+          "Escolha um ponto de desembarque em via pública próximo ao acesso.",
+          "Confira a cotação e o ponto de retorno antes de iniciar a viagem."
+        ],
+        "note": ""
+      }
+    ],
+    "guide_sources": [
+      {
+        "title": "Semob João Pessoa",
+        "url": "https://servicos.semobjp.pb.gov.br/linhas-de-onibus/"
+      }
+    ]
+  },
+  {
+    "id": "jpa-bessa",
+    "title": "Praia do Bessa",
+    "region": "joao-pessoa",
+    "city_id": "joao-pessoa",
+    "location": "João Pessoa, PB",
+    "category": "Praias",
+    "lat": -7.073,
+    "lng": -34.833,
+    "coordinate_note": "Coordenada aproximada para descobrir a região; confirme o acesso público no mapa.",
+    "subtitle": "Bairro de praia ao norte da orla de João Pessoa.",
+    "description": "O Bessa tem uma faixa extensa de areia, hospedagens e bares. O chamado Caribessa é um trecho específico, não o nome de toda a praia.",
+    "history": "O Bessa tem uma faixa extensa de areia, hospedagens e bares. O chamado Caribessa é um trecho específico, não o nome de toda a praia.",
+    "highlights": [
+      "Acesso urbano",
+      "Compare desde sua origem"
+    ],
+    "facilities": "Confira os serviços no trecho escolhido e combine seu retorno. A estrutura varia entre os acessos da praia.",
+    "tide_note": "Consulte condições locais e maré; nenhuma condição de banho atual foi verificada pelo app.",
+    "sources": [
+      {
+        "title": "Turismo local",
+        "url": "https://turismo.joaopessoa.pb.gov.br/praia/praia-do-bessa/"
+      }
+    ],
+    "reviewed_at": "2026-10-22",
+    "access_options": [
+      {
+        "id": "walk",
+        "title": "A pé",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Sem tarifa de transporte",
+        "steps": [
+          "Defina o trecho do Bessa e o acesso público mais próximo antes de sair.",
+          "Calcule a caminhada desde a sua origem; distâncias do catálogo são em linha reta."
+        ],
+        "note": ""
+      },
+      {
+        "id": "transit",
+        "title": "Ônibus / metrô",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Consulte valores e disponibilidade",
+        "steps": [
+          "Há referências municipais às linhas da região Manaíra/Bessa. Confirme no planejador o acesso ao trecho escolhido, sem presumir passagem na areia do Caribessa.",
+          "Confira o último retorno e possíveis trocas; consulte o trajeto com sua origem real."
+        ],
+        "note": ""
+      },
+      {
+        "id": "bike",
+        "title": "Bicicleta",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Considere eventual aluguel da bicicleta",
+        "steps": [
+          "A distância varia bastante ao longo do Bessa; confira ciclovias e cruzamentos até o acesso escolhido.",
+          "O modo bicicleta consulta um planejador externo. Só siga por vias permitidas e respeite a sinalização."
+        ],
+        "note": ""
+      },
+      {
+        "id": "road",
+        "title": "Táxi / carro",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Consulte valores e disponibilidade",
+        "steps": [
+          "Escolha um ponto de desembarque em via pública próximo ao acesso.",
+          "Confira a cotação e o ponto de retorno antes de iniciar a viagem."
+        ],
+        "note": ""
+      }
+    ],
+    "guide_sources": [
+      {
+        "title": "Semob João Pessoa",
+        "url": "https://servicos.semobjp.pb.gov.br/linhas-de-onibus/"
+      }
+    ]
+  },
+  {
+    "id": "jpa-farol",
+    "title": "Farol do Cabo Branco",
+    "region": "joao-pessoa",
+    "city_id": "joao-pessoa",
+    "location": "João Pessoa, PB",
+    "category": "Cultura",
+    "lat": -7.1489,
+    "lng": -34.7967,
+    "coordinate_note": "Coordenada aproximada para descobrir a região; confirme o acesso público no mapa.",
+    "subtitle": "Monumento e vista na região da Ponta do Seixas.",
+    "description": "O farol foi construído em 1972 e é um marco turístico da região do Cabo Branco. Não é o mesmo destino que a praia urbana ao lado de Tambaú.",
+    "history": "O farol foi construído em 1972 e é um marco turístico da região do Cabo Branco. Não é o mesmo destino que a praia urbana ao lado de Tambaú.",
+    "highlights": [
+      "Acesso urbano",
+      "Compare desde sua origem"
+    ],
+    "facilities": "Confira os serviços no trecho escolhido e combine seu retorno. Há museus e espaços culturais com horários próprios.",
+    "tide_note": "Consulte condições locais e maré; nenhuma condição de banho atual foi verificada pelo app.",
+    "sources": [
+      {
+        "title": "Turismo local",
+        "url": "https://turismo.joaopessoa.pb.gov.br/o-que-fazer/pontos-turisticos/monumentos-historicos/farol-do-cabo-branco/"
+      }
+    ],
+    "reviewed_at": "2026-10-22",
+    "access_options": [
+      {
+        "id": "walk",
+        "title": "A pé",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Sem tarifa de transporte",
+        "steps": [
+          "Confira o acesso ao monumento pela região da Ponta do Seixas; não caminhe pela borda da falésia.",
+          "Calcule a caminhada desde a sua origem; distâncias do catálogo são em linha reta."
+        ],
+        "note": ""
+      },
+      {
+        "id": "transit",
+        "title": "Ônibus / metrô",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Consulte valores e disponibilidade",
+        "steps": [
+          "A linha depende de sua origem; consulte os pontos de embarque e desembarque antes de sair. Não há linha selecionada automaticamente para este percurso.",
+          "Confira o último retorno e possíveis trocas; consulte o trajeto com sua origem real."
+        ],
+        "note": ""
+      },
+      {
+        "id": "bike",
+        "title": "Bicicleta",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Considere eventual aluguel da bicicleta",
+        "steps": [
+          "Considere a subida e o calor. Confirme os acessos sinalizados ao parque e ao monumento.",
+          "O modo bicicleta consulta um planejador externo. Só siga por vias permitidas e respeite a sinalização."
+        ],
+        "note": ""
+      },
+      {
+        "id": "road",
+        "title": "Táxi / carro",
+        "from": "Sua origem escolhida",
+        "dynamic_origin": true,
+        "distance": "Consulte desde sua origem",
+        "duration": "Depende do ponto de saída",
+        "price": "Consulte valores e disponibilidade",
+        "steps": [
+          "Escolha um ponto de desembarque em via pública próximo ao acesso.",
+          "Confira a cotação e o ponto de retorno antes de iniciar a viagem."
+        ],
+        "note": ""
+      }
+    ],
+    "guide_sources": [
+      {
+        "title": "Semob João Pessoa",
+        "url": "https://servicos.semobjp.pb.gov.br/linhas-de-onibus/"
+      }
+    ]
+  }
+]

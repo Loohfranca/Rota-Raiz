@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import {
+  Bike,
   Footprints,
   Ship,
   Car,
@@ -10,8 +11,9 @@ import {
   Info,
   Navigation,
 } from "lucide-react";
+import JourneyLookup from "./JourneyLookup";
 import WalkingPanel from "./WalkingPanel";
-const icons = { walk: Footprints, boat: Ship, road: Car, transit: Bus };
+const icons = { walk: Footprints, boat: Ship, road: Car, transit: Bus, bike: Bike };
 export default function AccessGuide({ tour, home, onSwitchToRoute }) {
   const options = tour.access_options || [],
     [active, setActive] = useState(options[0]?.id || "walk");
@@ -44,7 +46,7 @@ export default function AccessGuide({ tour, home, onSwitchToRoute }) {
           <Navigation size={17} />
           <div>
             <span>Saindo de</span>
-            <strong>{choice.from}</strong>
+            <strong>{choice.dynamic_origin ? (home?.name || "Escolha sua origem") : choice.from}</strong>
           </div>
         </div>
         <div className="access-metrics">
@@ -95,14 +97,8 @@ export default function AccessGuide({ tour, home, onSwitchToRoute }) {
           ) : (
             <WalkingPanel home={home} tour={tour} />
           ))}
-        {active === "transit" && (
-          <button
-            onClick={() => onSwitchToRoute(tour.title)}
-            className="button button-primary"
-          >
-            Consultar linhas cadastradas <ArrowUpRight size={17} />
-          </button>
-        )}
+        {(active === "transit" || active === "bike") && (home?.name ? <JourneyLookup origin={home} destination={{...tour,name:tour.title,address:`${tour.title}, ${tour.location}`,route_by_name:true}} modes={[active==='bike'?'bicycling':'transit']} /> : <p className="inline-notice">Escolha seu ponto de partida em Explorar para consultar este trajeto.</p>)}
+        {active === "transit" && <button onClick={() => onSwitchToRoute({...tour,name:tour.title,address:`${tour.title}, ${tour.location}`,route_by_name:true})} className="button button-secondary">Abrir no Como chegar <ArrowUpRight size={17}/></button>}
       </div>
     </section>
   );

@@ -47,6 +47,7 @@ export default function OriginPicker({
   onChange,
   stops = [],
   cities = [],
+  places = [],
 }) {
   const valid = hasCoordinates(home),
     inputId = useId();
@@ -88,7 +89,7 @@ export default function OriginPicker({
           q.length >= 3 &&
           (normalizeText(i.name).includes(q) || q.includes("eco glamping")),
       ),
-      ...searchLocations(query, stops, [], cities),
+      ...searchLocations(query, stops, places, cities),
     ]
       .filter(
         (i, n, a) =>

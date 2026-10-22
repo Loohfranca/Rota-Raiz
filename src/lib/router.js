@@ -89,7 +89,7 @@ export const searchLocations = (query, stops = [], places = [], cities = []) => 
 
   // 2. Atrativos e Passeios
   places.forEach((place) => {
-    const titleNorm = normalizeText(place.title);
+    const titleNorm = normalizeText(`${place.title} ${(place.aliases || []).join(" ")}`);
     const locNorm = normalizeText(place.location);
     if (titleNorm.includes(normalizedQuery) || locNorm.includes(normalizedQuery)) {
       const item = {
@@ -101,6 +101,8 @@ export const searchLocations = (query, stops = [], places = [], cities = []) => 
         lat: place.lat,
         lng: place.lng,
         placeRef: place,
+        address: place.address,
+        route_by_name: place.route_by_name,
       };
       results.push(item);
       seenIds.add(item.id);

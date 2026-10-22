@@ -2238,3 +2238,54 @@
 .journey-lookup-actions a svg:last-child { margin-left: auto; flex-shrink: 0; }
 .journey-lookup > small { display: block; margin-top: 15px; font-size: 12px; line-height: 1.6; color: #596458; }
 @media(max-width:767px) { .journey-lookup { padding: 18px; } }
+
+/* Full-width place names; tools stay below the editable text. */
+.place-input { position: relative; min-width: 0; }
+.route-search-card .place-input > .place-field, .place-field { display: flex; align-items: flex-start; gap: 10px; padding: 11px 12px; border: 1px solid #cbd5c0; border-radius: 13px; background: #f5f7ef; min-height: 0; }
+.place-dot { flex: 0 0 8px; width: 8px; height: 8px; background: var(--place-accent); border-radius: 50%; margin-top: 5px; }
+.place-value { flex: 1; min-width: 0; }
+.place-value label { display: block; font-size: 10px; line-height: 1.3; letter-spacing: .6px; text-transform: uppercase; margin: 0 0 4px; }
+.place-value textarea { display: block; width: 100%; padding: 0; border: 0; background: transparent; color: #243e32; font-family: inherit; font-size: 16px; font-weight: 500; line-height: 1.45; field-sizing: content; min-height: 24px; max-height: 144px; resize: none; overflow-wrap: anywhere; white-space: pre-wrap; }
+.place-value textarea:focus { outline: none; }
+.place-field:focus-within { outline: 2px solid #59744a; outline-offset: 1px; }
+.place-tools { display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 0 8px; padding: 0 2px; }
+.place-tools button { display: flex; align-items: center; gap: 5px; min-height: 44px; padding: 4px 6px; font-size: 11px; color: #344f30; }
+.place-tools button:disabled { opacity: .45; }
+.place-tools .place-clear { margin-left: auto; }
+.place-suggestions { position: absolute; top: 100%; left: 0; right: 0; z-index: 35; max-height: 260px; overflow-y: auto; border: 1px solid #dbe2d2; border-radius: 14px; background: #fffefa; box-shadow: 0 8px 26px #243e3220; padding: 4px; }
+.place-suggestions > button { width: 100%; min-height: 50px; padding: 9px; display: flex; align-items: flex-start; gap: 9px; text-align: left; border-radius: 9px; }
+.place-suggestions > button:hover { background: #edf1e6; }
+.place-suggestions > button svg { flex-shrink: 0; margin-top: 3px; }
+.place-suggestions > button span { min-width: 0; }
+.place-suggestions strong, .place-suggestions small { display: block; white-space: normal; overflow-wrap: anywhere; }
+.place-suggestions strong { font-size: 13px; line-height: 1.4; }
+.place-suggestions small, .place-suggestions p { color: #596458; font-size: 11px; line-height: 1.5; margin-top: 3px; }
+.place-suggestions p { padding: 10px; }
+.route-search-card { padding: 16px; gap: 12px; }
+.route-fields { display: flex; flex-direction: column; gap: 10px; }
+.route-form-actions { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin: -6px 0 -3px; }
+.route-form-actions button { display: flex; gap: 6px; align-items: center; min-height: 44px; padding: 4px 5px; font-size: 12px; font-weight: 500; }
+.route-search-card > button:last-child { min-height: 48px; font-size: 14px; }
+.airport-access { display: flex; flex-direction: column; gap: 10px; }
+.airport-access details { border: 1px solid #dce4d2; background: #edf1e6; border-radius: 15px; }
+.airport-access summary { display: flex; gap: 9px; padding: 12px; min-height: 48px; align-items: center; cursor: pointer; list-style: none; font-size: 13px; font-weight: 600; }
+.airport-access summary span { flex: 1; overflow-wrap: anywhere; }
+.airport-access summary svg { flex-shrink: 0; }
+.airport-access summary::-webkit-details-marker { display: none; }
+.airport-access details > div { padding: 0 14px 14px; }
+.airport-access p { font-size: 13px; line-height: 1.7; color: #596458; }
+.airport-access a { display: inline-flex; min-height: 44px; align-items: center; gap: 6px; font-size: 12px; text-decoration: underline; }
+.airport-access small { display: block; font-size: 11px; line-height: 1.6; color: #596458; }
+.access-content .journey-lookup { margin-top: 18px; padding: 15px; background: #f7f8f1; border-radius: 15px; }
+.access-content .journey-lookup p { font-size: 12px; }
+@media(max-width:767px) {
+ .routes-page .page-heading { margin-bottom: 18px; }
+ .routes-page .page-heading h1 { font-size: 28px; line-height: 1.15; margin: 5px 0 8px; }
+ .routes-page .page-heading .page-description { font-size: 13px; line-height: 1.5; }
+ .routes-page .page-heading .eyebrow { font-size: 9px; }
+ .route-search-card { padding: 13px; border-radius: 19px; gap: 10px; }
+ .routes-layout { gap: 18px; }
+ .place-tools { gap: 0 5px; }
+ .region-filters { max-width: 100%; overflow-x: auto; flex-wrap: nowrap; }
+ .region-filters button { flex-shrink: 0; }
+}

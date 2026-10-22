@@ -246,5 +246,115 @@
       "licenseUrl": "https://creativecommons.org/publicdomain/mark/1.0/",
       "caption": "Outro olhar para o Parracho"
     }
+  ],
+  "ssa-porto-barra": [
+    {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Praia_Porto_da_Barra.jpg/960px-Praia_Porto_da_Barra.jpg",
+      "author": "Ferik80",
+      "source": "https://commons.wikimedia.org/wiki/File:Praia_Porto_da_Barra.jpg",
+      "license": "CC BY 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "caption": "Praia do Porto da Barra"
+    }
+  ],
+  "ssa-farol-barra": [
+    {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/Farol_da_Barra_natural.jpg/960px-Farol_da_Barra_natural.jpg",
+      "author": "Milena Cintra",
+      "source": "https://commons.wikimedia.org/wiki/File:Farol_da_Barra_natural.jpg",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "caption": "Praia do Farol da Barra"
+    }
+  ],
+  "ssa-itapua": [
+    {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Itapua_Beach_Bahia_03.jpg/960px-Itapua_Beach_Bahia_03.jpg",
+      "author": "Alfredo Borba",
+      "source": "https://commons.wikimedia.org/wiki/File:Itapua_Beach_Bahia_03.jpg",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "caption": "Praia de Itapuã"
+    }
+  ],
+  "ssa-stella": [
+    {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/Stella_Maris_-_The_Beach.jpg/960px-Stella_Maris_-_The_Beach.jpg",
+      "author": "DlauriniJr",
+      "source": "https://commons.wikimedia.org/wiki/File:Stella_Maris_-_The_Beach.jpg",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "caption": "Praia de Stella Maris"
+    }
+  ],
+  "ssa-flamengo": [
+    {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/Praia_do_Flamengo%2C_Salvador_-_Rafael_Defavari.jpg/960px-Praia_do_Flamengo%2C_Salvador_-_Rafael_Defavari.jpg",
+      "author": "Rafael Defavari",
+      "source": "https://commons.wikimedia.org/wiki/File:Praia_do_Flamengo%2C_Salvador_-_Rafael_Defavari.jpg",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "caption": "Praia do Flamengo"
+    }
+  ],
+  "ssa-pelourinho": [
+    {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/Pelourinho-Salvador.jpg/960px-Pelourinho-Salvador.jpg",
+      "author": "Geotrieb",
+      "source": "https://commons.wikimedia.org/wiki/File:Pelourinho-Salvador.jpg",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "caption": "Pelourinho"
+    }
+  ],
+  "ssa-elevador": [
+    {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/Elevador_lacerda.jpg/960px-Elevador_lacerda.jpg",
+      "author": "Jader Gonçalves de Almeida",
+      "source": "https://commons.wikimedia.org/wiki/File:Elevador_lacerda.jpg",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "caption": "Elevador Lacerda"
+    }
+  ],
+  "jpa-tambau": [
+    {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Praia_de_tambau_em_joao_pessoa_paraiba.jpg/960px-Praia_de_tambau_em_joao_pessoa_paraiba.jpg",
+      "author": "Matheus Jampa da Silva",
+      "source": "https://commons.wikimedia.org/wiki/File:Praia_de_tambau_em_joao_pessoa_paraiba.jpg",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "caption": "Praia de Tambaú"
+    }
+  ],
+  "jpa-cabo-branco": [
+    {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/a/ac/Praia_de_Cabo_Branco.jpg",
+      "author": "Kelma Cavalcante",
+      "source": "https://commons.wikimedia.org/wiki/File:Praia_de_Cabo_Branco.jpg",
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "caption": "Praia de Cabo Branco"
+    }
+  ],
+  "jpa-bessa": [
+    {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/Praia_do_bessa_joao_pessoa.png/960px-Praia_do_bessa_joao_pessoa.png",
+      "author": "Matheus Jampa da Silva",
+      "source": "https://commons.wikimedia.org/wiki/File:Praia_do_bessa_joao_pessoa.png",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "caption": "Praia do Bessa"
+    }
+  ],
+  "jpa-farol": [
+    {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Farol_do_Cabo_Branco_-_Jo%C3%A3o_Pessoa_-_20230523152824.jpg/960px-Farol_do_Cabo_Branco_-_Jo%C3%A3o_Pessoa_-_20230523152824.jpg",
+      "author": "Miltextos",
+      "source": "https://commons.wikimedia.org/wiki/File:Farol_do_Cabo_Branco_-_Jo%C3%A3o_Pessoa_-_20230523152824.jpg",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "caption": "Farol do Cabo Branco"
+    }
   ]
 }

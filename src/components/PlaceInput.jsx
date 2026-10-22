@@ -77,6 +77,8 @@ export default function PlaceInput({
       lng: item.lng,
       stopId: item.stopId,
       source: "local",
+      address: item.address,
+      route_by_name: item.route_by_name,
     }));
     const seen = new Set(local.map((l) => normalizeText(l.name)));
     const extra = online.filter((o) => !seen.has(normalizeText(o.name)));
@@ -105,115 +107,34 @@ export default function PlaceInput({
       lng: item.lng ?? null,
       stopId: item.stopId || null,
       source: item.source,
-      address: item.source === "osm" ? (item.address || item.subtitle) : undefined,
+      address: item.address || (item.source === "osm" ? item.subtitle : undefined),
+      route_by_name: item.route_by_name,
     });
   };
 
-  return (
-    <div ref={boxRef} className="place-input relative">
-      <div
-        className="flex items-center gap-3 bg-[#fdf2e7] rounded-xl pl-3.5 pr-2 min-h-[56px] border border-[#e0d5c1] focus-within:ring-2"
-        style={{ "--tw-ring-color": accent }}
-      >
-        <span
-          className="w-3 h-3 rounded-full shrink-0"
-          style={{ backgroundColor: accent }}
-          aria-hidden="true"
-        />
-        <div className="flex flex-col flex-1 min-w-0 py-1.5">
-          <label
-            htmlFor={inputId}
-            className="text-[11px] font-bold text-[#59413b] uppercase leading-none mb-1"
-          >
-            {label}
-          </label>
-          <input
-            id={inputId}
-            onKeyDown={(e) => {
-              if (e.key === "Escape") setOpen(false);
-              if (e.key === "Enter") { e.preventDefault(); searchMap(); }
-            }}
-            type="text"
-            value={text}
-            onChange={(e) => handleType(e.target.value)}
-            onFocus={() => setOpen(true)}
-            placeholder={placeholder}
-            autoComplete="off"
-            className="text-base font-medium text-[#201b15] bg-transparent focus:outline-none w-full truncate placeholder:text-[#59413b]/60"
-          />
-        </div>
-
-        {text && (
-          <button
-            type="button"
-            onClick={() => {
-              requestRef.current?.abort();
-              setOnline([]);
-              setLoading(false);
-              setSearchError("");
-              setText("");
-              onChange(null);
-              setOpen(true);
-            }}
-            aria-label="Limpar"
-            className="w-9 h-11 flex items-center justify-center text-[#59413b] shrink-0"
-          >
-            <X size={16} />
-          </button>
-        )}
-
-        <button type="button" onClick={searchMap} disabled={loading || text.trim().length < 3 || !navigator.onLine} aria-label={`Buscar ${label.toLowerCase()} no mapa`} className="place-search-button"><Search size={18}/></button>
-        {onGps && (
-          <button
-            type="button"
-            onClick={onGps}
-            disabled={gpsLoading}
-            aria-label="Usar minha localização"
-            className="w-11 h-11 rounded-xl bg-[#2f5d3a]/10 text-[#2f5d3a] flex items-center justify-center shrink-0 active:scale-95"
-          >
-            <Navigation
-              size={18}
-              className={gpsLoading ? "animate-spin" : ""}
-            />
-          </button>
-        )}
-        {rightSlot}
+  const clear = () => {
+    requestRef.current?.abort(); setOnline([]); setLoading(false); setSearchError("");
+    setText(""); onChange(null); setOpen(true);
+  };
+  return <div ref={boxRef} className="place-input">
+    <div className="place-field" style={{"--place-accent":accent}}>
+      <span className="place-dot" aria-hidden="true"/>
+      <div className="place-value"><label htmlFor={inputId}>{label}</label>
+        <textarea id={inputId} rows={2} value={text} placeholder={placeholder} autoComplete="off"
+          onChange={e=>handleType(e.target.value)} onFocus={()=>setOpen(true)}
+          onKeyDown={e=>{if(e.key==='Escape')setOpen(false);if(e.key==='Enter'){e.preventDefault();searchMap();}}}/>
       </div>
-
-      {open && (suggestions.length > 0 || loading || searchError) && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#e0d5c1] rounded-xl shadow-lg z-30 max-h-64 overflow-y-auto">
-          {suggestions.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => handlePick(item)}
-              className="w-full text-left px-3.5 min-h-[48px] py-2 hover:bg-[#f7ece2] flex items-center gap-2.5 border-b border-[#f7ece2] last:border-0"
-            >
-              <MapPin
-                size={16}
-                className="shrink-0"
-                style={{ color: item.source === "osm" ? "#59413b" : accent }}
-              />
-              <span className="flex flex-col min-w-0">
-                <span className="text-sm font-bold text-[#201b15] truncate">
-                  {item.name}
-                </span>
-                <span className="text-xs text-[#59413b] truncate">
-                  {item.source === "osm"
-                    ? `Mapa · ${item.subtitle}`
-                    : item.subtitle}
-                </span>
-              </span>
-            </button>
-          ))}
-          {searchError && <p role="status" className="px-3.5 py-3 text-xs text-[#59413b]">{searchError}</p>}
-          {loading && (
-            <div className="px-3.5 py-2.5 text-xs text-[#59413b]">
-              Buscando no mapa…
-            </div>
-          )}
-        </div>
-      )}
     </div>
-  );
+    {open && <div className="place-tools">
+      <button type="button" onClick={searchMap} disabled={loading || text.trim().length<3 || !navigator.onLine} aria-label={`Buscar ${label.toLowerCase()} no mapa`}><Search size={16}/><span>{loading?'Buscando…':'Buscar no mapa'}</span></button>
+      {onGps && <button type="button" onClick={onGps} disabled={gpsLoading}><Navigation size={16}/><span>Usar GPS</span></button>}
+      {text && <button type="button" onClick={clear} aria-label={`Limpar ${label.toLowerCase()}`} className="place-clear"><X size={17}/><span>Limpar</span></button>}
+      {rightSlot}
+    </div>}
+    {open && (suggestions.length>0 || loading || searchError) && <div className="place-suggestions">
+      {suggestions.map(item=><button key={item.id} type="button" onClick={()=>handlePick(item)}><MapPin size={17}/><span><strong>{item.name}</strong><small>{item.subtitle}</small></span></button>)}
+      {searchError && <p role="status">{searchError}</p>}
+      {loading && <p role="status">Buscando no mapa…</p>}
+    </div>}
+  </div>;
 }

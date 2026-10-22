@@ -15,6 +15,7 @@ import {
   getSavedTours,
   toggleSaveTourOffline,
 } from "../lib/supabase";
+import { AIRPORTS } from "../data/travelNetwork";
 import { getTourPhotos } from "../lib/photos";
 import { Images } from "lucide-react";
 import BeachPhoto from "./BeachPhoto";
@@ -98,7 +99,8 @@ export default function ToursView({
     if (onlySaved && place.savedOrigin) onChangeHome(place.savedOrigin);
     onSelectTour(place);
   };
-  const hero = BEACHES.find(
+  const regionalHero = BEACHES.find(p => p.region === (region === "auto" ? near?.id : region));
+  const hero = regionalHero || BEACHES.find(
     (i) =>
       i.id ===
       (regionName === "Porto Seguro"
@@ -146,7 +148,7 @@ export default function ToursView({
         onChange={onChangeHome}
         stops={stops}
         cities={cities}
-        places={[...places, ...LODGINGS.map((i) => ({ ...i, title: i.name }))]}
+        places={[...places, ...AIRPORTS, ...LODGINGS.map((i) => ({ ...i, title: i.name }))]}
       />
       <section className="discovery-section">
         <div className="discovery-top">
@@ -235,8 +237,7 @@ export default function ToursView({
             <MapPin size={30} />
             <h3>Vamos planejar sua chegada?</h3>
             <p>
-              Sua origem está fora das regiões do catálogo. Escolha Caraíva,
-              Arraial d’Ajuda ou Porto Seguro para explorar.
+              Ainda não há lugares cadastrados perto desta origem. Explore as regiões disponíveis nos filtros.
             </p>
             <button
               className="button button-primary"
