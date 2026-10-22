@@ -4,16 +4,16 @@ import { getTourPhotos } from '../lib/photos';
 import BeachPhoto from './BeachPhoto';
 export default function PhotoGallery({tour,onOpenMap}) {
   const photos=getTourPhotos(tour), [index,setIndex]=useState(0), [failed,setFailed]=useState([]);
-  const dialog=useRef(null),start=useRef(null);
+  const dialog=useRef(null),start=useRef(null), swiped=useRef(false);
   const available=photos.filter(p=>!failed.includes(p.url));
   const active=available[index%Math.max(available.length,1)];
   const move=direction=>setIndex(n=>(n+direction+available.length)%available.length);
-  const swipe={onPointerDown:e=>{start.current={x:e.clientX,y:e.clientY};},onPointerUp:e=>{if(!start.current)return;const dx=e.clientX-start.current.x,dy=e.clientY-start.current.y;start.current=null;if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)&&available.length>1)move(dx<0?1:-1);},onPointerCancel:()=>{start.current=null;}};
+  const swipe={onPointerDown:e=>{swiped.current=false;start.current={x:e.clientX,y:e.clientY};},onPointerUp:e=>{if(!start.current)return;const dx=e.clientX-start.current.x,dy=e.clientY-start.current.y;start.current=null;if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)&&available.length>1){swiped.current=true;move(dx<0?1:-1);}},onPointerCancel:()=>{start.current=null;}};
   const fail=url=>{setFailed(previous=>[...previous,url]);setIndex(0);};
   if(!active)return <div className="detail-hero"><BeachPhoto tour={tour} className="detail-photo"/><button className="photo-map-button" onClick={onOpenMap}><MapPin size={17}/>Ver no mapa</button></div>;
   return <section className="photo-gallery" aria-label={`Fotos de ${tour.title}`}>
     <div className="gallery-stage" {...swipe}>
-      <button className="gallery-open" onClick={()=>dialog.current.showModal()} aria-label={`Ampliar foto ${index%available.length+1} de ${tour.title}`}><img src={active.url} alt={active.caption||tour.title} onError={()=>fail(active.url)} draggable="false"/></button>
+      <button className="gallery-open" onClick={()=>{if(!swiped.current)dialog.current.showModal();swiped.current=false;}} aria-label={`Ampliar foto ${index%available.length+1} de ${tour.title}`}><img src={active.url} alt={active.caption||tour.title} onError={()=>fail(active.url)} draggable="false"/></button>
       <div className="gallery-topline"><span><Images size={15}/>{index%available.length+1} / {available.length}</span><button onClick={()=>dialog.current.showModal()} aria-label="Abrir galeria em tela cheia"><Expand size={18}/></button></div>
       {available.length>1&&<><button className="gallery-arrow gallery-prev" aria-label="Foto anterior" onClick={()=>move(-1)}><ChevronLeft size={24}/></button><button className="gallery-arrow gallery-next" aria-label="Próxima foto" onClick={()=>move(1)}><ChevronRight size={24}/></button></>}
       <button className="photo-map-button" onClick={onOpenMap}><MapPin size={17}/>Ver no mapa</button>
