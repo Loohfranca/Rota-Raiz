@@ -99,3 +99,12 @@ const commonsPhoto = (name,author,license,version) => ({url:`https://commons.wik
 BEACH_GUIDES.pitinga.photo = commonsPhoto('Praia da Pitinga Bahia.jpg','Beto Quissak','CC BY-SA 4.0','by-sa/4.0');
 BEACH_GUIDES.mucuge.photo = commonsPhoto('Praia deserta em mucugê.jpg','Thomasilhabela','CC BY-SA 4.0','by-sa/4.0');
 BEACH_GUIDES.taperapua.photo = commonsPhoto('Vista da Praia de Taperapuã, Porto Seguro BA.JPG','HVL','CC BY 3.0','by/3.0');
+// Direct thumbnails avoid the Commons HTML redirect in image requests.
+const photoUrls = {
+  satu:'https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/Praia_do_Satu.jpg/1280px-Praia_do_Satu.jpg',
+  espelho:'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Praia_do_Espelho_%2828556208286%29.jpg/1280px-Praia_do_Espelho_%2828556208286%29.jpg',
+  pitinga:'https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a0/Praia_da_Pitinga_Bahia.jpg/1280px-Praia_da_Pitinga_Bahia.jpg',
+  mucuge:'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Praia_deserta_em_mucug%C3%AA.jpg/1280px-Praia_deserta_em_mucug%C3%AA.jpg',
+  taperapua:'https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8f/Vista_da_Praia_de_Taperapu%C3%A3%2C_Porto_Seguro_BA.JPG/1280px-Vista_da_Praia_de_Taperapu%C3%A3%2C_Porto_Seguro_BA.JPG',
+};
+Object.entries(photoUrls).forEach(([id,url]) => { BEACH_GUIDES[id].photo.url=url; });
