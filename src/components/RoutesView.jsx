@@ -16,6 +16,8 @@ import { getStops, getLegs, getPlaces, getCities } from "../lib/supabase";
 import { calculateRoute, resolvePoint } from "../lib/router";
 import PlaceInput from "./PlaceInput";
 import PageHeading from "./PageHeading";
+import AirportJourney from "./AirportJourney";
+import { AIRPORT_POINT, CARAIVA_POINT, getAirportJourney } from "../data/airportJourney";
 
 const MODE_LABEL = {
   ferry: "Balsa",
@@ -131,7 +133,8 @@ export default function RoutesView({
       return;
     }
     setFormError("");
-    setResult(calculateRoute(o, d, stops, legs, places, cities));
+    const journey = getAirportJourney(o, d);
+    setResult(journey ? { curated: journey } : calculateRoute(o, d, stops, legs, places, cities));
     setMode("fastest");
   };
 
@@ -205,6 +208,14 @@ export default function RoutesView({
   };
 
   const startersFromData = cities.slice(0, 6);
+  const airportPlaces = [...places, {id: 'airport-bps', title: AIRPORT_POINT.name, location: 'Porto Seguro, BA'}];
+  const pickAirportJourney = reverse => {
+    const from = reverse ? AIRPORT_POINT : CARAIVA_POINT;
+    const to = reverse ? CARAIVA_POINT : AIRPORT_POINT;
+    onChangeOrigin(from);
+    setDest(to);
+    runCalculation(from, to);
+  };
 
   return (
     <div className="routes-page">
@@ -216,6 +227,11 @@ export default function RoutesView({
       />
       <div className="routes-layout">
         <div className="routes-primary">
+          <div className="airport-shortcuts" aria-label="Rotas de aeroporto">
+            <span className="eyebrow">CARAÍVA E AEROPORTO</span>
+            <button type="button" onClick={() => pickAirportJourney(false)}>Caraíva → Aeroporto BPS <ArrowRight size={17}/></button>
+            <button type="button" onClick={() => pickAirportJourney(true)}>Aeroporto BPS → Caraíva <ArrowRight size={17}/></button>
+          </div>
           <section className="route-search-card">
             <div className="relative flex flex-col gap-2.5">
               <PlaceInput
@@ -224,7 +240,7 @@ export default function RoutesView({
                 onChange={changeOrigin}
                 placeholder="Digite um lugar ou use o GPS"
                 stops={stops}
-                places={places}
+                places={airportPlaces}
                 cities={cities}
                 accent="#c2461f"
                 onGps={handleGps}
@@ -248,7 +264,7 @@ export default function RoutesView({
                 onChange={changeDest}
                 placeholder="Praia, cidade, rodoviária..."
                 stops={stops}
-                places={places}
+                places={airportPlaces}
                 cities={cities}
                 accent="#2f5d3a"
               />
@@ -272,6 +288,7 @@ export default function RoutesView({
           </section>
         </div>
         <div className="routes-results">
+          {result?.curated && <AirportJourney journey={result.curated} />}
           {/* Resultado */}
           {result && result.found && option && (
             <section className="p-4 rounded-2xl bg-white border-2 border-[#c2461f] shadow-md flex flex-col gap-3">
@@ -373,7 +390,7 @@ export default function RoutesView({
             </section>
           )}
 
-          {result && !result.found && (
+          {result && !result.found && !result.curated && (
             <section className="p-4 rounded-2xl bg-white border border-amber-300 shadow-xs flex flex-col gap-3">
               <div className="flex items-start gap-2 text-amber-800">
                 <AlertCircle size={20} className="shrink-0 mt-0.5" />
