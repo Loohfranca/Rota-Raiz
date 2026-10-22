@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ArrowLeft, Waves, MapPin, Bookmark, Map as MapIcon, ArrowUpRight, Sparkles, ChevronDown } from 'lucide-react';
 import AccessGuide from './AccessGuide';
 import BeachPhoto from './BeachPhoto';
@@ -6,6 +6,7 @@ import { getSavedTours, toggleSaveTourOffline } from '../lib/supabase';
 export default function TourDetailView({ tour, home, onBack, onOpenMapWithTour, onSwitchToRoute }) {
   const [saved, setSaved] = useState(() => !!getSavedTours()[tour?.id]);
   const [error,setError] = useState('');
+  useEffect(() => { window.scrollTo({top:0,behavior:'instant'}); }, [tour?.id]);
   if (!tour) return null;
   const toggle = () => { try {setSaved(toggleSaveTourOffline(tour.id,{...tour,savedOrigin:home}));setError('');} catch {setError('Não foi possível salvar neste dispositivo.');} };
   const sources = [...new Map([...(tour.guide_sources||[]),...(tour.sources||[])].map(s=>[s.url,s])).values()];
