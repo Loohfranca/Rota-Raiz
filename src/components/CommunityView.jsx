@@ -100,8 +100,13 @@ export default function CommunityView({ onRoute }) {
           <h1>Comunidade</h1>
           <p>Um lugar bom merece ser compartilhado.</p>
         </div>
-        <button className="small-action" onClick={() => setForm({})}>
-          <Plus size={18} /> Indicar lugar
+        <button
+          className="small-action"
+          aria-label="Indicar lugar"
+          title="Indicar lugar"
+          onClick={() => setForm({})}
+        >
+          <Plus size={18} /> <span>Indicar lugar</span>
         </button>
       </div>
       <div className="community-controls">
@@ -157,7 +162,12 @@ export default function CommunityView({ onRoute }) {
                 ? "As indicações aparecem aqui depois da revisão."
                 : "A publicação comunitária ainda precisa ser conectada. Você já pode preparar suas indicações neste aparelho."}
           </p>
-          <button className="small-action" onClick={() => setForm({})}>
+          <button
+            className="small-action"
+            aria-label="Indicar lugar"
+            title="Indicar lugar"
+            onClick={() => setForm({})}
+          >
             Indicar um lugar <Plus size={16} />
           </button>
         </section>

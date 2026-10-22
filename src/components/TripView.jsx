@@ -114,9 +114,11 @@ export default function TripView({ onOpenTour }) {
         </div>
         <button
           className="small-action"
+          aria-label="Nova viagem"
+          title="Nova viagem"
           onClick={() => setSheet({ type: "trip" })}
         >
-          <Plus size={18} /> Nova viagem
+          <Plus size={18} /> <span>Nova viagem</span>
         </button>
       </div>
       {error && (
@@ -167,9 +169,12 @@ export default function TripView({ onOpenTour }) {
             </div>
             <button
               className="primary-action"
+              aria-label="Adicionar gasto"
               onClick={() => setSheet({ type: "expense" })}
             >
-              <Plus size={18} /> Adicionar gasto
+              <Plus size={18} />{" "}
+              <span className="wide-label">Adicionar gasto</span>
+              <span className="short-label">Gasto</span>
             </button>
           </section>
           <div className="trip-actions">
