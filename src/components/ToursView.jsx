@@ -17,6 +17,7 @@ import {
 import { getPlaces, getStops, getCities } from '../lib/supabase';
 import PlaceInput from './PlaceInput';
 import { toggleSaveTourOffline, getOfflineStorage } from '../lib/supabase';
+import { getSavedTours } from '../lib/supabase';
 import { haversineDistance } from '../lib/router';
 
 export default function ToursView({
@@ -29,6 +30,8 @@ export default function ToursView({
   const [cities, setCities] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todos');
+  const [onlySaved, setOnlySaved] = useState(false);
+  const [saveError, setSaveError] = useState('');
   const { tours: savedTours } = getOfflineStorage();
   const [offlineSavedList, setOfflineSavedList] = useState(savedTours);
 
@@ -37,7 +40,7 @@ export default function ToursView({
   useEffect(() => {
     async function loadPlacesData() {
       const [data, stopsData, citiesData] = await Promise.all([getPlaces(), getStops(), getCities()]);
-      setPlaces(data);
+      setPlaces([...data.filter(p => !getSavedTours()[p.id]), ...Object.values(getSavedTours())]);
       setStops(stopsData);
       setCities(citiesData);
     }
@@ -48,12 +51,13 @@ export default function ToursView({
     const titleMatch = (place.title || '').toLowerCase().includes(searchTerm.toLowerCase());
     const locMatch = (place.location || '').toLowerCase().includes(searchTerm.toLowerCase());
     const catMatch = selectedCategory === 'Todos' || place.category === selectedCategory;
-    return (titleMatch || locMatch) && catMatch;
+    return (titleMatch || locMatch) && catMatch && (!onlySaved || offlineSavedList.includes(place.id));
   });
 
   const handleToggleOffline = (e, tourId) => {
     e.stopPropagation();
-    const isNowSaved = toggleSaveTourOffline(tourId);
+    let isNowSaved;
+    try { isNowSaved = toggleSaveTourOffline(tourId, { ...places.find(p => p.id === tourId), savedOrigin: home }); setSaveError(''); } catch { setSaveError('Não foi possível salvar neste dispositivo.'); return; }
     if (isNowSaved) {
       setOfflineSavedList([...offlineSavedList, tourId]);
     } else {
@@ -69,9 +73,9 @@ export default function ToursView({
           <span className="text-[11px] font-bold uppercase tracking-wider text-[#c2461f]">
             Destinos Autênticos
           </span>
-          <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-[#bbefc1] text-[#00210b]">
-            {offlineSavedList.length} Salvos Offline
-          </span>
+          <button type="button" onClick={() => setOnlySaved(!onlySaved)} aria-pressed={onlySaved} className="min-h-[44px] text-xs font-bold px-2.5 py-0.5 rounded-full bg-[#bbefc1] text-[#00210b]">
+            {onlySaved ? 'Ver todos' : `${offlineSavedList.length} Salvos`}
+          </button>
         </div>
         <h1 className="font-headline font-bold text-2xl sm:text-3xl text-[#201b15] tracking-tight mt-0.5">
           Passeios & Atrativos Naturais
@@ -81,6 +85,8 @@ export default function ToursView({
         </p>
       </section>
 
+      <p className="text-xs">“Salvos” guarda informações neste navegador. O mapa da região não é baixado. As distâncias abaixo são em linha reta; abra o passeio para calcular o caminho a pé.</p>
+      {saveError && <p role="alert">{saveError}</p>}
       {/* Base das distâncias: o usuário escolhe de onde mede */}
       <section className="flex flex-col gap-1.5">
         <PlaceInput
@@ -145,7 +151,7 @@ export default function ToursView({
           return (
             <article
               key={place.id}
-              onClick={() => onSelectTour(place)}
+              onClick={() => { if (onlySaved && place.savedOrigin) onChangeHome(place.savedOrigin); onSelectTour(place); }}
               role="button"
               tabIndex={0}
               className="rounded-2xl bg-[#ffffff] border border-[#e0d5c1] hover:border-[#c2461f] hover:shadow-xs transition-all cursor-pointer overflow-hidden flex flex-col justify-between"
@@ -165,7 +171,7 @@ export default function ToursView({
                   ${isSaved ? 'bg-white/95 text-[#2f5d3a]' : 'bg-black/60 text-white'}
                 `}>
                   {isSaved ? <Check size={13} /> : <Cloud size={13} />}
-                  <span className="text-[11px]">{isSaved ? 'Salvo no Dispositivo' : 'Offline Pronto'}</span>
+                  <span className="text-[11px]">{isSaved ? 'Salvo no Dispositivo' : 'Guia não salvo'}</span>
                 </div>
 
                 {/* Location Pin */}
@@ -188,7 +194,7 @@ export default function ToursView({
                   </div>
                   {distance != null && (
                     <span className="font-headline font-bold text-sm text-[#c2461f] shrink-0">
-                      ~ {distance} km
+                      ~ {Number(distance).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} km em linha reta
                     </span>
                   )}
                 </div>
@@ -222,7 +228,7 @@ export default function ToursView({
                   </button>
 
                   <button
-                    onClick={() => onSelectTour(place)}
+                    onClick={() => { if (onlySaved && place.savedOrigin) onChangeHome(place.savedOrigin); onSelectTour(place); }}
                     type="button"
                     className="min-h-[44px] px-3.5 rounded-xl bg-[#f7ece2] hover:bg-[#ece1d7] text-[#c2461f] border border-[#e0d5c1] flex items-center gap-1 text-xs font-bold transition-colors"
                   >

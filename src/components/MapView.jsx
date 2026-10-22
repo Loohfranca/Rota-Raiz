@@ -149,6 +149,7 @@ const createUserGpsIcon = () => {
 
 export default function MapView({ 
   home,
+  destination,
   routeLegsToDraw, 
   onSelectPinRoute 
 }) {
@@ -180,6 +181,7 @@ export default function MapView({
 
   // Centro do mapa: onde o usuário está; senão, o centro dos pontos cadastrados
   const defaultCenter = React.useMemo(() => {
+    if (destination?.lat != null && destination?.lng != null) return [destination.lat, destination.lng];
     if (home?.lat != null && home?.lng != null) return [home.lat, home.lng];
     if (stops.length > 0) {
       const lat = stops.reduce((sum, st) => sum + st.lat, 0) / stops.length;
@@ -187,7 +189,7 @@ export default function MapView({
       return [lat, lng];
     }
     return [-14.2, -51.9]; // centro do Brasil enquanto os dados carregam
-  }, [home, stops]);
+  }, [home, stops, destination]);
 
   // Extrair coordenadas da rota se houver `routeLegsToDraw`
   const activeRouteCoords = React.useMemo(() => {
@@ -321,8 +323,8 @@ export default function MapView({
           {/* Controlador de Bounds / Zoom */}
           <MapBoundsUpdater
             bounds={activeRouteCoords}
-            center={userLocation ? [userLocation.lat, userLocation.lng] : defaultCenter}
-            zoom={userLocation ? 13 : 10}
+            center={destination ? defaultCenter : userLocation ? [userLocation.lat, userLocation.lng] : defaultCenter}
+            zoom={destination || userLocation ? 13 : 10}
           />
 
           {/* Linha da Rota Selecionada (Terracota com glow) */}
