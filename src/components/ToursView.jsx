@@ -135,7 +135,7 @@ export default function ToursView({
       </section>
 
       {/* Places Grid */}
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredPlaces.map((place) => {
           const isSaved = offlineSavedList.includes(place.id);
           const distance = home?.lat != null && home?.lng != null
@@ -148,88 +148,98 @@ export default function ToursView({
               onClick={() => onSelectTour(place)}
               role="button"
               tabIndex={0}
-              className="rounded-2xl bg-[#ffffff] border border-[#e0d5c1] hover:border-[#c2461f] hover:shadow-xs transition-all cursor-pointer overflow-hidden flex flex-col justify-between"
+              className="group rounded-2xl bg-[#ffffff] border border-[#e0d5c1] hover:border-[#c2461f] hover:shadow-md transition-all cursor-pointer overflow-hidden flex flex-col"
             >
-              {/* Photo Banner */}
-              <div className="relative h-48 w-full bg-[#f7ece2] overflow-hidden">
+              {/* Photo Banner with Overlay */}
+              <div className="relative h-40 sm:h-44 w-full bg-[#f7ece2] overflow-hidden">
                 <img
                   src={place.image_url}
                   alt={place.photo_alt || place.title}
                   loading="lazy"
-                  className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                 />
 
-                {/* Salvo Offline Pill */}
-                <div className={`
-                  absolute top-3 right-3 flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold shadow-xs backdrop-blur-md
-                  ${isSaved ? 'bg-white/95 text-[#2f5d3a]' : 'bg-black/60 text-white'}
-                `}>
-                  {isSaved ? <Check size={13} /> : <Cloud size={13} />}
-                  <span className="text-[11px]">{isSaved ? 'Salvo no Dispositivo' : 'Offline Pronto'}</span>
-                </div>
+                {/* Gradient Overlay for Better Text Readability */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
-                {/* Location Pin */}
-                <div className="absolute bottom-3 left-3 px-2.5 py-1 rounded-lg text-xs font-bold text-white bg-black/60 backdrop-blur-md flex items-center gap-1">
-                  <MapPin size={13} />
-                  <span>{place.location.split(',')[0]}</span>
-                </div>
-              </div>
-
-              {/* Card Body */}
-              <div className="p-4 flex flex-col gap-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <h2 className="font-headline font-bold text-base sm:text-lg text-[#201b15]">
-                      {place.title}
-                    </h2>
-                    <p className="text-xs text-[#59413b] mt-0.5">
-                      {place.location}
-                    </p>
-                  </div>
-                  {distance != null && (
-                    <span className="font-headline font-bold text-sm text-[#c2461f] shrink-0">
-                      ~ {distance} km
-                    </span>
-                  )}
-                </div>
-
-                {/* Tide or Access Alert Pill */}
-                {place.tide_dependent ? (
-                  <div className="p-2.5 rounded-xl bg-blue-50 border border-blue-200 text-xs font-medium text-blue-900 flex items-center gap-2">
-                    <span>🌊</span>
-                    <span className="truncate">{place.tide_window || 'Melhor na maré baixa'}</span>
-                  </div>
-                ) : (
-                  <div className="p-2.5 rounded-xl bg-[#fdf2e7] border border-[#e0d5c1] text-xs font-medium text-[#201b15] flex items-center gap-2">
-                    <Clock size={14} className="text-[#c2461f] shrink-0" />
-                    <span className="truncate">{place.expense_range || 'Acesso livre e gratuito'}</span>
-                  </div>
-                )}
-
-                {/* Action Buttons */}
-                <div className="pt-2 flex items-center justify-between border-t border-[#f7ece2]">
+                {/* Top Right: Offline Status */}
+                <div className="absolute top-2 right-2">
                   <button
                     onClick={(e) => handleToggleOffline(e, place.id)}
                     type="button"
-                    className={`min-h-[44px] px-3.5 rounded-xl flex items-center gap-1.5 text-xs font-bold transition-all border ${
-                      isSaved 
-                        ? 'bg-[#bbefc1] text-[#00210b] border-[#bbefc1]' 
-                        : 'bg-[#2f5d3a] text-white border-[#2f5d3a]'
-                    }`}
+                    className={`
+                      flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-bold shadow-sm backdrop-blur-sm transition-all
+                      ${isSaved
+                        ? 'bg-[#2f5d3a] text-white'
+                        : 'bg-white/90 text-[#59413b] hover:bg-white'
+                      }
+                    `}
+                    aria-label={isSaved ? 'Remover offline' : 'Salvar offline'}
                   >
-                    {isSaved ? <Check size={14} /> : <Download size={14} />}
-                    <span>{isSaved ? 'Salvo' : 'Salvar Offline'}</span>
-                  </button>
-
-                  <button
-                    onClick={() => onSelectTour(place)}
-                    type="button"
-                    className="min-h-[44px] px-3.5 rounded-xl bg-[#f7ece2] hover:bg-[#ece1d7] text-[#c2461f] border border-[#e0d5c1] flex items-center gap-1 text-xs font-bold transition-colors"
-                  >
-                    <span>Ver Detalhes</span>
-                    <ChevronRight size={14} />
+                    {isSaved ? <Check size={12} /> : <Download size={12} />}
+                    <span className="text-[10px]">{isSaved ? 'Salvo' : 'Salvar'}</span>
                   </button>
                 </div>
+
+                {/* Bottom Left: Location */}
+                <div className="absolute bottom-2 left-2 flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold text-white">
+                  <MapPin size={12} className="shrink-0" />
+                  <span>{place.location.split(',')[0]}</span>
+                </div>
+
+                {/* Bottom Right: Distance (if available) */}
+                {distance != null && (
+                  <div className="absolute bottom-2 right-2 px-2.5 py-1 rounded-lg bg-[#c2461f] text-white text-xs font-bold">
+                    ~ {distance} km
+                  </div>
+                )}
+              </div>
+
+              {/* Card Body */}
+              <div className="p-3 sm:p-4 flex flex-col gap-2.5 flex-1">
+                {/* Title & Category */}
+                <div className="flex flex-col gap-1">
+                  <h2 className="font-headline font-bold text-base sm:text-lg text-[#201b15] leading-tight">
+                    {place.title}
+                  </h2>
+                  <p className="text-xs text-[#59413b]">
+                    {place.location}
+                  </p>
+                </div>
+
+                {/* Info Chip: Tide or Cost */}
+                <div className={`
+                  text-xs font-semibold px-2.5 py-1.5 rounded-lg flex items-center gap-1.5
+                  ${place.tide_dependent
+                    ? 'bg-blue-50 text-blue-900 border border-blue-200'
+                    : 'bg-[#fdf2e7] text-[#201b15] border border-[#e0d5c1]'
+                  }
+                `}>
+                  {place.tide_dependent ? (
+                    <>
+                      <span>🌊</span>
+                      <span>{place.tide_window || 'Maré baixa'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Clock size={13} className="text-[#c2461f] shrink-0" />
+                      <span>{place.expense_range || 'Acesso gratuito'}</span>
+                    </>
+                  )}
+                </div>
+
+                {/* Spacer for button alignment */}
+                <div className="flex-1" />
+
+                {/* Main Action Button */}
+                <button
+                  onClick={() => onSelectTour(place)}
+                  type="button"
+                  className="w-full min-h-[40px] rounded-xl bg-[#c2461f] hover:bg-[#a02e06] text-white flex items-center justify-center gap-2 text-xs font-bold transition-colors shadow-xs"
+                >
+                  <span>Ver Detalhes</span>
+                  <ArrowRight size={13} />
+                </button>
               </div>
             </article>
           );
