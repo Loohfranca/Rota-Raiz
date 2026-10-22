@@ -19,15 +19,7 @@ const fareText = (fare) => {
   }
 };
 
-const timeText = (iso) => {
-  if (!iso) return null;
-  const date = new Date(iso);
-  return Number.isNaN(date.getTime())
-    ? null
-    : new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(date);
-};
-
-function Step({ step, index }) {
+function Step({ step }) {
   const isTransit = step.mode === "transit";
   return (
     <li className="flex gap-3 py-3 border-b border-[#e9ddd0] last:border-0">
@@ -44,8 +36,8 @@ function Step({ step, index }) {
           <>
             {step.agency && <p className="text-xs text-[#59413b]">Empresa: {step.agency}</p>}
             {step.headsign && <p className="text-xs text-[#59413b]">Sentido: {step.headsign}</p>}
-            {step.from && <p className="text-xs text-[#59413b]">Embarque: {step.from}{timeText(step.departure) ? " · " + timeText(step.departure) : ""}</p>}
-            {step.to && <p className="text-xs text-[#59413b]">Desembarque: {step.to}{timeText(step.arrival) ? " · " + timeText(step.arrival) : ""}</p>}
+            {step.from && <p className="text-xs text-[#59413b]">Embarque: {step.from}{step.departureLocal ? " · " + step.departureLocal : ""}</p>}
+            {step.to && <p className="text-xs text-[#59413b]">Desembarque: {step.to}{step.arrivalLocal ? " · " + step.arrivalLocal : ""}</p>}
           </>
         ) : <p className="text-xs text-[#59413b]">{step.instruction}</p>}
         {step.durationMinutes !== null && <p className="text-xs text-[#8b6255]">{durationText(step.durationMinutes)}</p>}
@@ -146,7 +138,7 @@ export default function NationalRoutesView() {
               {fareText(route.fare)}
             </div>
             <ol>
-              {route.steps.map((step, i) => <Step step={step} index={i} key={i} />)}
+              {route.steps.map((step, i) => <Step step={step} key={i} />)}
             </ol>
             <p className="text-xs text-[#59413b]">
               Fonte: <span translate="no">Google Maps</span>. Horários e preços podem mudar sem aviso;
