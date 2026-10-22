@@ -1,44 +1,770 @@
-import React, { useRef, useState } from 'react';
-import { Plus, Wallet, Users, Download, Upload, ArrowUpRight, Trash2, Bookmark, FileText, Pencil } from 'lucide-react';
-import Sheet from './Sheet';
-import { getSavedTours } from '../lib/supabase';
-import { CATEGORIES, money, parseMoney, splitAmount, summarize, validateTrips, downloadJson } from '../lib/tripLedger';
-const KEY = 'rotaraiz_trips_v1';
-const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
-function load() { try { return { trips: validateTrips(JSON.parse(localStorage.getItem(KEY) || '[]')), error: '' }; } catch { return { trips: [], error: 'Não foi possível ler suas viagens. O conteúdo anterior não foi alterado. Restaure uma cópia antes de salvar.' }; } }
+import React, { useRef, useState } from "react";
+import {
+  Plus,
+  Wallet,
+  Users,
+  Download,
+  Upload,
+  ArrowUpRight,
+  Trash2,
+  Bookmark,
+  FileText,
+  Pencil,
+} from "lucide-react";
+import Sheet from "./Sheet";
+import { getSavedTours } from "../lib/supabase";
+import {
+  CATEGORIES,
+  money,
+  parseMoney,
+  splitAmount,
+  summarize,
+  validateTrips,
+  downloadJson,
+} from "../lib/tripLedger";
+const KEY = "rotaraiz_trips_v1";
+const today = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+function load() {
+  try {
+    return {
+      trips: validateTrips(JSON.parse(localStorage.getItem(KEY) || "[]")),
+      error: "",
+    };
+  } catch {
+    return {
+      trips: [],
+      error:
+        "Não foi possível ler suas viagens. O conteúdo anterior não foi alterado. Restaure uma cópia antes de salvar.",
+    };
+  }
+}
 export default function TripView({ onOpenTour }) {
-  const [initial] = useState(load), [trips, setTrips] = useState(initial.trips), [active, setActive] = useState(initial.trips[0]?.id), [sheet, setSheet] = useState(null), [error, setError] = useState(initial.error), [notice, setNotice] = useState('');
-  const file = useRef(null), trip = trips.find(t => t.id === active), stats = trip ? summarize(trip) : null;
+  const [initial] = useState(load),
+    [trips, setTrips] = useState(initial.trips),
+    [active, setActive] = useState(initial.trips[0]?.id),
+    [sheet, setSheet] = useState(null),
+    [error, setError] = useState(initial.error),
+    [blocked, setBlocked] = useState(!!initial.error),
+    [notice, setNotice] = useState("");
+  const file = useRef(null),
+    trip = trips.find((t) => t.id === active),
+    stats = trip ? summarize(trip) : null;
   const saved = Object.values(getSavedTours());
-  function persist(next, restoring = false) { if (initial.error && !restoring && !trips.length) { setError('Restaure uma cópia para preservar os dados anteriores.'); return false; } try { validateTrips(next); localStorage.setItem(KEY, JSON.stringify(next)); setTrips(next); setError(''); return true; } catch (e) { setError(e.message || 'Não foi possível salvar neste aparelho.'); return false; } }
-  function update(next) { return persist(trips.map(t => t.id === next.id ? next : t)); }
-  async function restore(e) { const f = e.target.files[0]; if (!f) return; try { if (f.size > 5000000) throw new Error('O arquivo deve ter até 5 MB.'); const data = JSON.parse(await f.text()); if (data.version !== 1) throw new Error('Formato de cópia não reconhecido.'); const incoming = validateTrips(data.trips); const merged = [...trips]; for (const t of incoming) { const old = merged.find(x => x.id === t.id); if (old && JSON.stringify(old) !== JSON.stringify(t)) { if (!window.confirm(`Substituir a versão local de “${old.name}” pela cópia?`)) continue; merged.splice(merged.indexOf(old),1,t); } else if (!old) merged.push(t); } if (persist(merged, true)) { setActive(merged[0]?.id); setNotice('Cópia restaurada.'); } } catch (err) { setError(err.message); } e.target.value = ''; }
-  return <div className="travel-page"><div className="travel-heading"><div><span className="eyebrow">SEU CADERNO DE CAMINHO</span><h1>Minha viagem</h1><p>Lugares guardados. Contas em dia.</p></div><button className="small-action" onClick={() => setSheet({ type:'trip' })}><Plus size={18}/> Nova viagem</button></div>
-    {error && <p role="alert" className="form-error">{error}</p>}{notice && <p role="status">{notice}</p>}
-    {trips.length > 0 && <label className="trip-select">Sua viagem<select value={active || ''} onChange={e => setActive(e.target.value)}>{trips.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}</select></label>}
-    {!trip ? <section className="travel-empty"><Wallet size={32}/><h2>A viagem também fica na memória.</h2><p>Crie uma viagem, adicione as pessoas e anote os gastos pelo caminho.</p><button className="primary-action" onClick={() => setSheet({type:'trip'})}>Criar minha viagem <Plus size={18}/></button></section> : <>
-    <section className="trip-overview"><div><span>Total da viagem</span><strong>{money(stats.total)}</strong><small>{trip.expenses.length} despesas · {trip.people.length} {trip.people.length===1?'participante':'participantes'}</small></div><button className="primary-action" onClick={() => setSheet({type:'expense'})}><Plus size={18}/> Adicionar gasto</button></section>
-    <div className="trip-actions"><button onClick={() => setSheet({type:'people'})}><Users size={17}/> Pessoas</button><button onClick={() => setSheet({type:'report'})}><FileText size={17}/> Relatório</button><button aria-label="Renomear viagem" onClick={() => setSheet({type:'rename'})}><Pencil size={17}/></button></div>
-    <div className="trip-columns"><section><div className="section-heading"><h2>Gastos do caminho</h2><span>{stats.days ? `${stats.days} ${stats.days===1?'dia':'dias'} entre registros` : 'Comece por aqui'}</span></div>
-    {!trip.expenses.length && <p className="quiet-empty">Seu primeiro almoço, passagem ou passeio aparece aqui.</p>}
-    {[...trip.expenses].sort((a,b) => b.date.localeCompare(a.date)).map((e,i,all) => <React.Fragment key={e.id}>{(i===0 || all[i-1].date!==e.date) && <h3 className="expense-day">{new Date(e.date+'T12:00:00').toLocaleDateString('pt-BR',{day:'numeric',month:'long',year:'numeric'})}</h3>}<button className="expense-row" onClick={() => setSheet({type:'expense',expense:e})}><span className="expense-symbol"><Wallet size={18}/></span><span><b>{e.description}</b><small>{e.category} · {trip.people.find(p=>p.id===e.payer)?.name} pagou</small></span><strong>{money(e.amount)}</strong><ArrowUpRight size={16}/></button></React.Fragment>)}
-    </section><section className="trip-breakdown"><h2>Onde foi o dinheiro</h2>{!stats.total ? <p>O resumo aparece conforme você registra os gastos.</p> : Object.entries(stats.categories).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).map(([c,v])=><div className="category-total" key={c}><span>{c}</span><b>{money(v)}</b><meter min="0" max={stats.total} value={v} aria-label={`${c}: ${money(v)}`}/></div>)}<details className="settlement"><summary>Acertos entre as pessoas</summary><p>Proposta de divisão. Não registra pagamentos de acerto.</p>{stats.settlements.map((s,i)=><p key={i}><b>{s.from}</b> → {s.to} <strong>{money(s.amount)}</strong></p>)}{!stats.settlements.length && <p>Nenhum acerto pendente.</p>}</details></section></div>
-    </>}
-    <details className="saved-trip"><summary><Bookmark size={18}/> Lugares salvos <span>{saved.length}</span></summary>{saved.length ? saved.map(p=><button key={p.id} className="expense-row" onClick={()=>onOpenTour(p)}><span><b>{p.title}</b><small>{p.location}</small></span><ArrowUpRight size={18}/></button>) : <p>Salve lugares no Explorar para encontrá-los aqui.</p>}</details>
-    <footer className="trip-storage"><p>Salvo neste navegador. Faça uma cópia para guardar ou levar a outro aparelho. As pessoas cadastradas não recebem convite nem acesso automático.</p><div><button disabled={!trips.length} onClick={()=>downloadJson('rota-raiz-viagens.json',{version:1,trips})}><Download size={16}/> Baixar cópia</button><button onClick={()=>file.current.click()}><Upload size={16}/> Restaurar cópia</button><input ref={file} type="file" accept="application/json,.json" hidden onChange={restore}/></div></footer>
-    {sheet?.type==='trip' && <Sheet title="Uma nova viagem" onClose={()=>setSheet(null)}>{error&&<p role="alert" className="form-error">{error}</p>}<form className="compact-form" onSubmit={e=>{e.preventDefault(); const f=new FormData(e.currentTarget), id=crypto.randomUUID(); if(persist([...trips,{id,name:f.get('name').trim(),people:[{id:crypto.randomUUID(),name:f.get('person').trim()}],expenses:[]}])) {setActive(id);setSheet(null);} }}><label>Nome da viagem<input name="name" maxLength={100} required placeholder="Bahia e João Pessoa"/></label><label>Seu nome<input name="person" maxLength={60} required placeholder="Como você quer aparecer"/></label><button className="primary-action">Criar viagem</button></form></Sheet>}
-    {sheet?.type==='rename' && <Sheet title="Nome da viagem" onClose={()=>setSheet(null)}>{error&&<p role="alert" className="form-error">{error}</p>}<form className="compact-form" onSubmit={e=>{e.preventDefault(); if(update({...trip,name:new FormData(e.currentTarget).get('name').trim()}))setSheet(null);}}><label>Nome<input name="name" required maxLength={100} defaultValue={trip.name}/></label><button className="primary-action">Salvar nome</button></form></Sheet>}
-    {sheet?.type==='people' && <People trip={trip} update={update} onClose={()=>setSheet(null)}/>}
-    {sheet?.type==='expense' && <Expense trip={trip} expense={sheet.expense} update={update} onClose={()=>setSheet(null)}/>}
-    {sheet?.type==='report' && <Sheet title="Resumo da viagem" className="trip-report-dialog" onClose={()=>setSheet(null)}><article id="trip-report"><span className="eyebrow">ROTA RAIZ · RELATÓRIO</span><h2>{trip.name}</h2><strong className="report-total">{money(stats.total)}</strong><p>{trip.expenses.length} despesas · {stats.days} {stats.days===1?'dia':'dias'} entre primeiro e último registro</p>{stats.days>0 && <p>Média por dia nesse período: {money(stats.average)}</p>}<h3>Por categoria</h3>{Object.entries(stats.categories).filter(([,v])=>v).sort((a,b)=>b[1]-a[1]).map(([c,v])=><p className="report-line" key={c}><span>{c} · {Math.round(v/stats.total*100)}%</span><b>{money(v)}</b></p>)}<h3>Por pessoa</h3>{stats.people.map(p=><div key={p.id}><b>{p.name}</b><p>Pagou {money(p.paid)} · sua parte {money(p.share)}</p></div>)}<h3>Acertos sugeridos</h3>{stats.settlements.map((s,i)=><p key={i}>{s.from} → {s.to}: <b>{money(s.amount)}</b></p>)}{!stats.settlements.length && <p>Nenhum acerto pendente.</p>}<p>Os acertos são calculados pelas despesas; transferências de quitação não estão registradas.</p><h3>Despesas registradas</h3>{trip.expenses.map(e=><p className="report-line" key={e.id}><span>{e.date.split('-').reverse().join('/')} · {e.description} · {e.category} · {trip.people.find(p=>p.id===e.payer)?.name}</span><b>{money(e.amount)}</b></p>)}</article><button className="primary-action no-print" onClick={()=>window.print()}><Download size={17}/> Imprimir / salvar PDF</button><p className="no-print">Escolha “Salvar como PDF” na janela de impressão para compartilhar.</p></Sheet>}
-    </div>;
+  function persist(next, restoring = false) {
+    if (blocked && !restoring) {
+      setError("Restaure uma cópia para preservar os dados anteriores.");
+      return false;
+    }
+    try {
+      validateTrips(next);
+      localStorage.setItem(KEY, JSON.stringify(next));
+      setTrips(next);
+      setBlocked(false);
+      setError("");
+      return true;
+    } catch (e) {
+      setError(e.message || "Não foi possível salvar neste aparelho.");
+      return false;
+    }
+  }
+  function update(next) {
+    return persist(trips.map((t) => (t.id === next.id ? next : t)));
+  }
+  async function restore(e) {
+    const f = e.target.files[0];
+    if (!f) return;
+    try {
+      if (f.size > 5000000) throw new Error("O arquivo deve ter até 5 MB.");
+      const data = JSON.parse(await f.text());
+      if (data.version !== 1)
+        throw new Error("Formato de cópia não reconhecido.");
+      const incoming = validateTrips(data.trips);
+      const merged = [...trips];
+      for (const t of incoming) {
+        const old = merged.find((x) => x.id === t.id);
+        if (old && JSON.stringify(old) !== JSON.stringify(t)) {
+          if (
+            !window.confirm(
+              `Substituir a versão local de “${old.name}” pela cópia?`,
+            )
+          )
+            continue;
+          merged.splice(merged.indexOf(old), 1, t);
+        } else if (!old) merged.push(t);
+      }
+      if (persist(merged, true)) {
+        setActive(merged[0]?.id);
+        setNotice("Cópia restaurada.");
+      }
+    } catch (err) {
+      setError(err.message);
+    }
+    e.target.value = "";
+  }
+  return (
+    <div className="travel-page">
+      <div className="travel-heading">
+        <div>
+          <span className="eyebrow">SEU CADERNO DE CAMINHO</span>
+          <h1>Minha viagem</h1>
+          <p>Lugares guardados. Contas em dia.</p>
+        </div>
+        <button
+          className="small-action"
+          onClick={() => setSheet({ type: "trip" })}
+        >
+          <Plus size={18} /> Nova viagem
+        </button>
+      </div>
+      {error && (
+        <p role="alert" className="form-error">
+          {error}
+        </p>
+      )}
+      {notice && <p role="status">{notice}</p>}
+      {trips.length > 0 && (
+        <label className="trip-select">
+          Sua viagem
+          <select
+            value={active || ""}
+            onChange={(e) => setActive(e.target.value)}
+          >
+            {trips.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+      {!trip ? (
+        <section className="travel-empty">
+          <Wallet size={32} />
+          <h2>A viagem também fica na memória.</h2>
+          <p>
+            Crie uma viagem, adicione as pessoas e anote os gastos pelo caminho.
+          </p>
+          <button
+            className="primary-action"
+            onClick={() => setSheet({ type: "trip" })}
+          >
+            Criar minha viagem <Plus size={18} />
+          </button>
+        </section>
+      ) : (
+        <>
+          <section className="trip-overview">
+            <div>
+              <span>Total da viagem</span>
+              <strong>{money(stats.total)}</strong>
+              <small>
+                {trip.expenses.length} despesas · {trip.people.length}{" "}
+                {trip.people.length === 1 ? "participante" : "participantes"}
+              </small>
+            </div>
+            <button
+              className="primary-action"
+              onClick={() => setSheet({ type: "expense" })}
+            >
+              <Plus size={18} /> Adicionar gasto
+            </button>
+          </section>
+          <div className="trip-actions">
+            <button onClick={() => setSheet({ type: "people" })}>
+              <Users size={17} /> Pessoas
+            </button>
+            <button onClick={() => setSheet({ type: "report" })}>
+              <FileText size={17} /> Relatório
+            </button>
+            <button
+              aria-label="Renomear viagem"
+              onClick={() => setSheet({ type: "rename" })}
+            >
+              <Pencil size={17} />
+            </button>
+          </div>
+          <div className="trip-columns">
+            <section>
+              <div className="section-heading">
+                <h2>Gastos do caminho</h2>
+                <span>
+                  {stats.days
+                    ? `${stats.days} ${stats.days === 1 ? "dia" : "dias"} entre registros`
+                    : "Comece por aqui"}
+                </span>
+              </div>
+              {!trip.expenses.length && (
+                <p className="quiet-empty">
+                  Seu primeiro almoço, passagem ou passeio aparece aqui.
+                </p>
+              )}
+              {[...trip.expenses]
+                .sort((a, b) => b.date.localeCompare(a.date))
+                .map((e, i, all) => (
+                  <React.Fragment key={e.id}>
+                    {(i === 0 || all[i - 1].date !== e.date) && (
+                      <h3 className="expense-day">
+                        {new Date(e.date + "T12:00:00").toLocaleDateString(
+                          "pt-BR",
+                          { day: "numeric", month: "long", year: "numeric" },
+                        )}
+                      </h3>
+                    )}
+                    <button
+                      className="expense-row"
+                      onClick={() => setSheet({ type: "expense", expense: e })}
+                    >
+                      <span className="expense-symbol">
+                        <Wallet size={18} />
+                      </span>
+                      <span>
+                        <b>{e.description}</b>
+                        <small>
+                          {e.category} ·{" "}
+                          {trip.people.find((p) => p.id === e.payer)?.name}{" "}
+                          pagou
+                        </small>
+                      </span>
+                      <strong>{money(e.amount)}</strong>
+                      <ArrowUpRight size={16} />
+                    </button>
+                  </React.Fragment>
+                ))}
+            </section>
+            <section className="trip-breakdown">
+              <h2>Onde foi o dinheiro</h2>
+              {!stats.total ? (
+                <p>O resumo aparece conforme você registra os gastos.</p>
+              ) : (
+                Object.entries(stats.categories)
+                  .filter(([, v]) => v > 0)
+                  .sort((a, b) => b[1] - a[1])
+                  .map(([c, v]) => (
+                    <div className="category-total" key={c}>
+                      <span>{c}</span>
+                      <b>{money(v)}</b>
+                      <meter
+                        min="0"
+                        max={stats.total}
+                        value={v}
+                        aria-label={`${c}: ${money(v)}`}
+                      />
+                    </div>
+                  ))
+              )}
+              <details className="settlement">
+                <summary>Acertos entre as pessoas</summary>
+                <p>Proposta de divisão. Não registra pagamentos de acerto.</p>
+                {stats.settlements.map((s, i) => (
+                  <p key={i}>
+                    <b>{s.from}</b> → {s.to} <strong>{money(s.amount)}</strong>
+                  </p>
+                ))}
+                {!stats.settlements.length && <p>Nenhum acerto pendente.</p>}
+              </details>
+            </section>
+          </div>
+        </>
+      )}
+      <details className="saved-trip">
+        <summary>
+          <Bookmark size={18} /> Lugares salvos <span>{saved.length}</span>
+        </summary>
+        {saved.length ? (
+          saved.map((p) => (
+            <button
+              key={p.id}
+              className="expense-row"
+              onClick={() => onOpenTour(p)}
+            >
+              <span>
+                <b>{p.title}</b>
+                <small>{p.location}</small>
+              </span>
+              <ArrowUpRight size={18} />
+            </button>
+          ))
+        ) : (
+          <p>Salve lugares no Explorar para encontrá-los aqui.</p>
+        )}
+      </details>
+      <footer className="trip-storage">
+        <p>
+          Salvo neste navegador. Faça uma cópia para guardar ou levar a outro
+          aparelho. As pessoas cadastradas não recebem convite nem acesso
+          automático.
+        </p>
+        <div>
+          <button
+            disabled={!trips.length}
+            onClick={() =>
+              downloadJson("rota-raiz-viagens.json", { version: 1, trips })
+            }
+          >
+            <Download size={16} /> Baixar cópia
+          </button>
+          <button onClick={() => file.current.click()}>
+            <Upload size={16} /> Restaurar cópia
+          </button>
+          <input
+            ref={file}
+            type="file"
+            accept="application/json,.json"
+            hidden
+            onChange={restore}
+          />
+        </div>
+      </footer>
+      {sheet?.type === "trip" && (
+        <Sheet title="Uma nova viagem" onClose={() => setSheet(null)}>
+          {error && (
+            <p role="alert" className="form-error">
+              {error}
+            </p>
+          )}
+          <form
+            className="compact-form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const f = new FormData(e.currentTarget),
+                id = crypto.randomUUID();
+              if (
+                persist([
+                  ...trips,
+                  {
+                    id,
+                    name: f.get("name").trim(),
+                    people: [
+                      { id: crypto.randomUUID(), name: f.get("person").trim() },
+                    ],
+                    expenses: [],
+                  },
+                ])
+              ) {
+                setActive(id);
+                setSheet(null);
+              }
+            }}
+          >
+            <label>
+              Nome da viagem
+              <input
+                name="name"
+                maxLength={100}
+                required
+                placeholder="Bahia e João Pessoa"
+              />
+            </label>
+            <label>
+              Seu nome
+              <input
+                name="person"
+                maxLength={60}
+                required
+                placeholder="Como você quer aparecer"
+              />
+            </label>
+            <button className="primary-action">Criar viagem</button>
+          </form>
+        </Sheet>
+      )}
+      {sheet?.type === "rename" && (
+        <Sheet title="Nome da viagem" onClose={() => setSheet(null)}>
+          {error && (
+            <p role="alert" className="form-error">
+              {error}
+            </p>
+          )}
+          <form
+            className="compact-form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (
+                update({
+                  ...trip,
+                  name: new FormData(e.currentTarget).get("name").trim(),
+                })
+              )
+                setSheet(null);
+            }}
+          >
+            <label>
+              Nome
+              <input
+                name="name"
+                required
+                maxLength={100}
+                defaultValue={trip.name}
+              />
+            </label>
+            <button className="primary-action">Salvar nome</button>
+          </form>
+        </Sheet>
+      )}
+      {sheet?.type === "people" && (
+        <People trip={trip} update={update} onClose={() => setSheet(null)} />
+      )}
+      {sheet?.type === "expense" && (
+        <Expense
+          trip={trip}
+          expense={sheet.expense}
+          update={update}
+          onClose={() => setSheet(null)}
+        />
+      )}
+      {sheet?.type === "report" && (
+        <Sheet
+          title="Resumo da viagem"
+          className="trip-report-dialog"
+          onClose={() => setSheet(null)}
+        >
+          <article id="trip-report">
+            <span className="eyebrow">ROTA RAIZ · RELATÓRIO</span>
+            <h2>{trip.name}</h2>
+            <strong className="report-total">{money(stats.total)}</strong>
+            <p>
+              {trip.expenses.length} despesas · {stats.days}{" "}
+              {stats.days === 1 ? "dia" : "dias"} entre primeiro e último
+              registro
+            </p>
+            {stats.days > 0 && (
+              <p>Média por dia nesse período: {money(stats.average)}</p>
+            )}
+            <h3>Por categoria</h3>
+            {Object.entries(stats.categories)
+              .filter(([, v]) => v)
+              .sort((a, b) => b[1] - a[1])
+              .map(([c, v]) => (
+                <p className="report-line" key={c}>
+                  <span>
+                    {c} · {Math.round((v / stats.total) * 100)}%
+                  </span>
+                  <b>{money(v)}</b>
+                </p>
+              ))}
+            <h3>Por pessoa</h3>
+            {stats.people.map((p) => (
+              <div key={p.id}>
+                <b>{p.name}</b>
+                <p>
+                  Pagou {money(p.paid)} · sua parte {money(p.share)}
+                </p>
+              </div>
+            ))}
+            <h3>Acertos sugeridos</h3>
+            {stats.settlements.map((s, i) => (
+              <p key={i}>
+                {s.from} → {s.to}: <b>{money(s.amount)}</b>
+              </p>
+            ))}
+            {!stats.settlements.length && <p>Nenhum acerto pendente.</p>}
+            <p>
+              Os acertos são calculados pelas despesas; transferências de
+              quitação não estão registradas.
+            </p>
+            <h3>Despesas registradas</h3>
+            {trip.expenses.map((e) => (
+              <p className="report-line" key={e.id}>
+                <span>
+                  {e.date.split("-").reverse().join("/")} · {e.description} ·{" "}
+                  {e.category} ·{" "}
+                  {trip.people.find((p) => p.id === e.payer)?.name}
+                </span>
+                <b>{money(e.amount)}</b>
+              </p>
+            ))}
+          </article>
+          <button
+            className="primary-action no-print"
+            onClick={() => window.print()}
+          >
+            <Download size={17} /> Imprimir / salvar PDF
+          </button>
+          <p className="no-print">
+            Escolha “Salvar como PDF” na janela de impressão para compartilhar.
+          </p>
+        </Sheet>
+      )}
+    </div>
+  );
 }
-function People({trip,update,onClose}) {
- const [error,setError]=useState('');
- return <Sheet title="Quem vai junto" onClose={onClose}><div className="people-list">{trip.people.map(p=><div key={p.id}><b>{p.name}</b><button className="icon-button" aria-label={`Remover ${p.name}`} disabled={trip.people.length===1 || trip.expenses.some(e=>e.payer===p.id || Object.hasOwn(e.shares,p.id))} onClick={()=>update({...trip,people:trip.people.filter(x=>x.id!==p.id)})}><Trash2 size={17}/></button></div>)}</div><p className="field-help">Pessoas com despesas ficam no histórico. Cadastros são locais, sem convite.</p><form className="compact-form" onSubmit={e=>{e.preventDefault();const name=new FormData(e.currentTarget).get('name').trim();if(!name)return;if(trip.people.some(p=>p.name.toLocaleLowerCase()===name.toLocaleLowerCase())){setError('Essa pessoa já está na viagem.');return;}if(update({...trip,people:[...trip.people,{id:crypto.randomUUID(),name}]})){e.currentTarget.reset();setError('');}else setError('Não foi possível salvar neste aparelho.');}}><label>Adicionar pessoa<input name="name" required maxLength={60} placeholder="Nome"/></label>{error&&<p role="alert">{error}</p>}<button className="primary-action" disabled={trip.people.length>=50}>Adicionar pessoa</button></form></Sheet>;
+function People({ trip, update, onClose }) {
+  const [error, setError] = useState("");
+  return (
+    <Sheet title="Quem vai junto" onClose={onClose}>
+      <div className="people-list">
+        {trip.people.map((p) => (
+          <div key={p.id}>
+            <b>{p.name}</b>
+            <button
+              className="icon-button"
+              aria-label={`Remover ${p.name}`}
+              disabled={
+                trip.people.length === 1 ||
+                trip.expenses.some(
+                  (e) => e.payer === p.id || Object.hasOwn(e.shares, p.id),
+                )
+              }
+              onClick={() =>
+                update({
+                  ...trip,
+                  people: trip.people.filter((x) => x.id !== p.id),
+                })
+              }
+            >
+              <Trash2 size={17} />
+            </button>
+          </div>
+        ))}
+      </div>
+      <p className="field-help">
+        Pessoas com despesas ficam no histórico. Cadastros são locais, sem
+        convite.
+      </p>
+      <form
+        className="compact-form"
+        onSubmit={(e) => {
+          e.preventDefault();
+          const name = new FormData(e.currentTarget).get("name").trim();
+          if (!name) return;
+          if (
+            trip.people.some(
+              (p) => p.name.toLocaleLowerCase() === name.toLocaleLowerCase(),
+            )
+          ) {
+            setError("Essa pessoa já está na viagem.");
+            return;
+          }
+          if (
+            update({
+              ...trip,
+              people: [...trip.people, { id: crypto.randomUUID(), name }],
+            })
+          ) {
+            e.currentTarget.reset();
+            setError("");
+          } else setError("Não foi possível salvar neste aparelho.");
+        }}
+      >
+        <label>
+          Adicionar pessoa
+          <input name="name" required maxLength={60} placeholder="Nome" />
+        </label>
+        {error && <p role="alert">{error}</p>}
+        <button className="primary-action" disabled={trip.people.length >= 50}>
+          Adicionar pessoa
+        </button>
+      </form>
+    </Sheet>
+  );
 }
-function Expense({trip,expense,update,onClose}) {
- const [selected,setSelected]=useState(expense?Object.keys(expense.shares):trip.people.map(p=>p.id)),[custom,setCustom]=useState(expense ? expense.splitMode === 'custom' || (!expense.splitMode && JSON.stringify(expense.shares) !== JSON.stringify(splitAmount(expense.amount,Object.keys(expense.shares)))) : false),[error,setError]=useState('');
- function submit(e){e.preventDefault();try{const f=new FormData(e.currentTarget),amount=parseMoney(f.get('amount'));let shares=splitAmount(amount,selected);if(custom){shares=Object.fromEntries(selected.map(id=>{const raw=f.get('share-'+id);return[id,raw==='0'||raw==='0,00'||raw==='0.00'?0:parseMoney(raw)];}));if(Object.values(shares).reduce((a,b)=>a+b,0)!==amount)throw new Error('As partes precisam somar exatamente o valor do gasto.');}const item={id:expense?.id||crypto.randomUUID(),description:f.get('description').trim(),amount,category:f.get('category'),payer:f.get('payer'),date:f.get('date'),shares,splitMode:custom?'custom':'equal'};const expenses=expense?trip.expenses.map(x=>x.id===expense.id?item:x):[...trip.expenses,item];if(update({...trip,expenses}))onClose();else setError('Não foi possível salvar. Confira o armazenamento do navegador.');}catch(err){setError(err.message);}}
- return <Sheet title={expense?'Editar gasto':'Adicionar gasto'} onClose={onClose}><form className="compact-form" onSubmit={submit}><div className="form-pair"><label>Valor (R$)<input name="amount" inputMode="decimal" required defaultValue={expense?(expense.amount/100).toFixed(2).replace('.',','):''} placeholder="0,00"/></label><label>Data<input name="date" type="date" required defaultValue={expense?.date||today()}/></label></div><label>O que foi?<input name="description" required maxLength={160} defaultValue={expense?.description} placeholder="Almoço na praia"/></label><div className="form-pair"><label>Categoria<select name="category" defaultValue={expense?.category||CATEGORIES[0]}>{CATEGORIES.map(c=><option key={c}>{c}</option>)}</select></label><label>Quem pagou?<select name="payer" defaultValue={expense?.payer||trip.people[0].id}>{trip.people.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select></label></div><fieldset><legend>Dividir com quem?</legend><div className="person-options">{trip.people.map(p=><label key={p.id}><input type="checkbox" checked={selected.includes(p.id)} onChange={e=>setSelected(e.target.checked?[...selected,p.id]:selected.filter(id=>id!==p.id))}/>{p.name}</label>)}</div></fieldset><label className="check-row"><input type="checkbox" checked={custom} onChange={e=>setCustom(e.target.checked)}/> Ajustar valores por pessoa</label>{custom ? selected.map(id=><label key={id}>{trip.people.find(p=>p.id===id).name} (R$)<input name={'share-'+id} inputMode="decimal" required defaultValue={expense?.shares[id]!=null?(expense.shares[id]/100).toFixed(2).replace('.',','):''} placeholder="0,00"/></label>):<p className="field-help">Divisão igual. Centavos restantes são distribuídos na ordem selecionada.</p>}{error&&<p className="form-error" role="alert">{error}</p>}<button className="primary-action">Salvar gasto</button>{expense&&<button type="button" className="danger-action" onClick={()=>{if(window.confirm('Excluir esta despesa?')&&update({...trip,expenses:trip.expenses.filter(x=>x.id!==expense.id)}))onClose();}}><Trash2 size={16}/> Excluir gasto</button>}</form></Sheet>;
+function Expense({ trip, expense, update, onClose }) {
+  const [selected, setSelected] = useState(
+      expense ? Object.keys(expense.shares) : trip.people.map((p) => p.id),
+    ),
+    [custom, setCustom] = useState(
+      expense
+        ? expense.splitMode === "custom" ||
+            (!expense.splitMode &&
+              JSON.stringify(expense.shares) !==
+                JSON.stringify(
+                  splitAmount(expense.amount, Object.keys(expense.shares)),
+                ))
+        : false,
+    ),
+    [error, setError] = useState("");
+  function submit(e) {
+    e.preventDefault();
+    try {
+      const f = new FormData(e.currentTarget),
+        amount = parseMoney(f.get("amount"));
+      let shares = splitAmount(amount, selected);
+      if (custom) {
+        shares = Object.fromEntries(
+          selected.map((id) => {
+            const raw = f.get("share-" + id);
+            return [
+              id,
+              raw === "0" || raw === "0,00" || raw === "0.00"
+                ? 0
+                : parseMoney(raw),
+            ];
+          }),
+        );
+        if (Object.values(shares).reduce((a, b) => a + b, 0) !== amount)
+          throw new Error(
+            "As partes precisam somar exatamente o valor do gasto.",
+          );
+      }
+      const item = {
+        id: expense?.id || crypto.randomUUID(),
+        description: f.get("description").trim(),
+        amount,
+        category: f.get("category"),
+        payer: f.get("payer"),
+        date: f.get("date"),
+        shares,
+        splitMode: custom ? "custom" : "equal",
+      };
+      const expenses = expense
+        ? trip.expenses.map((x) => (x.id === expense.id ? item : x))
+        : [...trip.expenses, item];
+      if (update({ ...trip, expenses })) onClose();
+      else
+        setError(
+          "Não foi possível salvar. Confira o armazenamento do navegador.",
+        );
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+  return (
+    <Sheet
+      title={expense ? "Editar gasto" : "Adicionar gasto"}
+      onClose={onClose}
+    >
+      <form className="compact-form" onSubmit={submit}>
+        <div className="form-pair">
+          <label>
+            Valor (R$)
+            <input
+              name="amount"
+              inputMode="decimal"
+              required
+              defaultValue={
+                expense
+                  ? (expense.amount / 100).toFixed(2).replace(".", ",")
+                  : ""
+              }
+              placeholder="0,00"
+            />
+          </label>
+          <label>
+            Data
+            <input
+              name="date"
+              type="date"
+              required
+              defaultValue={expense?.date || today()}
+            />
+          </label>
+        </div>
+        <label>
+          O que foi?
+          <input
+            name="description"
+            required
+            maxLength={160}
+            defaultValue={expense?.description}
+            placeholder="Almoço na praia"
+          />
+        </label>
+        <div className="form-pair">
+          <label>
+            Categoria
+            <select
+              name="category"
+              defaultValue={expense?.category || CATEGORIES[0]}
+            >
+              {CATEGORIES.map((c) => (
+                <option key={c}>{c}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Quem pagou?
+            <select
+              name="payer"
+              defaultValue={expense?.payer || trip.people[0].id}
+            >
+              {trip.people.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+        <fieldset>
+          <legend>Dividir com quem?</legend>
+          <div className="person-options">
+            {trip.people.map((p) => (
+              <label key={p.id}>
+                <input
+                  type="checkbox"
+                  checked={selected.includes(p.id)}
+                  onChange={(e) =>
+                    setSelected(
+                      e.target.checked
+                        ? [...selected, p.id]
+                        : selected.filter((id) => id !== p.id),
+                    )
+                  }
+                />
+                {p.name}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+        <label className="check-row">
+          <input
+            type="checkbox"
+            checked={custom}
+            onChange={(e) => setCustom(e.target.checked)}
+          />{" "}
+          Ajustar valores por pessoa
+        </label>
+        {custom ? (
+          selected.map((id) => (
+            <label key={id}>
+              {trip.people.find((p) => p.id === id).name} (R$)
+              <input
+                name={"share-" + id}
+                inputMode="decimal"
+                required
+                defaultValue={
+                  expense?.shares[id] != null
+                    ? (expense.shares[id] / 100).toFixed(2).replace(".", ",")
+                    : ""
+                }
+                placeholder="0,00"
+              />
+            </label>
+          ))
+        ) : (
+          <p className="field-help">
+            Divisão igual. Centavos restantes são distribuídos na ordem
+            selecionada.
+          </p>
+        )}
+        {error && (
+          <p className="form-error" role="alert">
+            {error}
+          </p>
+        )}
+        <button className="primary-action">Salvar gasto</button>
+        {expense && (
+          <button
+            type="button"
+            className="danger-action"
+            onClick={() => {
+              if (
+                window.confirm("Excluir esta despesa?") &&
+                update({
+                  ...trip,
+                  expenses: trip.expenses.filter((x) => x.id !== expense.id),
+                })
+              )
+                onClose();
+            }}
+          >
+            <Trash2 size={16} /> Excluir gasto
+          </button>
+        )}
+      </form>
+    </Sheet>
+  );
 }

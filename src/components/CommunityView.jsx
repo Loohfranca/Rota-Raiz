@@ -1,17 +1,375 @@
-import React, { useEffect, useState } from 'react';
-import { Plus, MapPin, ExternalLink, Camera, Search, Send, Download, Trash2, Users } from 'lucide-react';
-import Sheet from './Sheet';
-import { COMMUNITY_CATEGORIES, getRecommendations, instagramUrl, safeInstagram, validRecommendation, submitRecommendation } from '../lib/community';
-import { downloadJson } from '../lib/tripLedger';
-const KEY='rotaraiz_recommendations_v1';
-export default function CommunityView({onRoute}) {
- const [drafts,setDrafts]=useState(()=>{try{const d=JSON.parse(localStorage.getItem(KEY)||'[]');return Array.isArray(d)?d.filter(validRecommendation):[];}catch{return[];}}),[items,setItems]=useState([]),[available,setAvailable]=useState(false),[loading,setLoading]=useState(true),[query,setQuery]=useState(''),[category,setCategory]=useState('Todos'),[own,setOwn]=useState(false),[form,setForm]=useState(false),[error,setError]=useState(''),[busy,setBusy]=useState(null),[notice,setNotice]=useState('');
- useEffect(()=>{let active=true;getRecommendations().then(r=>{if(active){setItems(r.items);setAvailable(r.available);setLoading(false);}}).catch(()=>{if(active)setLoading(false);});return()=>{active=false;};},[]);
- function save(next){try{localStorage.setItem(KEY,JSON.stringify(next));setDrafts(next);setError('');return true;}catch{setError('Não foi possível salvar neste aparelho.');return false;}}
- async function send(item){setBusy(item.id);setNotice('');try{await submitRecommendation(item);save(drafts.map(d=>d.id===item.id?{...d,submitted:true}:d));setNotice('Indicação enviada para revisão. Ela ainda não está publicada.');}catch(e){setError(e.message);}finally{setBusy(null);}}
- const list=(own?drafts:items).filter(i=>(category==='Todos'||i.category===category)&&`${i.name} ${i.city} ${i.address}`.toLocaleLowerCase().includes(query.toLocaleLowerCase()));
- return <div className="travel-page"><div className="travel-heading"><div><span className="eyebrow">DICAS QUE PASSAM DE MÃO EM MÃO</span><h1>Comunidade</h1><p>Um lugar bom merece ser compartilhado.</p></div><button className="small-action" onClick={()=>setForm({})}><Plus size={18}/> Indicar lugar</button></div><div className="community-controls"><label className="community-search"><Search size={18}/><input aria-label="Buscar indicação por lugar ou cidade" placeholder="Lugar ou cidade" value={query} onChange={e=>setQuery(e.target.value)}/></label><select aria-label="Categoria da indicação" value={category} onChange={e=>setCategory(e.target.value)}>{['Todos',...COMMUNITY_CATEGORIES].map(c=><option key={c}>{c}</option>)}</select></div><div className="segmented-control"><button aria-pressed={!own} onClick={()=>setOwn(false)}>Descobrir</button><button aria-pressed={own} onClick={()=>setOwn(true)}>Minhas indicações <span>{drafts.length}</span></button></div>{error&&<p role="alert" className="form-error">{error}</p>}{notice&&<p role="status">{notice}</p>}{loading&&!own?<p role="status">Buscando indicações…</p>:!list.length?<section className="travel-empty"><Users size={30}/><h2>{query||category!=='Todos'?'Nenhuma indicação nesse filtro.':own?'Sua próxima descoberta começa aqui.':'Vamos construir esse caminho juntos.'}</h2><p>{own?'Guarde um lugar com nome, endereço e uma dica pessoal.':available?'As indicações aparecem aqui depois da revisão.':'A publicação comunitária ainda precisa ser conectada. Você já pode preparar suas indicações neste aparelho.'}</p><button className="small-action" onClick={()=>setForm({})}>Indicar um lugar <Plus size={16}/></button></section>:<div className="recommendation-grid">{list.map(i=><article className="recommendation" key={i.id}><span className="eyebrow">{i.category} · {i.city}</span><h2>{i.name}</h2><p className="recommendation-address"><MapPin size={16}/>{i.address}</p><p>{i.note}</p><small>{own?(items.some(p=>p.id===i.id)?'Publicada na comunidade':i.submitted?'Enviada para revisão':'Rascunho neste aparelho'):`Cadastro conferido em ${new Date(i.reviewed_at).toLocaleDateString('pt-BR')}. Dica pessoal; confirme a operação.`}</small><div className="recommendation-actions"><button onClick={()=>onRoute({name:`${i.name}, ${i.address}, ${i.city}`,address:`${i.name}, ${i.address}, ${i.city}`,route_by_name:true})}>Como chegar <ExternalLink size={15}/></button>{safeInstagram(i.instagram)&&<a href={safeInstagram(i.instagram)} target="_blank" rel="noopener noreferrer"><Camera size={17}/> Instagram</a>}{own&&!i.submitted&&<button onClick={()=>setForm({draft:i})}>Editar</button>}{own&&!i.submitted&&<button disabled={busy===i.id} onClick={()=>send(i)}><Send size={16}/>{busy===i.id?'Enviando…':'Enviar para revisão'}</button>}{own&&<button aria-label={`Excluir cópia local de ${i.name}`} onClick={()=>{if(window.confirm('Excluir a cópia neste aparelho? Um envio já feito não será removido da revisão.'))save(drafts.filter(d=>d.id!==i.id));}}><Trash2 size={16}/></button>}</div></article>)}</div>}
- {own&&drafts.length>0&&<button className="small-action" onClick={()=>downloadJson('rota-raiz-indicacoes.json',{version:1,recommendations:drafts})}><Download size={16}/> Baixar minhas indicações</button>}
- {form&&<Sheet title="Indicar um lugar" onClose={()=>setForm(false)}><RecommendationForm initial={form.draft} onSave={item=>{if(save(form.draft?drafts.map(d=>d.id===item.id?item:d):[...drafts,item])){setOwn(true);setForm(false);setNotice('Indicação salva neste aparelho. Use “Enviar para revisão” para solicitar a publicação.');return true;}return false;}}/></Sheet>}</div>;
+import React, { useEffect, useState } from "react";
+import {
+  Plus,
+  MapPin,
+  ExternalLink,
+  Camera,
+  Search,
+  Send,
+  Download,
+  Trash2,
+  Users,
+} from "lucide-react";
+import Sheet from "./Sheet";
+import {
+  COMMUNITY_CATEGORIES,
+  getRecommendations,
+  instagramUrl,
+  safeInstagram,
+  validRecommendation,
+  submitRecommendation,
+} from "../lib/community";
+import { downloadJson } from "../lib/tripLedger";
+const KEY = "rotaraiz_recommendations_v1";
+export default function CommunityView({ onRoute }) {
+  const [drafts, setDrafts] = useState(() => {
+      try {
+        const d = JSON.parse(localStorage.getItem(KEY) || "[]");
+        return Array.isArray(d) ? d.filter(validRecommendation) : [];
+      } catch {
+        return [];
+      }
+    }),
+    [items, setItems] = useState([]),
+    [available, setAvailable] = useState(false),
+    [loading, setLoading] = useState(true),
+    [query, setQuery] = useState(""),
+    [category, setCategory] = useState("Todos"),
+    [own, setOwn] = useState(false),
+    [form, setForm] = useState(false),
+    [error, setError] = useState(""),
+    [busy, setBusy] = useState(null),
+    [notice, setNotice] = useState("");
+  useEffect(() => {
+    let active = true;
+    getRecommendations()
+      .then((r) => {
+        if (active) {
+          setItems(r.items);
+          setAvailable(r.available);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+  function save(next) {
+    try {
+      localStorage.setItem(KEY, JSON.stringify(next));
+      setDrafts(next);
+      setError("");
+      return true;
+    } catch {
+      setError("Não foi possível salvar neste aparelho.");
+      return false;
+    }
+  }
+  async function send(item) {
+    setBusy(item.id);
+    setNotice("");
+    try {
+      await submitRecommendation(item);
+      save(
+        drafts.map((d) => (d.id === item.id ? { ...d, submitted: true } : d)),
+      );
+      setNotice(
+        "Indicação enviada para revisão. Ela ainda não está publicada.",
+      );
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBusy(null);
+    }
+  }
+  const list = (own ? drafts : items).filter(
+    (i) =>
+      (category === "Todos" || i.category === category) &&
+      `${i.name} ${i.city} ${i.address}`
+        .toLocaleLowerCase()
+        .includes(query.toLocaleLowerCase()),
+  );
+  return (
+    <div className="travel-page">
+      <div className="travel-heading">
+        <div>
+          <span className="eyebrow">DICAS QUE PASSAM DE MÃO EM MÃO</span>
+          <h1>Comunidade</h1>
+          <p>Um lugar bom merece ser compartilhado.</p>
+        </div>
+        <button className="small-action" onClick={() => setForm({})}>
+          <Plus size={18} /> Indicar lugar
+        </button>
+      </div>
+      <div className="community-controls">
+        <label className="community-search">
+          <Search size={18} />
+          <input
+            aria-label="Buscar indicação por lugar ou cidade"
+            placeholder="Lugar ou cidade"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </label>
+        <select
+          aria-label="Categoria da indicação"
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+        >
+          {["Todos", ...COMMUNITY_CATEGORIES].map((c) => (
+            <option key={c}>{c}</option>
+          ))}
+        </select>
+      </div>
+      <div className="segmented-control">
+        <button aria-pressed={!own} onClick={() => setOwn(false)}>
+          Descobrir
+        </button>
+        <button aria-pressed={own} onClick={() => setOwn(true)}>
+          Minhas indicações <span>{drafts.length}</span>
+        </button>
+      </div>
+      {error && (
+        <p role="alert" className="form-error">
+          {error}
+        </p>
+      )}
+      {notice && <p role="status">{notice}</p>}
+      {loading && !own ? (
+        <p role="status">Buscando indicações…</p>
+      ) : !list.length ? (
+        <section className="travel-empty">
+          <Users size={30} />
+          <h2>
+            {query || category !== "Todos"
+              ? "Nenhuma indicação nesse filtro."
+              : own
+                ? "Sua próxima descoberta começa aqui."
+                : "Vamos construir esse caminho juntos."}
+          </h2>
+          <p>
+            {own
+              ? "Guarde um lugar com nome, endereço e uma dica pessoal."
+              : available
+                ? "As indicações aparecem aqui depois da revisão."
+                : "A publicação comunitária ainda precisa ser conectada. Você já pode preparar suas indicações neste aparelho."}
+          </p>
+          <button className="small-action" onClick={() => setForm({})}>
+            Indicar um lugar <Plus size={16} />
+          </button>
+        </section>
+      ) : (
+        <div className="recommendation-grid">
+          {list.map((i) => (
+            <article className="recommendation" key={i.id}>
+              <span className="eyebrow">
+                {i.category} · {i.city}
+              </span>
+              <h2>{i.name}</h2>
+              <p className="recommendation-address">
+                <MapPin size={16} />
+                {i.address}
+              </p>
+              <p>{i.note}</p>
+              <small>
+                {own
+                  ? items.some((p) => p.id === i.id)
+                    ? "Publicada na comunidade"
+                    : i.submitted
+                      ? "Enviada para revisão"
+                      : "Rascunho neste aparelho"
+                  : `Cadastro conferido em ${new Date(i.reviewed_at).toLocaleDateString("pt-BR")}. Dica pessoal; confirme a operação.`}
+              </small>
+              <div className="recommendation-actions">
+                <button
+                  onClick={() =>
+                    onRoute({
+                      name: `${i.name}, ${i.address}, ${i.city}`,
+                      address: `${i.name}, ${i.address}, ${i.city}`,
+                      route_by_name: true,
+                    })
+                  }
+                >
+                  Como chegar <ExternalLink size={15} />
+                </button>
+                {safeInstagram(i.instagram) && (
+                  <a
+                    href={safeInstagram(i.instagram)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Camera size={17} /> Instagram
+                  </a>
+                )}
+                {own && !i.submitted && (
+                  <button onClick={() => setForm({ draft: i })}>Editar</button>
+                )}
+                {own && !i.submitted && (
+                  <button disabled={busy === i.id} onClick={() => send(i)}>
+                    <Send size={16} />
+                    {busy === i.id ? "Enviando…" : "Enviar para revisão"}
+                  </button>
+                )}
+                {own && (
+                  <button
+                    aria-label={`Excluir cópia local de ${i.name}`}
+                    onClick={() => {
+                      if (
+                        window.confirm(
+                          "Excluir a cópia neste aparelho? Um envio já feito não será removido da revisão.",
+                        )
+                      )
+                        save(drafts.filter((d) => d.id !== i.id));
+                    }}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                )}
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+      {own && drafts.length > 0 && (
+        <button
+          className="small-action"
+          onClick={() =>
+            downloadJson("rota-raiz-indicacoes.json", {
+              version: 1,
+              recommendations: drafts,
+            })
+          }
+        >
+          <Download size={16} /> Baixar minhas indicações
+        </button>
+      )}
+      {form && (
+        <Sheet title="Indicar um lugar" onClose={() => setForm(false)}>
+          <RecommendationForm
+            initial={form.draft}
+            onSave={(item) => {
+              if (
+                save(
+                  form.draft
+                    ? drafts.map((d) => (d.id === item.id ? item : d))
+                    : [...drafts, item],
+                )
+              ) {
+                setOwn(true);
+                setForm(false);
+                setNotice(
+                  "Indicação salva neste aparelho. Use “Enviar para revisão” para solicitar a publicação.",
+                );
+                return true;
+              }
+              return false;
+            }}
+          />
+        </Sheet>
+      )}
+    </div>
+  );
 }
-function RecommendationForm({onSave,initial}){const [error,setError]=useState('');return <form className="compact-form" onSubmit={e=>{e.preventDefault();try{const f=new FormData(e.currentTarget);const item={id:initial?.id||crypto.randomUUID(),name:f.get('name').trim(),category:f.get('category'),city:f.get('city').trim(),address:f.get('address').trim(),instagram:instagramUrl(f.get('instagram')),note:f.get('note').trim()};if(!item.name||!item.city||!item.address||!item.note)throw new Error('Preencha nome, cidade, endereço e sua dica.');if(!onSave(item))setError('Não foi possível salvar neste aparelho.');}catch(err){setError(err.message);}}}><label>Nome do lugar<input name="name" defaultValue={initial?.name} required maxLength={120}/></label><div className="form-pair"><label>Categoria<select name="category" defaultValue={initial?.category}>{COMMUNITY_CATEGORIES.map(c=><option key={c}>{c}</option>)}</select></label><label>Cidade e estado<input name="city" defaultValue={initial?.city} placeholder="João Pessoa, PB" required maxLength={120}/></label></div><label>Endereço completo<input name="address" defaultValue={initial?.address} placeholder="Rua, número e bairro" required maxLength={300}/></label><label>Instagram <small>opcional</small><input name="instagram" defaultValue={initial?.instagram} maxLength={120} placeholder="@nomedolugar" autoCapitalize="none"/></label><label>Sua dica<textarea name="note" defaultValue={initial?.note} required maxLength={500} rows={3} placeholder="O que você conheceu e recomenda?"/></label><p className="field-help">Cadastre o endereço público do estabelecimento. A indicação precisa de revisão antes de aparecer para outras pessoas.</p>{error&&<p role="alert" className="form-error">{error}</p>}<button className="primary-action">Guardar indicação</button></form>;}
+function RecommendationForm({ onSave, initial }) {
+  const [error, setError] = useState("");
+  return (
+    <form
+      className="compact-form"
+      onSubmit={(e) => {
+        e.preventDefault();
+        try {
+          const f = new FormData(e.currentTarget);
+          const item = {
+            id: initial?.id || crypto.randomUUID(),
+            name: f.get("name").trim(),
+            category: f.get("category"),
+            city: f.get("city").trim(),
+            address: f.get("address").trim(),
+            instagram: instagramUrl(f.get("instagram")),
+            note: f.get("note").trim(),
+          };
+          if (!item.name || !item.city || !item.address || !item.note)
+            throw new Error("Preencha nome, cidade, endereço e sua dica.");
+          if (!onSave(item))
+            setError("Não foi possível salvar neste aparelho.");
+        } catch (err) {
+          setError(err.message);
+        }
+      }}
+    >
+      <label>
+        Nome do lugar
+        <input
+          name="name"
+          defaultValue={initial?.name}
+          required
+          maxLength={120}
+        />
+      </label>
+      <div className="form-pair">
+        <label>
+          Categoria
+          <select name="category" defaultValue={initial?.category}>
+            {COMMUNITY_CATEGORIES.map((c) => (
+              <option key={c}>{c}</option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Cidade e estado
+          <input
+            name="city"
+            defaultValue={initial?.city}
+            placeholder="João Pessoa, PB"
+            required
+            maxLength={120}
+          />
+        </label>
+      </div>
+      <label>
+        Endereço completo
+        <input
+          name="address"
+          defaultValue={initial?.address}
+          placeholder="Rua, número e bairro"
+          required
+          maxLength={300}
+        />
+      </label>
+      <label>
+        Instagram <small>opcional</small>
+        <input
+          name="instagram"
+          defaultValue={initial?.instagram}
+          maxLength={120}
+          placeholder="@nomedolugar"
+          autoCapitalize="none"
+        />
+      </label>
+      <label>
+        Sua dica
+        <textarea
+          name="note"
+          defaultValue={initial?.note}
+          required
+          maxLength={500}
+          rows={3}
+          placeholder="O que você conheceu e recomenda?"
+        />
+      </label>
+      <p className="field-help">
+        Cadastre o endereço público do estabelecimento. A indicação precisa de
+        revisão antes de aparecer para outras pessoas.
+      </p>
+      {error && (
+        <p role="alert" className="form-error">
+          {error}
+        </p>
+      )}
+      <button className="primary-action">Guardar indicação</button>
+    </form>
+  );
+}

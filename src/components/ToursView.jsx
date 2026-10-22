@@ -101,16 +101,20 @@ export default function ToursView({
     if (onlySaved && place.savedOrigin) onChangeHome(place.savedOrigin);
     onSelectTour(place);
   };
-  const regionalHero = BEACHES.find(p => p.region === (region === "auto" ? near?.id : region));
-  const hero = regionalHero || BEACHES.find(
-    (i) =>
-      i.id ===
-      (regionName === "Porto Seguro"
-        ? "taperapua"
-        : regionName === "Arraial d’Ajuda"
-          ? "pitinga"
-          : "satu"),
+  const regionalHero = BEACHES.find(
+    (p) => p.region === (region === "auto" ? near?.id : region),
   );
+  const hero =
+    regionalHero ||
+    BEACHES.find(
+      (i) =>
+        i.id ===
+        (regionName === "Porto Seguro"
+          ? "taperapua"
+          : regionName === "Arraial d’Ajuda"
+            ? "pitinga"
+            : "satu"),
+    );
   return (
     <div className="explore-page">
       <section className="explore-hero">
@@ -150,7 +154,11 @@ export default function ToursView({
         onChange={onChangeHome}
         stops={stops}
         cities={cities}
-        places={[...places, ...AIRPORTS, ...LODGINGS.map((i) => ({ ...i, title: i.name }))]}
+        places={[
+          ...places,
+          ...AIRPORTS,
+          ...LODGINGS.map((i) => ({ ...i, title: i.name })),
+        ]}
       />
       <section className="discovery-section">
         <div className="discovery-top">
@@ -239,7 +247,8 @@ export default function ToursView({
             <MapPin size={30} />
             <h3>Vamos planejar sua chegada?</h3>
             <p>
-              Ainda não há lugares cadastrados perto desta origem. Explore as regiões disponíveis nos filtros.
+              Ainda não há lugares cadastrados perto desta origem. Explore as
+              regiões disponíveis nos filtros.
             </p>
             <button
               className="button button-primary"
@@ -263,7 +272,12 @@ export default function ToursView({
                   className={`beach-card ${place.photo ? "has-photo" : "without-photo"}`}
                 >
                   <div className="beach-card-visual">
-                    {getTourPhotos(place).length > 1 && <span className="card-photo-count"><Images size={13}/>{getTourPhotos(place).length} fotos</span>}
+                    {getTourPhotos(place).length > 1 && (
+                      <span className="card-photo-count">
+                        <Images size={13} />
+                        {getTourPhotos(place).length} fotos
+                      </span>
+                    )}
                     <BeachPhoto tour={place} className="beach-card-photo" />
                     <span className="beach-location">
                       <MapPin size={13} />
@@ -286,8 +300,19 @@ export default function ToursView({
                     </button>
                   </div>
                   <div className="beach-card-body">
-                    <span className="beach-card-region">{place.location?.split(",")[0]}</span>
-                    <h3><button type="button" className="beach-card-open" onClick={() => open(place)} aria-label={`Ver detalhes de ${place.title}`}>{place.title}</button></h3>
+                    <span className="beach-card-region">
+                      {place.location?.split(",")[0]}
+                    </span>
+                    <h3>
+                      <button
+                        type="button"
+                        className="beach-card-open"
+                        onClick={() => open(place)}
+                        aria-label={`Ver detalhes de ${place.title}`}
+                      >
+                        {place.title}
+                      </button>
+                    </h3>
                     <p>{place.subtitle}</p>
                     <div className="beach-card-facts">
                       {place.distanceKm != null ? (
@@ -300,7 +325,9 @@ export default function ToursView({
                         </span>
                       ) : null}
                     </div>
-                    <span className="beach-details" aria-hidden="true">Ver detalhes <ArrowUpRight size={17} /></span>
+                    <span className="beach-details" aria-hidden="true">
+                      Ver detalhes <ArrowUpRight size={17} />
+                    </span>
                   </div>
                 </article>
               ))}
@@ -330,9 +357,8 @@ export default function ToursView({
             )}
           </>
         )}
-
       </section>
-      <CommunitySuggestions home={home} onRoute={onRoute}/>
+      <CommunitySuggestions home={home} onRoute={onRoute} />
     </div>
   );
 }
