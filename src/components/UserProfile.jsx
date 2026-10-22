@@ -10,6 +10,7 @@ export default function UserProfile({ user, onLogout }) {
     if (success && onLogout) {
       onLogout();
     }
+    setShowDropdown(false);
   };
 
   if (!user) return null;
@@ -29,15 +30,13 @@ export default function UserProfile({ user, onLogout }) {
       {/* Trigger Button */}
       <button
         onClick={() => setShowDropdown(!showDropdown)}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#fdf2e7] border border-[#e0d5c1] hover:bg-[#f7ece2] transition-colors"
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#fdf2e7] border border-[#e0d5c1] hover:bg-[#f7ece2] transition-colors"
+        title={displayName}
       >
-        <div className="w-7 h-7 rounded-full bg-[#c2461f] text-white flex items-center justify-center text-xs font-bold">
+        <div className="w-6 h-6 rounded-full bg-[#c2461f] text-white flex items-center justify-center text-[10px] font-bold shrink-0">
           {userInitials}
         </div>
-        <span className="text-xs font-bold text-[#201b15] truncate max-w-[100px]">
-          {displayName}
-        </span>
-        <ChevronDown size={14} className={`text-[#59413b] transition-transform ${showDropdown ? 'rotate-180' : ''}`} />
+        <ChevronDown size={13} className={`text-[#59413b] transition-transform shrink-0 ${showDropdown ? 'rotate-180' : ''}`} />
       </button>
 
       {/* Dropdown Menu */}

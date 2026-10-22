@@ -29,6 +29,7 @@ export default function ToursView({
   const [cities, setCities] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todos');
+  const [viewMode, setViewMode] = useState('discover'); // 'discover' | 'mine'
   const { tours: savedTours } = getOfflineStorage();
   const [offlineSavedList, setOfflineSavedList] = useState(savedTours);
 
@@ -79,6 +80,30 @@ export default function ToursView({
         <p className="text-xs sm:text-sm text-[#59413b] mt-0.5">
           Praias e atrativos com a distância a partir de onde você está.
         </p>
+      </section>
+
+      {/* View Mode Tabs */}
+      <section className="flex items-center gap-2">
+        <button
+          onClick={() => setViewMode('discover')}
+          className={`flex-1 min-h-[44px] rounded-xl font-bold text-sm transition-all ${
+            viewMode === 'discover'
+              ? 'bg-[#c2461f] text-white'
+              : 'bg-[#ffffff] text-[#59413b] border border-[#e0d5c1] hover:bg-[#f7ece2]'
+          }`}
+        >
+          🔍 Descobrir
+        </button>
+        <button
+          onClick={() => setViewMode('mine')}
+          className={`flex-1 min-h-[44px] rounded-xl font-bold text-sm transition-all ${
+            viewMode === 'mine'
+              ? 'bg-[#c2461f] text-white'
+              : 'bg-[#ffffff] text-[#59413b] border border-[#e0d5c1] hover:bg-[#f7ece2]'
+          }`}
+        >
+          ✏️ Minhas Indicações
+        </button>
       </section>
 
       {/* Base das distâncias: o usuário escolhe de onde mede */}
@@ -135,8 +160,25 @@ export default function ToursView({
       </section>
 
       {/* Places Grid */}
-      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredPlaces.map((place) => {
+      {viewMode === 'mine' ? (
+        <section className="p-8 rounded-2xl bg-[#fdf2e7] border border-[#e0d5c1] flex flex-col items-center justify-center gap-4 min-h-[300px]">
+          <div className="text-5xl">✏️</div>
+          <h2 className="font-headline font-bold text-xl text-[#201b15] text-center">
+            Você ainda não publicou nenhuma indicação
+          </h2>
+          <p className="text-sm text-[#59413b] text-center max-w-xs">
+            Compartilhe seus lugares favoritos e dicas com a comunidade Rota Raiz.
+          </p>
+          <button
+            type="button"
+            className="mt-2 min-h-[44px] px-6 rounded-xl bg-[#c2461f] hover:bg-[#a02e06] text-white font-bold text-sm transition-colors"
+          >
+            + Publicar Indicação
+          </button>
+        </section>
+      ) : (
+        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredPlaces.map((place) => {
           const isSaved = offlineSavedList.includes(place.id);
           const distance = home?.lat != null && home?.lng != null
             ? haversineDistance(home.lat, home.lng, place.lat, place.lng)
@@ -243,9 +285,12 @@ export default function ToursView({
               </div>
             </article>
           );
-        })}
-      </section>
+          })}
+        </section>
+      )}
 
+      {viewMode === 'discover' && (
+        <>
       {/* Helpful Traveler Note */}
       <section className="p-4 rounded-2xl bg-[#bbefc1]/30 border border-[#e0d5c1] flex items-start gap-3 shadow-xs">
         <div className="w-9 h-9 rounded-xl bg-[#2f5d3a] text-white flex items-center justify-center shrink-0">
@@ -260,6 +305,8 @@ export default function ToursView({
           </p>
         </div>
       </section>
+        </>
+      )}
     </div>
   );
 }
