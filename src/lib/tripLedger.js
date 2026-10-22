@@ -44,7 +44,7 @@ export function validateTrips(data) {
     if (ids.size !== t.people.length || t.people.some(p => typeof p.id !== 'string' || typeof p.name !== 'string' || !p.name.trim() || p.name.length > 60)) throw new Error('Participantes inválidos.');
     const expenseIds = new Set();
     for (const e of t.expenses) {
-      if (!e || typeof e.id !== 'string' || expenseIds.has(e.id) || typeof e.description !== 'string' || !e.description.trim() || e.description.length > 160 || !CATEGORIES.includes(e.category) || !Number.isSafeInteger(e.amount) || e.amount <= 0 || e.amount > 100000000 || !ids.has(e.payer) || !/^\d{4}-\d{2}-\d{2}$/.test(e.date) || !Number.isFinite(Date.parse(e.date)) || !e.shares || !Object.keys(e.shares).length || Object.entries(e.shares).some(([id, amount]) => !ids.has(id) || !Number.isSafeInteger(amount) || amount < 0) || Object.values(e.shares).reduce((a,b) => a+b,0) !== e.amount) throw new Error('Despesa inválida no arquivo.');
+      if (!e || typeof e.id !== 'string' || expenseIds.has(e.id) || typeof e.description !== 'string' || !e.description.trim() || e.description.length > 160 || !CATEGORIES.includes(e.category) || !Number.isSafeInteger(e.amount) || e.amount <= 0 || e.amount > 100000000 || !ids.has(e.payer) || !/^\d{4}-\d{2}-\d{2}$/.test(e.date) || !Number.isFinite(Date.parse(e.date)) || new Date(e.date).toISOString().slice(0,10) !== e.date || !e.shares || !Object.keys(e.shares).length || Object.entries(e.shares).some(([id, amount]) => !ids.has(id) || !Number.isSafeInteger(amount) || amount < 0) || Object.values(e.shares).reduce((a,b) => a+b,0) !== e.amount) throw new Error('Despesa inválida no arquivo.');
       expenseIds.add(e.id);
     }
   }
