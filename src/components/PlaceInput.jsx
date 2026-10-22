@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useId } from "react";
-import { MapPin, Navigation, X } from "lucide-react";
+import { MapPin, Navigation, Search, X } from "lucide-react";
 import { searchLocations, normalizeText } from "../lib/router";
 import { searchPlacesOnline } from "../lib/geocode";
 
@@ -25,10 +25,16 @@ export default function PlaceInput({
   const [online, setOnline] = useState([]);
   const [loading, setLoading] = useState(false);
   const boxRef = useRef(null);
+  const requestRef = useRef(null);
+  const [searchError, setSearchError] = useState("");
 
   // Mantém o texto sincronizado quando o valor muda por fora (inverter, GPS, usar ponto próximo)
   useEffect(() => {
     setText(value?.name || "");
+    requestRef.current?.abort();
+    setOnline([]);
+    setLoading(false);
+    setSearchError("");
   }, [value?.name]);
 
   useEffect(() => {
@@ -39,30 +45,28 @@ export default function PlaceInput({
     return () => document.removeEventListener("pointerdown", close);
   }, []);
 
-  // Busca online com atraso (debounce) para respeitar o limite do serviço gratuito
-  useEffect(() => {
-    if (!open) return undefined;
+  useEffect(() => () => requestRef.current?.abort(), []);
+
+  const searchMap = async () => {
+    requestRef.current?.abort();
+    const controller = new AbortController();
+    requestRef.current = controller;
     const q = text.trim();
-    if (q.length < 3 || !navigator.onLine) {
-      setOnline([]);
-      return undefined;
+    if (q.length < 3) return;
+    setSearchError("");
+    setLoading(true);
+    setOpen(true);
+    try {
+      const results = await searchPlacesOnline(q, controller.signal);
+      if (controller.signal.aborted) return;
+      setOnline(results);
+      if (!results.length) setSearchError("Nenhum endereço encontrado. Inclua cidade e estado, ou mantenha o texto para consultar o trajeto.");
+    } catch (error) {
+      if (error.name !== "AbortError") setSearchError("Não foi possível localizar agora. Você pode manter o endereço digitado e consultar o trajeto.");
+    } finally {
+      if (!controller.signal.aborted) setLoading(false);
     }
-    const ctrl = new AbortController();
-    const timer = setTimeout(async () => {
-      setLoading(true);
-      try {
-        setOnline(await searchPlacesOnline(q, ctrl.signal));
-      } catch (err) {
-        if (err.name !== "AbortError") setOnline([]);
-      } finally {
-        setLoading(false);
-      }
-    }, 700);
-    return () => {
-      clearTimeout(timer);
-      ctrl.abort();
-    };
-  }, [text, open]);
+  };
 
   const suggestions = useMemo(() => {
     const local = searchLocations(text, stops, places, cities).map((item) => ({
@@ -80,12 +84,19 @@ export default function PlaceInput({
   }, [text, stops, places, cities, online]);
 
   const handleType = (val) => {
+    requestRef.current?.abort();
+    setOnline([]);
+    setLoading(false);
+    setSearchError("");
     setText(val);
     setOpen(true);
     onChange(val.trim() ? { name: val } : null);
   };
 
   const handlePick = (item) => {
+    requestRef.current?.abort();
+    setLoading(false);
+    setSearchError("");
     setText(item.name);
     setOpen(false);
     onChange({
@@ -94,6 +105,7 @@ export default function PlaceInput({
       lng: item.lng ?? null,
       stopId: item.stopId || null,
       source: item.source,
+      address: item.source === "osm" ? (item.address || item.subtitle) : undefined,
     });
   };
 
@@ -119,6 +131,7 @@ export default function PlaceInput({
             id={inputId}
             onKeyDown={(e) => {
               if (e.key === "Escape") setOpen(false);
+              if (e.key === "Enter") { e.preventDefault(); searchMap(); }
             }}
             type="text"
             value={text}
@@ -134,6 +147,10 @@ export default function PlaceInput({
           <button
             type="button"
             onClick={() => {
+              requestRef.current?.abort();
+              setOnline([]);
+              setLoading(false);
+              setSearchError("");
               setText("");
               onChange(null);
               setOpen(true);
@@ -145,6 +162,7 @@ export default function PlaceInput({
           </button>
         )}
 
+        <button type="button" onClick={searchMap} disabled={loading || text.trim().length < 3 || !navigator.onLine} aria-label={`Buscar ${label.toLowerCase()} no mapa`} className="place-search-button"><Search size={18}/></button>
         {onGps && (
           <button
             type="button"
@@ -162,7 +180,7 @@ export default function PlaceInput({
         {rightSlot}
       </div>
 
-      {open && (suggestions.length > 0 || loading) && (
+      {open && (suggestions.length > 0 || loading || searchError) && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#e0d5c1] rounded-xl shadow-lg z-30 max-h-64 overflow-y-auto">
           {suggestions.map((item) => (
             <button
@@ -188,6 +206,7 @@ export default function PlaceInput({
               </span>
             </button>
           ))}
+          {searchError && <p role="status" className="px-3.5 py-3 text-xs text-[#59413b]">{searchError}</p>}
           {loading && (
             <div className="px-3.5 py-2.5 text-xs text-[#59413b]">
               Buscando no mapa…

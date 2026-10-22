@@ -2185,10 +2185,6 @@
 }
 @media (prefers-reduced-motion: reduce) { .beach-card { transition: none; } .beach-card:hover { transform: none; } }
 
-.airport-shortcuts { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
-.airport-shortcuts > .eyebrow { margin-bottom: 3px; }
-.airport-shortcuts button { min-height: 46px; padding: 12px 15px; border: 1px solid #dbe3d3; border-radius: 14px; background: #edf1e6; color: #243e32; display: flex; justify-content: space-between; align-items: center; text-align: left; font-weight: 600; font-size: 13px; }
-.airport-shortcuts button:hover { background: #e0e8d9; }
 .airport-journey { min-width: 0; }
 .airport-journey header > .eyebrow { display: flex; align-items: center; gap: 8px; }
 .airport-journey h2 { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 27px; font-weight: 600; line-height: 1.25; margin: 10px 0; letter-spacing: -.6px; }
@@ -2227,3 +2223,18 @@
 .journey-flight-check li { margin-bottom: 8px; }
 .journey-reviewed { font-size: 11px; color: #596458; line-height: 1.7; margin-top: 14px; }
 @media(max-width:767px) { .airport-journey h2 { font-size: 23px; } .journey-option > summary { padding: 14px 12px; gap: 10px; } .journey-option-content { padding: 0 14px 16px; } .journey-mode-icon { width: 36px; height: 36px; } .journey-option-label strong { font-size: 15px; } }
+
+.route-search-hint { font-size: 12px; line-height: 1.6; color: #596458; }
+.place-search-button { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 12px; color: #243e32; flex-shrink: 0; }
+.place-search-button:hover { background: #e9efdf; }
+.place-search-button:disabled { opacity: .4; }
+.journey-lookup { background: #fffefa; border: 1px solid #dfe5d8; border-radius: 22px; padding: 22px; }
+.airport-journey + .journey-lookup { margin-top: 20px; }
+.journey-lookup h2 { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 22px; line-height: 1.4; font-weight: 600; margin-top: 12px; overflow-wrap: anywhere; }
+.journey-lookup h2 svg { flex-shrink: 0; }
+.journey-lookup p { font-size: 14px; line-height: 1.7; color: #596458; margin: 12px 0 18px; }
+.journey-lookup-actions { display: flex; flex-direction: column; gap: 9px; }
+.journey-lookup-actions a { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 12px 14px; border-radius: 13px; background: #edf1e6; font-size: 13px; font-weight: 600; }
+.journey-lookup-actions a svg:last-child { margin-left: auto; flex-shrink: 0; }
+.journey-lookup > small { display: block; margin-top: 15px; font-size: 12px; line-height: 1.6; color: #596458; }
+@media(max-width:767px) { .journey-lookup { padding: 18px; } }

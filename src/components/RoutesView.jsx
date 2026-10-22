@@ -5,7 +5,6 @@ import {
   Clock,
   Coins,
   AlertCircle,
-  PlusCircle,
   ShieldCheck,
   ShieldAlert,
   Bus,
@@ -17,7 +16,8 @@ import { calculateRoute, resolvePoint } from "../lib/router";
 import PlaceInput from "./PlaceInput";
 import PageHeading from "./PageHeading";
 import AirportJourney from "./AirportJourney";
-import { AIRPORT_POINT, CARAIVA_POINT, getAirportJourney } from "../data/airportJourney";
+import { getAirportJourney } from "../data/airportJourney";
+import JourneyLookup from "./JourneyLookup";
 
 const MODE_LABEL = {
   ferry: "Balsa",
@@ -37,7 +37,7 @@ const ModeIcon = ({ mode, size = 16 }) => {
 };
 
 const formatMoney = (v) =>
-  v ? `R$ ${Number(v).toFixed(2).replace(".", ",")}` : "Grátis";
+  v == null ? "Consultar valor" : Number(v) === 0 ? "Grátis" : `R$ ${Number(v).toFixed(2).replace(".", ",")}`;
 
 export default function RoutesView({
   origin,
@@ -138,26 +138,6 @@ export default function RoutesView({
     setMode("fastest");
   };
 
-  // Usa o ponto cadastrado mais próximo no lugar do que foi digitado
-  const useNearestStop = () => {
-    if (!result?.nearestStop) return;
-    const s = result.nearestStop;
-    const point = {
-      name: s.name,
-      lat: s.lat,
-      lng: s.lng,
-      stopId: s.id,
-      source: "local",
-    };
-    if (result.side === "origin") {
-      onChangeOrigin(point);
-      runCalculation(point, dest);
-    } else {
-      setDest(point);
-      runCalculation(origin, point);
-    }
-  };
-
   // Destinos reais que saem direto da origem escolhida (vindos dos trechos cadastrados)
   const nextDestinations = useMemo(() => {
     const r = resolvePoint(origin, stops, places, cities);
@@ -207,40 +187,25 @@ export default function RoutesView({
     });
   };
 
-  const startersFromData = cities.slice(0, 6);
-  const airportPlaces = [...places, {id: 'airport-bps', title: AIRPORT_POINT.name, location: 'Porto Seguro, BA'}];
-  const pickAirportJourney = reverse => {
-    const from = reverse ? AIRPORT_POINT : CARAIVA_POINT;
-    const to = reverse ? CARAIVA_POINT : AIRPORT_POINT;
-    onChangeOrigin(from);
-    setDest(to);
-    runCalculation(from, to);
-  };
-
   return (
     <div className="routes-page">
       <PageHeading
         eyebrow="De um lugar ao outro"
         title="A viagem começa"
         accent="no caminho."
-        description="Encontre as conexões de van, ônibus, balsa e canoa."
+        description="Escolha de onde sair e aonde chegar. A viagem é sua."
       />
       <div className="routes-layout">
         <div className="routes-primary">
-          <div className="airport-shortcuts" aria-label="Rotas de aeroporto">
-            <span className="eyebrow">CARAÍVA E AEROPORTO</span>
-            <button type="button" onClick={() => pickAirportJourney(false)}>Caraíva → Aeroporto BPS <ArrowRight size={17}/></button>
-            <button type="button" onClick={() => pickAirportJourney(true)}>Aeroporto BPS → Caraíva <ArrowRight size={17}/></button>
-          </div>
-          <section className="route-search-card">
+          <section className="route-search-card" aria-label="Escolha sua viagem">
             <div className="relative flex flex-col gap-2.5">
               <PlaceInput
                 label="De onde você sai"
                 value={origin}
                 onChange={changeOrigin}
-                placeholder="Digite um lugar ou use o GPS"
+                placeholder="Endereço, bairro ou cidade de saída"
                 stops={stops}
-                places={airportPlaces}
+                places={places}
                 cities={cities}
                 accent="#c2461f"
                 onGps={handleGps}
@@ -262,14 +227,15 @@ export default function RoutesView({
                 label="Para onde você vai"
                 value={dest}
                 onChange={changeDest}
-                placeholder="Praia, cidade, rodoviária..."
+                placeholder="Endereço, praia, aeroporto ou cidade"
                 stops={stops}
-                places={airportPlaces}
+                places={places}
                 cities={cities}
                 accent="#2f5d3a"
               />
             </div>
 
+            <p className="route-search-hint">Digite qualquer origem e destino. Para localizar um endereço no mapa, use a lupa do campo.</p>
             {formError && (
               <p className="text-sm text-[#ba1a1a] flex items-center gap-1.5">
                 <AlertCircle size={16} className="shrink-0" />
@@ -390,55 +356,9 @@ export default function RoutesView({
             </section>
           )}
 
-          {result && !result.found && !result.curated && (
-            <section className="p-4 rounded-2xl bg-white border border-amber-300 shadow-xs flex flex-col gap-3">
-              <div className="flex items-start gap-2 text-amber-800">
-                <AlertCircle size={20} className="shrink-0 mt-0.5" />
-                <h2 className="font-headline font-bold text-base leading-snug">
-                  {result.reason === "no-coverage"
-                    ? "Ainda não temos rotas por aí"
-                    : result.reason === "unknown"
-                      ? "Não encontrei esse lugar"
-                      : result.reason === "same"
-                        ? "Origem e destino iguais"
-                        : "Ainda não temos essa rota"}
-                </h2>
-              </div>
-              <p className="text-sm text-[#59413b] leading-relaxed">
-                {result.message}
-              </p>
-
-              {result.reason === "no-coverage" && result.nearestStop && (
-                <>
-                  <p className="text-sm text-[#59413b]">
-                    O ponto cadastrado mais perto é{" "}
-                    <strong>{result.nearestStop.name}</strong>, a ~
-                    {Math.round(result.nearestKm)} km em linha reta.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={useNearestStop}
-                    className="min-h-[48px] px-4 rounded-xl bg-[#c2461f] text-white font-bold text-sm"
-                  >
-                    Usar esse ponto
-                  </button>
-                </>
-              )}
-
-              {(result.reason === "no-route" ||
-                result.reason === "no-coverage") &&
-                onNavigateToAdmin && (
-                  <button
-                    type="button"
-                    onClick={onNavigateToAdmin}
-                    className="min-h-[44px] px-4 rounded-xl bg-[#f7ece2] text-[#c2461f] font-bold text-sm flex items-center justify-center gap-1.5 border border-[#e0d5c1] self-start"
-                  >
-                    <PlusCircle size={16} />
-                    Cadastrar este trecho
-                  </button>
-                )}
-            </section>
-          )}
+          {result && !result.found && !result.curated && result.reason !== 'same' && <JourneyLookup origin={origin} destination={dest} uncovered />}
+          {result?.reason === 'same' && <p role="status" className="journey-context">Escolha um destino diferente da sua origem.</p>}
+          {result && (result.found || result.curated) && <JourneyLookup origin={origin} destination={dest} />}
 
           {!result && !nextDestinations.length && (
             <section className="route-welcome">
@@ -452,8 +372,8 @@ export default function RoutesView({
                 Mais viagem.
               </h2>
               <p>
-                Escolha a origem e o destino para consultar os trechos
-                cadastrados e os locais de embarque.
+                Informe um endereço, bairro ou cidade em cada campo.
+                Os resultados seguem os pontos que você escolher.
               </p>
               <div className="transport-legend">
                 <span>
@@ -502,36 +422,6 @@ export default function RoutesView({
             </section>
           )}
 
-          {!result && !origin?.name && startersFromData.length > 0 && (
-            <section className="flex flex-col gap-2">
-              <h2 className="font-headline font-bold text-base text-[#201b15] px-1">
-                Comece por aqui
-              </h2>
-              <div className="flex flex-wrap gap-2">
-                {startersFromData.map((c) => {
-                  const s = stops.find((st) => st.city_id === c.id);
-                  return (
-                    <button
-                      key={c.id}
-                      type="button"
-                      onClick={() =>
-                        changeOrigin({
-                          name: c.name,
-                          lat: c.lat,
-                          lng: c.lng,
-                          stopId: s?.id || null,
-                          source: "local",
-                        })
-                      }
-                      className="min-h-[44px] px-4 rounded-full bg-white border border-[#e0d5c1] text-sm font-bold text-[#201b15]"
-                    >
-                      {c.name}
-                    </button>
-                  );
-                })}
-              </div>
-            </section>
-          )}
         </div>
       </div>
       {onNavigateToAdmin && (

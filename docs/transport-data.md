@@ -1,5 +1,13 @@
 # Transporte: cobertura e atualização
 
+## Origem e destino livres — correção em 22/10/2026
+
+Não há atalhos ou preenchimento automático de Caraíva/aeroporto na tela. O viajante escolhe os dois pontos; a origem anteriormente escolhida pode ser lembrada como nos demais fluxos. Não existem mais sugestões iniciais limitadas às cidades da Bahia.
+
+O conteúdo pesquisado de Caraíva só é usado quando os pontos escolhidos correspondem ao trajeto. Fora da cobertura interna, a UI identifica a ausência de roteiro verificado e oferece consulta externa pelo Google Maps com origem/destino reais e preferência por transporte público, carro ou caminhada. Isso NÃO é integração com Google Routes API, nem cobertura nacional interna concluída. Não há inventário nacional de ônibus, canoas ou táxis.
+
+Busca de endereço no Nominatim público agora depende de ação explícita na lupa/Enter, sem consultas enquanto o usuário digita. Texto digitado também pode ser enviado à consulta externa, sem exigir que um endereço exista no nosso banco. Endereços completos selecionados são preservados para evitar confundir lugares homônimos. Fonte: https://developers.google.com/maps/documentation/urls/get-started e https://operations.osmfoundation.org/policies/nominatim/.
+
 ## Implementado em 22/10/2026
 
 A aba Como chegar reconhece Caraíva ↔ Aeroporto de Porto Seguro (BPS), inclusive a hospedagem em Caraíva, por nome ou coordenadas próximas à vila. Os atalhos usam explicitamente a vila; Nova Caraíva dispensa a etapa de canoa. Isso é um roteiro editorial de acessos, não um cálculo com disponibilidade, cotações ou tabela operacional em tempo real. Outras rotas continuam usando o grafo cadastrado.
