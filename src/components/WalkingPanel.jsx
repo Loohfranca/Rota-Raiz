@@ -17,11 +17,11 @@ export default function WalkingPanel({ home, tour }) {
   const save = () => { try { saveWalk(result); setSaved(true); } catch { setError('Não foi possível salvar: armazenamento do dispositivo indisponível ou cheio.'); } };
   const valid = hasCoordinates(home) && hasCoordinates(tour);
   const google = valid ? `https://www.google.com/maps/dir/?api=1&origin=${home.lat},${home.lng}&destination=${tour.lat},${tour.lng}&travelmode=walking` : null;
-  return <section className="bg-[#f8f7f2] rounded-xl p-4 flex flex-col gap-3">
-    <h3 className="text-sm font-bold">Percurso calculado desde sua origem</h3>
+  return <section className="walking-panel">
+    <h3 className="text-sm font-bold">Seu caminho a pé</h3>
     <p className="text-xs text-[#777b6a]">{home?.name || 'Escolha sua origem em Passeios'} → {tour.title}</p>
       {!valid && <p className="text-sm">Volte a Passeios e escolha um endereço ou marque sua origem no mapa.</p>}
-      <button disabled={!valid || loading} onClick={calculate} className="min-h-[44px] rounded-xl bg-[#2f5d3a] disabled:opacity-50 text-white p-3">{loading ? 'Calculando caminhada…' : 'Calcular desde minha origem'}</button>
+      <button disabled={!valid || loading} onClick={calculate} className="min-h-[44px] rounded-xl bg-[#2f5d3a] disabled:opacity-50 text-white p-3">{loading ? 'Calculando caminhada…' : 'Calcular percurso a pé'}</button>
       {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
       {result && <>
         <p className="font-bold">{result.km.toLocaleString('pt-BR', { maximumFractionDigits: 2 })} km no traçado automático · aproximadamente {Math.ceil(result.seconds / 60)} min</p>

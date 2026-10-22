@@ -15,6 +15,7 @@ import {
 import { getStops, getLegs, getPlaces, getCities } from '../lib/supabase';
 import { calculateRoute, resolvePoint } from '../lib/router';
 import PlaceInput from './PlaceInput';
+import PageHeading from './PageHeading';
 
 const MODE_LABEL = { ferry: 'Balsa', van: 'Van', bus: 'Ônibus', canoe: 'Canoa', boat: 'Barco', walk: 'A pé' };
 
@@ -172,15 +173,10 @@ export default function RoutesView({ origin, onChangeOrigin, initialDestination,
   const startersFromData = cities.slice(0, 6);
 
   return (
-    <div className="flex flex-col gap-4 w-full">
-      <section className="flex flex-col gap-1 pt-1">
-        <h1 className="font-headline font-bold text-2xl text-[#201b15] tracking-tight">
-          Como chegar?
-        </h1>
-        <p className="text-sm text-[#59413b]">Van, ônibus e balsa sem mistério.</p>
-      </section>
-
-      <section className="p-3.5 rounded-2xl bg-white border border-[#e0d5c1] shadow-xs flex flex-col gap-3">
+    <div className="routes-page">
+      <PageHeading eyebrow="De um lugar ao outro" title="A viagem começa" accent="no caminho." description="Encontre as conexões de van, ônibus, balsa e canoa."/>
+      <div className="routes-layout"><div className="routes-primary">
+      <section className="route-search-card">
         <div className="relative flex flex-col gap-2.5">
           <PlaceInput
             label="De onde você sai"
@@ -235,6 +231,7 @@ export default function RoutesView({ origin, onChangeOrigin, initialDestination,
         </button>
       </section>
 
+      </div><div className="routes-results">
       {/* Resultado */}
       {result && result.found && option && (
         <section className="p-4 rounded-2xl bg-white border-2 border-[#c2461f] shadow-md flex flex-col gap-3">
@@ -324,7 +321,7 @@ export default function RoutesView({ origin, onChangeOrigin, initialDestination,
             onClick={openDetails}
             className="w-full min-h-[48px] rounded-xl bg-[#2f5d3a] text-white font-bold text-sm flex items-center justify-center gap-2"
           >
-            Detalhes, mapa e salvar offline
+            Ver etapas e guardar roteiro
             <ArrowRight size={16} />
           </button>
         </section>
@@ -375,6 +372,7 @@ export default function RoutesView({ origin, onChangeOrigin, initialDestination,
         </section>
       )}
 
+      {!result && !nextDestinations.length && <section className="route-welcome"><span className="note-icon"><Ship size={28}/></span><p className="eyebrow">A conexão certa</p><h2>Menos dúvida.<br/>Mais viagem.</h2><p>Escolha a origem e o destino para consultar os trechos cadastrados e os locais de embarque.</p><div className="transport-legend"><span><Bus size={18}/>Van e ônibus</span><span><Ship size={18}/>Balsa e canoa</span><span><Footprints size={18}/>A pé</span></div></section>}
       {/* Sugestões vindas dos dados cadastrados */}
       {!result && nextDestinations.length > 0 && (
         <section className="flex flex-col gap-2">
@@ -427,6 +425,7 @@ export default function RoutesView({ origin, onChangeOrigin, initialDestination,
         </section>
       )}
 
+      </div></div>
       {onNavigateToAdmin && (
         <button
           type="button"

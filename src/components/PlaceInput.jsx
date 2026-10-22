@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useId } from 'react';
 import { MapPin, Navigation, X } from 'lucide-react';
 import { searchLocations, normalizeText } from '../lib/router';
 import { searchPlacesOnline } from '../lib/geocode';
@@ -19,6 +19,7 @@ export default function PlaceInput({
   gpsLoading = false,
   rightSlot = null,
 }) {
+  const inputId = useId();
   const [text, setText] = useState(value?.name || '');
   const [open, setOpen] = useState(false);
   const [online, setOnline] = useState([]);
@@ -97,7 +98,7 @@ export default function PlaceInput({
   };
 
   return (
-    <div ref={boxRef} className="relative">
+    <div ref={boxRef} className="place-input relative">
       <div
         className="flex items-center gap-3 bg-[#fdf2e7] rounded-xl pl-3.5 pr-2 min-h-[56px] border border-[#e0d5c1] focus-within:ring-2"
         style={{ '--tw-ring-color': accent }}
@@ -108,10 +109,12 @@ export default function PlaceInput({
           aria-hidden="true"
         />
         <div className="flex flex-col flex-1 min-w-0 py-1.5">
-          <label className="text-[11px] font-bold text-[#59413b] uppercase leading-none mb-1">
+          <label htmlFor={inputId} className="text-[11px] font-bold text-[#59413b] uppercase leading-none mb-1">
             {label}
           </label>
           <input
+            id={inputId}
+            onKeyDown={e => {if(e.key === 'Escape') setOpen(false);}}
             type="text"
             value={text}
             onChange={(e) => handleType(e.target.value)}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import { 
   ArrowLeft, 
@@ -16,7 +16,6 @@ import {
   X,
   ShieldCheck,
   ShieldAlert,
-  AlertTriangle,
   Lightbulb
 } from 'lucide-react';
 import { toggleSaveRouteOffline, getOfflineStorage } from '../lib/supabase';
@@ -28,12 +27,13 @@ export default function RouteDetailView({
   onBack,
   onOpenMapWithRoute
 }) {
+  useEffect(() => {window.scrollTo({top:0,behavior:'instant'});}, [route]);
   // Dados dinâmicos ou fallback
   const originName = route?.originName || origin || 'Porto Seguro';
   const destName = route?.destName || destination || 'Caraíva';
   const routeId = route?.id || `route-${originName}-${destName}`;
-  const totalTime = route?.totalTime || route?.selectedOption?.totalTime || '~ 3h 10 min';
-  const totalCost = route?.totalCost || route?.selectedOption?.totalCostFormatted || 'R$ 38,00';
+  const totalTime = route?.totalTime || route?.selectedOption?.totalTime || 'A confirmar';
+  const totalCost = route?.totalCost || route?.selectedOption?.totalCostFormatted || 'A confirmar';
   const steps = route?.steps || route?.selectedOption?.steps || [];
   const hasUnconfirmed = route?.selectedOption?.hasUnconfirmed ?? true;
   const hasTideDependent = route?.selectedOption?.hasTideDependent ?? false;
@@ -67,14 +67,14 @@ export default function RouteDetailView({
   };
 
   return (
-    <div className="flex flex-col w-full max-w-4xl mx-auto pb-8 gap-4">
+    <div className="route-detail flex flex-col w-full max-w-4xl mx-auto pb-8 gap-4">
       {/* Offline Notification Banner */}
       {showBanner && (
         <div className="w-full bg-[#2f5d3a] text-white px-4 py-3 rounded-xl shadow-xs flex items-center justify-between animate-fade-in">
           <div className="flex items-center gap-2">
             <CheckCircle2 size={18} />
             <span className="text-xs font-medium">
-              Itinerário salvo no seu dispositivo. Você pode consultá-lo mesmo em áreas sem sinal de internet ou telefone.
+              Roteiro marcado nos salvos deste navegador. O fundo do mapa precisa de conexão.
             </span>
           </div>
           <button
@@ -137,12 +137,12 @@ export default function RouteDetailView({
             {hasUnconfirmed ? (
               <span className="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-bold flex items-center gap-1.5 border border-amber-300">
                 <ShieldAlert size={14} className="text-amber-600" />
-                <span>Não confirmado hoje</span>
+                <span>Confirme antes de sair</span>
               </span>
             ) : (
               <span className="px-2.5 py-1 rounded-full bg-[#bbefc1] text-[#00210b] text-xs font-bold flex items-center gap-1.5 border border-[#2f5d3a]/30">
                 <ShieldCheck size={14} className="text-[#2f5d3a]" />
-                <span>Confirmado hoje</span>
+                <span>Informação cadastrada</span>
               </span>
             )}
 
@@ -170,7 +170,7 @@ export default function RouteDetailView({
       {/* Step by Step Timeline */}
       <section className="flex flex-col gap-3">
         <h2 className="font-headline font-bold text-base text-[#201b15] px-1">
-          Passo a Passo das Baldeações
+          Seu caminho, etapa por etapa
         </h2>
 
         <div className="flex flex-col gap-3">
@@ -259,18 +259,6 @@ export default function RouteDetailView({
         </div>
       </section>
 
-      {/* Backpack Advice Banner */}
-      <section className="p-4 rounded-2xl bg-[#bbefc1]/30 border border-[#e0d5c1] flex items-start gap-3 shadow-xs">
-        <div className="w-9 h-9 rounded-xl bg-[#2f5d3a] text-white flex items-center justify-center shrink-0">
-          <Lightbulb size={18} />
-        </div>
-        <div className="flex flex-col text-xs text-[#59413b] leading-relaxed">
-          <span className="font-headline font-bold text-sm text-[#201b15] mb-0.5">
-            Dica Importante de Viagem
-          </span>
-          Ao viajar entre Arraial d'Ajuda, Trancoso e Caraíva, o último ônibus da Águia Azul parte pontualmente às 15:45 da saída da balsa. Se perder esse horário, a única opção é contratar táxi particular ou van fretada.
-        </div>
-      </section>
     </div>
   );
 }

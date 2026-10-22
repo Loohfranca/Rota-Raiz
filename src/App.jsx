@@ -25,7 +25,7 @@ export default function App() {
   // É sempre escolhido por quem usa o app (nada fixo no código).
   const [home, setHome] = useState(loadHome);
 
-  const [activeTab, setActiveTab] = useState('routes');
+  const [activeTab, setActiveTab] = useState('tours');
   const [selectedRoute, setSelectedRoute] = useState(null);
   const [selectedTour, setSelectedTour] = useState(null);
   const [mapDestination, setMapDestination] = useState(null);
@@ -61,6 +61,7 @@ export default function App() {
     setSelectedTour(null);
     if (tabId !== 'routes') setPrefilledDestination('');
     setActiveTab(tabId);
+    window.scrollTo({top:0,behavior:'instant'});
   };
 
   const handleOpenMapWithRoute = (route) => {
@@ -87,7 +88,8 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5EDE1] flex flex-col text-[#201B15]">
+    <div className="app-root">
+      <a className="skip-link" href="#main-content">Ir para o conteúdo</a>
       <Navbar
         activeTab={activeTab}
         onChangeTab={handleTabChange}
@@ -95,7 +97,7 @@ export default function App() {
         dataSource={dataSource}
       />
 
-      <main className="flex-1 w-full max-w-3xl mx-auto px-4 py-4 pb-28 md:pb-10 min-w-0">
+      <main id="main-content" className={`app-main ${activeTab === 'map' ? 'app-main-map' : ''}`}>
         {selectedRoute ? (
           <RouteDetailView
             route={selectedRoute}
@@ -106,7 +108,7 @@ export default function App() {
           <TourDetailView
             tour={selectedTour}
             home={home}
-            onBack={() => setSelectedTour(null)}
+            onBack={() => {setSelectedTour(null); requestAnimationFrame(() => document.dispatchEvent(new Event('rota-raiz:catalog-return')));}}
             onOpenMapWithTour={handleOpenMapWithTour}
             onSwitchToRoute={goToRoutesWith}
           />
@@ -127,12 +129,14 @@ export default function App() {
             destination={mapDestination}
             routeLegsToDraw={selectedRouteLegsForMap}
             onSelectPinRoute={goToRoutesWith}
+            onOpenTour={setSelectedTour}
           />
         ) : activeTab === 'tours' ? (
-          <ToursView home={home} onChangeHome={changeHome} onSelectTour={setSelectedTour} />
+          null
         ) : activeTab === 'admin' ? (
           <AdminView onBack={() => setActiveTab('routes')} />
         ) : null}
+        {activeTab === 'tours' && <div hidden={!!selectedTour || !!selectedRoute}><ToursView home={home} onChangeHome={changeHome} onSelectTour={setSelectedTour} /></div>}
       </main>
 
       <BottomNav activeTab={activeTab} onChangeTab={handleTabChange} />
