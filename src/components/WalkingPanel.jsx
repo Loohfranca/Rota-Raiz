@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Polyline, CircleMarker, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Polyline, CircleMarker, Popup, useMap } from 'react-leaflet';
 import { cachedWalk, fetchWalk, saveWalk, hasCoordinates } from '../lib/walking';
 import 'leaflet/dist/leaflet.css';
 function Fit({ points }) { const map = useMap(); useEffect(() => { map.fitBounds(points, { padding: [20, 20] }); }, [points, map]); return null; }
@@ -26,19 +26,22 @@ export default function WalkingPanel({ home, tour, onSwitchToRoute }) {
       <button aria-pressed={mode === 'transit'} onClick={() => setMode('transit')} className={`min-h-[44px] rounded-xl p-2 ${mode === 'transit' ? 'bg-[#2f5d3a] text-white' : 'bg-[#f7ece2]'}`}>Van / ônibus</button>
     </div>
     {mode === 'transit' ? <><p className="text-sm">Consulte os trechos de transporte cadastrados. Distâncias e horários dependem dos dados disponíveis.</p><button onClick={() => onSwitchToRoute(tour.title)} className="min-h-[44px] rounded-xl bg-[#c2461f] text-white p-3">Consultar transporte</button></> : <>
-      <p className="text-sm">O percurso usa ruas e caminhos mapeados no OpenStreetMap. Distância e tempo são estimativas; acessos por praia, maré e travessias precisam ser conferidos no local.</p>
+
+      {tour.requires_crossing_from_caraiva && <p className="text-xs rounded-xl bg-amber-50 p-3">Desde a vila de Caraíva, a opção costeira envolve canoa e trechos dependentes da maré. O cálculo usa apenas caminhos mapeados e pode não representar essa combinação. Confira a travessia com um guia local.</p>}
+      {!valid && <p className="text-sm">Volte a Passeios e escolha um endereço ou marque sua origem no mapa.</p>}
       <button disabled={!valid || loading} onClick={calculate} className="min-h-[44px] rounded-xl bg-[#2f5d3a] disabled:opacity-50 text-white p-3">{loading ? 'Calculando caminhada…' : 'Calcular percurso a pé'}</button>
       {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
       {result && <>
         <p className="font-bold">{result.km.toLocaleString('pt-BR', { maximumFractionDigits: 2 })} km a pé · aproximadamente {Math.ceil(result.seconds / 60)} min</p>
+        {result.hasFerry && <p className="text-sm bg-amber-50 rounded-xl p-3">O trajeto inclui travessia por água. O tempo é estimado e não garante operação ou horário de canoa/balsa.</p>}
         <p className="text-xs">Calculado em {new Date(result.calculatedAt).toLocaleString('pt-BR')} · Valhalla / OpenStreetMap</p>
-        <div className="h-72 w-full rounded-xl overflow-hidden">
+        <div className="h-[360px] sm:h-[440px] w-full rounded-xl overflow-hidden">
           <MapContainer center={result.points[0]} zoom={13} className="h-full w-full">
             <TileLayer attribution='© OpenStreetMap contributors' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-            <Polyline positions={result.points} color="#2f5d3a" /><CircleMarker center={result.points[0]} radius={6} /><CircleMarker center={result.points[result.points.length - 1]} radius={6} /><Fit points={result.points} />
+            <Polyline positions={result.points} color="#2f5d3a" /><CircleMarker center={result.points[0]} radius={8} color="#2563eb"><Popup>Saída: {home?.name}</Popup></CircleMarker><CircleMarker center={result.points[result.points.length - 1]} radius={8} color="#c2461f"><Popup>Chegada: {tour.title}</Popup></CircleMarker><Fit points={result.points} />
           </MapContainer>
         </div>
-        <ol className="list-decimal pl-5 text-sm flex flex-col gap-2">{result.instructions.map((step, i) => <li key={i}>{step.text} · {Math.round(step.km * 1000)} m</li>)}</ol>
+        <details><summary className="min-h-[44px] flex items-center font-bold cursor-pointer">Ver instruções da caminhada</summary><ol className="list-decimal pl-5 text-sm flex flex-col gap-2">{result.instructions.map((step, i) => <li key={i}>{step.text} · {Math.round(step.km * 1000)} m</li>)}</ol></details>
         <button onClick={save} className="min-h-[44px] rounded-xl border p-3">{saved ? 'Caminhada salva neste dispositivo' : 'Salvar caminhada e instruções'}</button>
         <p className="text-xs">Salva o traçado e as instruções para esta origem. O fundo do mapa não é baixado. Reabra o passeio em “Salvos” com a mesma origem para consultar.</p>
       </>}

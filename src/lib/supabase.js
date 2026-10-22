@@ -1,3 +1,4 @@
+import { BEACHES } from '../data/beachCatalog';
 import { createClient } from '@supabase/supabase-js';
 import { CITIES, STOPS, OPERATORS, LEGS, PLACES } from '../data/seedData';
 
@@ -88,17 +89,26 @@ export const getLegs = async () => {
 };
 
 // Buscar atrativos / passeios
+export const mergeBeachCatalog = (data = []) => {
+  const map = new Map(data.filter(item => item.id !== 'caraiva-prainha').map(item => [item.id, item]));
+  BEACHES.forEach(item => map.set(item.id, { ...map.get(item.id), ...item }));
+  return [...map.values()];
+};
 export const getPlaces = async () => {
   if (supabase) {
     try {
       const { data, error } = await supabase.from('places').select('*');
-      if (!error && data && data.length > 0) return data;
-    } catch (e) {
-      console.warn('Erro ao consultar places no Supabase, usando local:', e);
-    }
+      if (!error && data) {
+        const merged = mergeBeachCatalog(data);
+        try { localStorage.setItem('rotaraiz_places', JSON.stringify(merged)); } catch { /* consultation remains available */ }
+        return merged;
+      }
+    } catch (e) { console.warn('Usando catálogo local:', e); }
   }
-  const cached = localStorage.getItem('rotaraiz_places');
-  return cached ? JSON.parse(cached) : PLACES;
+  try {
+    const cached = JSON.parse(localStorage.getItem('rotaraiz_places') || 'null');
+    return mergeBeachCatalog(Array.isArray(cached) ? cached : PLACES);
+  } catch { return mergeBeachCatalog(PLACES); }
 };
 
 // Buscar operadores
