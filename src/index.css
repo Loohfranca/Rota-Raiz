@@ -2158,6 +2158,7 @@
 .beach-card-open:focus-visible { outline: none; }
 .beach-card:has(.beach-card-open:focus-visible) { outline: 3px solid #a64425; outline-offset: 3px; }
 .beach-card .save-beach { z-index: 2; }
+.beach-card .card-photo-count { pointer-events: none; }
 .beach-card-body > p { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.5; }
 .beach-card-facts { margin: 10px 0 0; }
 .beach-card-facts:empty { display: none; }
