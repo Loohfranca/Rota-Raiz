@@ -41,8 +41,8 @@ export default function PlaceInput({
     const close = (e) => {
       if (boxRef.current && !boxRef.current.contains(e.target)) setOpen(false);
     };
-    document.addEventListener("pointerdown", close);
-    return () => document.removeEventListener("pointerdown", close);
+    document.addEventListener("click", close);
+    return () => document.removeEventListener("click", close);
   }, []);
 
   useEffect(() => () => requestRef.current?.abort(), []);
