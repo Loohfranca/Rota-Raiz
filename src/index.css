@@ -107,3 +107,18 @@
   font-family: var(--font-body) !important;
   z-index: 10;
 }
+
+/* Allow card contents and long names to reflow without clipping the page. */
+@layer base {
+  #root { min-height: 100dvh; }
+  main, section, article, form, input, select, textarea { min-width: 0; }
+  main { overflow-wrap: anywhere; }
+  input, select, textarea { max-width: 100%; }
+  button { cursor: pointer; }
+  button > svg { flex-shrink: 0; }
+  img { max-width: 100%; }
+  @media (max-width: 767px) {
+    input, select, textarea { font-size: 16px; }
+    main { padding-bottom: calc(6rem + env(safe-area-inset-bottom)); }
+  }
+}

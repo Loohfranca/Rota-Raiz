@@ -109,7 +109,7 @@ export default function TourDetailView({
           <button
             onClick={handleShare}
             aria-label="Compartilhar rota"
-            className="w-10 h-10 flex items-center justify-center rounded-xl bg-[#ffffff] border border-[#e0d5c1] text-[#201b15] hover:bg-[#f7ece2] transition-colors"
+            className="w-11 h-11 flex items-center justify-center rounded-xl bg-[#ffffff] border border-[#e0d5c1] text-[#201b15] hover:bg-[#f7ece2] transition-colors"
           >
             {copiedShare ? <Check size={16} className="text-[#2f5d3a]" /> : <Share2 size={16} />}
           </button>
@@ -117,7 +117,7 @@ export default function TourDetailView({
           <button
             onClick={() => setIsBookmarked(!isBookmarked)}
             aria-label="Favoritar"
-            className="w-10 h-10 flex items-center justify-center rounded-xl bg-[#ffffff] border border-[#e0d5c1] text-[#c2461f] hover:bg-[#f7ece2] transition-colors"
+            className="w-11 h-11 flex items-center justify-center rounded-xl bg-[#ffffff] border border-[#e0d5c1] text-[#c2461f] hover:bg-[#f7ece2] transition-colors"
           >
             <Bookmark size={16} className={isBookmarked ? 'fill-current' : ''} />
           </button>
@@ -151,7 +151,7 @@ export default function TourDetailView({
             )}
           </div>
 
-          <div className="flex items-end justify-between">
+          <div className="flex flex-wrap items-end justify-between gap-2">
             <span className="text-xs font-bold text-white bg-black/60 backdrop-blur-md px-3 py-1 rounded-lg">
               {tour.location}
             </span>

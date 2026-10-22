@@ -251,7 +251,7 @@ export default function MapView({
 
       {/* Filter and GPS Bar */}
       <div className="flex items-center justify-between gap-2 flex-wrap">
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+        <div className="flex min-w-0 max-w-full items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
           {[
             { id: 'all', label: 'Tudo', icon: Layers },
             { id: 'stops', label: 'Paradas de Transporte', icon: Bus },
@@ -306,7 +306,7 @@ export default function MapView({
       )}
 
       {/* Leaflet Map Frame */}
-      <div className="w-full h-[calc(100dvh-17rem)] min-h-[340px] sm:h-[540px] rounded-3xl overflow-hidden shadow-xs border border-[#e0d5c1] relative bg-[#f7ece2]">
+      <div className="w-full h-[calc(100dvh-17rem)] min-h-[240px] sm:h-[540px] rounded-3xl overflow-hidden shadow-xs border border-[#e0d5c1] relative bg-[#f7ece2]">
         <MapContainer
           center={defaultCenter}
           zoom={10}

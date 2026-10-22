@@ -88,7 +88,7 @@ export default function RouteDetailView({
 
       {/* Top Header Actions */}
       <header className="flex flex-col gap-2">
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-col items-stretch sm:flex-row sm:items-center sm:justify-between gap-2">
           <button
             onClick={onBack}
             className="min-h-[44px] px-3.5 rounded-xl flex items-center gap-1.5 text-xs font-bold text-[#201b15] bg-[#ffffff] border border-[#e0d5c1] hover:bg-[#f7ece2] transition-colors"
@@ -97,7 +97,7 @@ export default function RouteDetailView({
             <span>Voltar</span>
           </button>
 
-          <div className="flex items-center gap-2">
+          <div className="grid grid-cols-1 min-[360px]:grid-cols-2 sm:flex gap-2">
             <button
               onClick={handleToggleOffline}
               className={`min-h-[44px] px-3.5 rounded-xl flex items-center gap-1.5 text-xs font-bold border transition-all ${
@@ -180,13 +180,13 @@ export default function RouteDetailView({
               className="p-4 sm:p-5 rounded-2xl bg-[#ffffff] border border-[#e0d5c1] shadow-xs flex flex-col gap-3"
             >
               {/* Step Header */}
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
                   <div className="w-8 h-8 rounded-full bg-[#c2461f] text-white flex items-center justify-center font-bold text-sm shrink-0">
                     {step.number}
                   </div>
                   <div className="flex flex-col">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
                       {getTransportIcon(step.mode)}
                       <span className="font-headline font-bold text-base text-[#201b15]">
                         {step.title}
