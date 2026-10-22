@@ -6,7 +6,6 @@ import {
   Search,
   Compass,
   Navigation,
-  Waves,
   ArrowRight,
 } from "lucide-react";
 import {
@@ -284,7 +283,8 @@ export default function ToursView({
                     </button>
                   </div>
                   <div className="beach-card-body">
-                    <h3>{place.title}</h3>
+                    <span className="beach-card-region">{place.location?.split(",")[0]}</span>
+                    <h3><button type="button" className="beach-card-open" onClick={() => open(place)} aria-label={`Ver detalhes de ${place.title}`}>{place.title}</button></h3>
                     <p>{place.subtitle}</p>
                     <div className="beach-card-facts">
                       {place.distanceKm != null ? (
@@ -295,26 +295,9 @@ export default function ToursView({
                           })}{" "}
                           km <small>em linha reta</small>
                         </span>
-                      ) : (
-                        <span>
-                          <Compass size={14} />
-                          Conheça esse lugar
-                        </span>
-                      )}
-                      {place.essentials?.[0] && (
-                        <span>
-                          <Waves size={14} />
-                          {place.essentials[0].label}:{" "}
-                          {place.essentials[0].value}
-                        </span>
-                      )}
+                      ) : null}
                     </div>
-                    <button
-                      onClick={() => open(place)}
-                      className="beach-details"
-                    >
-                      Conhecer e ver como ir <ArrowUpRight size={19} />
-                    </button>
+                    <span className="beach-details" aria-hidden="true">Ver detalhes <ArrowUpRight size={17} /></span>
                   </div>
                 </article>
               ))}
