@@ -5,6 +5,9 @@ import RoutesView from "./components/RoutesView";
 import RouteDetailView from "./components/RouteDetailView";
 import ToursView from "./components/ToursView";
 import TourDetailView from "./components/TourDetailView";
+import TripView from "./components/TripView";
+import CommunityView from "./components/CommunityView";
+import { ArrowLeft, MapPin } from "lucide-react";
 import MapView from "./components/MapView";
 import AdminView from "./components/AdminView";
 import { isSupabaseConfigured } from "./lib/supabase";
@@ -28,6 +31,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState("tours");
   const [selectedRoute, setSelectedRoute] = useState(null);
   const [selectedTour, setSelectedTour] = useState(null);
+  const [mapReturnTab, setMapReturnTab] = useState("tours");
   const [mapDestination, setMapDestination] = useState(null);
   const [selectedRouteLegsForMap, setSelectedRouteLegsForMap] = useState(null);
   const [prefilledDestination, setPrefilledDestination] = useState("");
@@ -65,6 +69,7 @@ export default function App() {
   };
 
   const handleOpenMapWithRoute = (route) => {
+    setMapReturnTab("routes");
     setMapDestination(null);
     setSelectedRouteLegsForMap(route?.legs || null);
     setSelectedRoute(null);
@@ -73,6 +78,7 @@ export default function App() {
   };
 
   const handleOpenMapWithTour = (tour) => {
+    setMapReturnTab("tours");
     setMapDestination(tour);
     setSelectedRouteLegsForMap(null);
     setSelectedTour(null);
@@ -93,7 +99,7 @@ export default function App() {
         Ir para o conteúdo
       </a>
       <Navbar
-        activeTab={activeTab}
+        activeTab={activeTab === "map" ? mapReturnTab : activeTab}
         onChangeTab={handleTabChange}
         isOnline={isOnline}
         dataSource={dataSource}
@@ -118,7 +124,7 @@ export default function App() {
             onSwitchToRoute={goToRoutesWith}
           />
         ) : activeTab === "routes" ? (
-          <RoutesView
+          <><button className="small-action contextual-map" onClick={() => {setMapReturnTab("routes");setMapDestination(null);setSelectedRouteLegsForMap(null);setActiveTab("map");}}><MapPin size={17}/> Ver lugares e embarques</button><RoutesView
             origin={home}
             onChangeOrigin={changeHome}
             initialDestination={prefilledDestination}
@@ -127,21 +133,22 @@ export default function App() {
               setSelectedRoute(r);
             }}
             onNavigateToAdmin={() => setActiveTab("admin")}
-          />
+          /></>
         ) : activeTab === "map" ? (
-          <MapView
+          <><button className="small-action map-back" onClick={() => handleTabChange(mapReturnTab)}><ArrowLeft size={17}/> Voltar</button><MapView
             home={home}
             destination={mapDestination}
             routeLegsToDraw={selectedRouteLegsForMap}
             onSelectPinRoute={goToRoutesWith}
             onOpenTour={setSelectedTour}
-          />
-        ) : activeTab === "tours" ? null : activeTab === "admin" ? (
+          /></>
+        ) : activeTab === "trip" ? <TripView onOpenTour={setSelectedTour}/> : activeTab === "community" ? <CommunityView onRoute={goToRoutesWith}/> : activeTab === "tours" ? null : activeTab === "admin" ? (
           <AdminView onBack={() => setActiveTab("routes")} />
         ) : null}
         {activeTab === "tours" && (
           <div hidden={!!selectedTour || !!selectedRoute}>
-            <ToursView
+            <button className="small-action contextual-map" onClick={() => {setMapReturnTab("tours");setMapDestination(null);setSelectedRouteLegsForMap(null);setActiveTab("map");}}><MapPin size={17}/> Lugares e embarques no mapa</button><ToursView
+              onRoute={goToRoutesWith}
               visible={!selectedTour && !selectedRoute}
               home={home}
               onChangeHome={changeHome}
@@ -151,7 +158,7 @@ export default function App() {
         )}
       </main>
 
-      <BottomNav activeTab={activeTab} onChangeTab={handleTabChange} />
+      <BottomNav activeTab={activeTab === "map" ? mapReturnTab : activeTab} onChangeTab={handleTabChange} />
     </div>
   );
 }

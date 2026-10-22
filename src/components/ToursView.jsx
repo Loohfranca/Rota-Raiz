@@ -18,6 +18,7 @@ import {
 import { AIRPORTS } from "../data/travelNetwork";
 import { getTourPhotos } from "../lib/photos";
 import { Images } from "lucide-react";
+import CommunitySuggestions from "./CommunitySuggestions";
 import BeachPhoto from "./BeachPhoto";
 import OriginPicker from "./OriginPicker";
 import { BEACHES, LODGINGS } from "../data/beachCatalog";
@@ -28,6 +29,7 @@ export default function ToursView({
   onChangeHome,
   onSelectTour,
   visible = true,
+  onRoute,
 }) {
   const [places, setPlaces] = useState(BEACHES),
     [stops, setStops] = useState([]),
@@ -330,6 +332,7 @@ export default function ToursView({
         )}
 
       </section>
+      <CommunitySuggestions home={home} onRoute={onRoute}/>
     </div>
   );
 }

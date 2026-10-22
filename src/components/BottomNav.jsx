@@ -1,9 +1,10 @@
 import React from "react";
-import { Navigation, Map, Compass } from "lucide-react";
+import { Navigation, Wallet, Users, Compass } from "lucide-react";
 export const TABS = [
   { id: "tours", label: "Explorar", icon: Compass },
   { id: "routes", label: "Como chegar", icon: Navigation },
-  { id: "map", label: "Mapa", icon: Map },
+  { id: "trip", label: "Minha viagem", icon: Wallet },
+  { id: "community", label: "Comunidade", icon: Users },
 ];
 export default function BottomNav({ activeTab, onChangeTab }) {
   return (
