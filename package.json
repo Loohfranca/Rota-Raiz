@@ -12,6 +12,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",
     "canvas-confetti": "^1.9.4",
+    "jspdf": "4.2.1",
     "leaflet": "^1.9.4",
     "lucide-react": "^1.60.0",
     "react": "^19.3.1",

@@ -48,7 +48,8 @@ export default function TripView({ onOpenTour }) {
     [sheet, setSheet] = useState(null),
     [error, setError] = useState(initial.error),
     [blocked, setBlocked] = useState(!!initial.error),
-    [notice, setNotice] = useState("");
+    [notice, setNotice] = useState(""),
+    [pdfBusy, setPdfBusy] = useState(false);
   const file = useRef(null),
     trip = trips.find((t) => t.id === active),
     stats = trip ? summarize(trip) : null;
@@ -68,6 +69,21 @@ export default function TripView({ onOpenTour }) {
     } catch (e) {
       setError(e.message || "Não foi possível salvar neste aparelho.");
       return false;
+    }
+  }
+  async function exportPdf() {
+    if (!trip || pdfBusy) return;
+    setPdfBusy(true);
+    setError("");
+    try {
+      const { downloadTripPdf } = await import("../lib/tripReportPdf");
+      downloadTripPdf(trip);
+    } catch {
+      setError(
+        "Não foi possível gerar o PDF. Tente novamente; seus gastos continuam salvos.",
+      );
+    } finally {
+      setPdfBusy(false);
     }
   }
   function update(next) {
@@ -296,11 +312,25 @@ export default function TripView({ onOpenTour }) {
           <p>Salve lugares no Explorar para encontrá-los aqui.</p>
         )}
       </details>
-      <footer className="trip-storage">
+      {trip && (
+        <div className="trip-report-download">
+          <button
+            className="primary-action"
+            disabled={pdfBusy}
+            onClick={exportPdf}
+          >
+            <Download size={17} />
+            {pdfBusy ? "Gerando PDF…" : "Baixar relatório em PDF"}
+          </button>
+          <p>Resumo visual da viagem, categorias, participantes e acertos.</p>
+        </div>
+      )}
+      <details className="trip-storage">
+        <summary>Cópia de segurança e restauração</summary>
         <p>
-          Salvo neste navegador. Faça uma cópia para guardar ou levar a outro
-          aparelho. As pessoas cadastradas não recebem convite nem acesso
-          automático.
+          Os gastos ficam neste navegador. O backup JSON serve para restaurar os
+          dados ou levar a outro aparelho. As pessoas cadastradas não recebem
+          convite nem acesso automático.
         </p>
         <div>
           <button
@@ -309,10 +339,10 @@ export default function TripView({ onOpenTour }) {
               downloadJson("rota-raiz-viagens.json", { version: 1, trips })
             }
           >
-            <Download size={16} /> Baixar cópia
+            <Download size={16} /> Backup dos dados (.json)
           </button>
           <button onClick={() => file.current.click()}>
-            <Upload size={16} /> Restaurar cópia
+            <Upload size={16} /> Restaurar backup
           </button>
           <input
             ref={file}
@@ -322,7 +352,7 @@ export default function TripView({ onOpenTour }) {
             onChange={restore}
           />
         </div>
-      </footer>
+      </details>
       {sheet?.type === "trip" && (
         <Sheet title="Uma nova viagem" onClose={() => setSheet(null)}>
           {error && (
@@ -426,6 +456,23 @@ export default function TripView({ onOpenTour }) {
           className="trip-report-dialog"
           onClose={() => setSheet(null)}
         >
+          {error && (
+            <p className="form-error" role="alert">
+              {error}
+            </p>
+          )}
+          <button
+            className="primary-action no-print"
+            disabled={pdfBusy}
+            onClick={exportPdf}
+          >
+            <Download size={17} />{" "}
+            {pdfBusy ? "Gerando PDF…" : "Baixar relatório em PDF"}
+          </button>
+          <p className="no-print">
+            Arquivo PDF com resumo visual e despesas detalhadas, pronto para
+            guardar ou compartilhar.
+          </p>
           <article id="trip-report">
             <span className="eyebrow">ROTA RAIZ · RELATÓRIO</span>
             <h2>{trip.name}</h2>
@@ -482,15 +529,7 @@ export default function TripView({ onOpenTour }) {
               </p>
             ))}
           </article>
-          <button
-            className="primary-action no-print"
-            onClick={() => window.print()}
-          >
-            <Download size={17} /> Imprimir / salvar PDF
-          </button>
-          <p className="no-print">
-            Escolha “Salvar como PDF” na janela de impressão para compartilhar.
-          </p>
+
         </Sheet>
       )}
     </div>

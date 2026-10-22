@@ -32,3 +32,9 @@ Quatro abas: Explorar, Como chegar, Minha viagem, Comunidade. Mapa contextual co
 - Botão de impressão acionado; o ambiente não exibiu uma prévia de impressão verificável. A geração final do PDF depende da janela de impressão do navegador do usuário.
 
 - Revisão final: rascunho editado pela interface; 320/390 sem excesso horizontal após compactar o resumo. Em 320, botões inferiores medidos em 67,5 × 68,6 px. Página temporária de revisão removida da publicação.
+
+
+## Correção da exportação visual
+O botão de backup foi renomeado para “Backup dos dados (.json)” e recolhido na área “Cópia de segurança e restauração”. “Baixar relatório em PDF” agora gera um arquivo PDF diretamente no aparelho, com capa/resumo, barras de categoria, participantes/saldos, acertos e despesas com sua divisão. O botão também fica no início do painel de relatório. A opção antiga dependente da impressão foi substituída.
+
+A geração usa módulo carregado sob demanda; dados financeiros continuam locais. Verificações: nove testes de cálculo/geração, cabeçalho binário %PDF-, relatório extenso com paginação, extração de texto e renderização de páginas de exemplo. Nenhum novo serviço pago foi conectado.
