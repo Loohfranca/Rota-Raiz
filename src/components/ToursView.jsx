@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Waves, MapPin, ArrowRight, Bookmark, Search } from 'lucide-react';
 import { getPlaces, getStops, getCities, getSavedTours, toggleSaveTourOffline } from '../lib/supabase';
+import BeachPhoto from './BeachPhoto';
 import OriginPicker from './OriginPicker';
 import { BEACHES, LODGINGS } from '../data/beachCatalog';
 import { selectBeaches, nearestRegion, REGIONS } from '../lib/nearby';
@@ -42,11 +43,11 @@ export default function ToursView({ home, onChangeHome, onSelectTour }) {
     {!(region==='auto' && hasCoordinates(home) && !near && !onlySaved) && <>
     <h2 className="text-xl font-bold">{onlySaved ? 'Meus passeios salvos' : near && region==='auto' ? `Praias em ${near.name}` : 'Explore os destinos'} <span className="text-sm font-normal">({filtered.length})</span></h2>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {filtered.map(place=><article key={place.id} className="rounded-2xl border border-[#e0d5c1] bg-white overflow-hidden flex flex-col">
-        <div className="h-28 bg-gradient-to-br from-[#2f5d3a] to-[#164e63] text-white p-4 flex items-end justify-between"><div><Waves size={26}/><span className="text-xs mt-2 block">{place.location}</span></div><MapPin size={20}/></div>
+      {filtered.map(place=><article key={place.id} className="rounded-[24px] border border-[#e0d8c9] bg-white overflow-hidden flex flex-col shadow-[0_5px_24px_rgba(52,45,29,0.04)]">
+        <div className="relative"><BeachPhoto tour={place} className="h-44"/><span className="absolute bottom-3 left-3 bg-white/95 text-[#516450] text-[10px] px-2.5 py-1.5 rounded-full">{place.location.split(',')[0]}</span></div>
         <div className="p-4 flex flex-col gap-3 flex-1"><h3 className="text-lg font-bold">{place.title}</h3><p className="text-sm text-[#59413b]">{place.subtitle}</p>
           <p className="text-sm font-bold text-[#2f5d3a]">{place.distanceKm != null ? `${Number(place.distanceKm).toLocaleString('pt-BR',{maximumFractionDigits:1})} km em linha reta da origem` : 'Escolha uma origem para medir a distância'}</p>
-          <p className="text-xs text-[#59413b]">Percurso a pé e minutos: calcule em “Ver detalhes”.</p>
+          <p className="text-xs text-[#777b6a]">{place.essentials?.[0] ? `${place.essentials[0].label}: ${place.essentials[0].value}` : 'Acessos e dicas no guia da praia'}</p>
           <div className="mt-auto flex flex-wrap gap-2"><button onClick={()=>open(place)} className="min-h-[44px] flex-1 flex items-center justify-center gap-2 rounded-xl bg-[#c2461f] text-white px-3 font-bold text-sm">Ver detalhes <ArrowRight size={16}/></button><button aria-label={saved[place.id] ? `Remover ${place.title} dos salvos` : `Salvar ${place.title}`} onClick={()=>toggle(place)} className="min-h-[44px] px-3 border rounded-xl"><Bookmark size={18} className={saved[place.id]?'fill-[#2f5d3a] text-[#2f5d3a]':''}/></button></div>
         </div>
       </article>)}

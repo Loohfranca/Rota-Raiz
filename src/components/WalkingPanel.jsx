@@ -3,8 +3,7 @@ import { MapContainer, TileLayer, Polyline, CircleMarker, Popup, useMap } from '
 import { cachedWalk, fetchWalk, saveWalk, hasCoordinates } from '../lib/walking';
 import 'leaflet/dist/leaflet.css';
 function Fit({ points }) { const map = useMap(); useEffect(() => { map.fitBounds(points, { padding: [20, 20] }); }, [points, map]); return null; }
-export default function WalkingPanel({ home, tour, onSwitchToRoute }) {
-  const [mode, setMode] = useState('walk');
+export default function WalkingPanel({ home, tour }) {
   const [result, setResult] = useState(() => cachedWalk(home, tour));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -18,21 +17,14 @@ export default function WalkingPanel({ home, tour, onSwitchToRoute }) {
   const save = () => { try { saveWalk(result); setSaved(true); } catch { setError('Não foi possível salvar: armazenamento do dispositivo indisponível ou cheio.'); } };
   const valid = hasCoordinates(home) && hasCoordinates(tour);
   const google = valid ? `https://www.google.com/maps/dir/?api=1&origin=${home.lat},${home.lng}&destination=${tour.lat},${tour.lng}&travelmode=walking` : null;
-  return <section className="bg-white rounded-2xl border border-[#e0d5c1] p-4 flex flex-col gap-3">
-    <h2 className="text-lg font-bold">Como chegar</h2>
-    <p className="text-sm">Saindo de: <strong>{home?.name || 'Escolha sua origem em Passeios'}</strong></p>
-    <div className="grid grid-cols-2 gap-2" role="group" aria-label="Modo de viagem">
-      <button aria-pressed={mode === 'walk'} onClick={() => setMode('walk')} className={`min-h-[44px] rounded-xl p-2 ${mode === 'walk' ? 'bg-[#2f5d3a] text-white' : 'bg-[#f7ece2]'}`}>A pé</button>
-      <button aria-pressed={mode === 'transit'} onClick={() => setMode('transit')} className={`min-h-[44px] rounded-xl p-2 ${mode === 'transit' ? 'bg-[#2f5d3a] text-white' : 'bg-[#f7ece2]'}`}>Van / ônibus</button>
-    </div>
-    {mode === 'transit' ? <><p className="text-sm">Consulte os trechos de transporte cadastrados. Distâncias e horários dependem dos dados disponíveis.</p><button onClick={() => onSwitchToRoute(tour.title)} className="min-h-[44px] rounded-xl bg-[#c2461f] text-white p-3">Consultar transporte</button></> : <>
-
-      {tour.requires_crossing_from_caraiva && <p className="text-xs rounded-xl bg-amber-50 p-3">Desde a vila de Caraíva, a opção costeira envolve canoa e trechos dependentes da maré. O cálculo usa apenas caminhos mapeados e pode não representar essa combinação. Confira a travessia com um guia local.</p>}
+  return <section className="bg-[#f8f7f2] rounded-xl p-4 flex flex-col gap-3">
+    <h3 className="text-sm font-bold">Percurso calculado desde sua origem</h3>
+    <p className="text-xs text-[#777b6a]">{home?.name || 'Escolha sua origem em Passeios'} → {tour.title}</p>
       {!valid && <p className="text-sm">Volte a Passeios e escolha um endereço ou marque sua origem no mapa.</p>}
-      <button disabled={!valid || loading} onClick={calculate} className="min-h-[44px] rounded-xl bg-[#2f5d3a] disabled:opacity-50 text-white p-3">{loading ? 'Calculando caminhada…' : 'Calcular percurso a pé'}</button>
+      <button disabled={!valid || loading} onClick={calculate} className="min-h-[44px] rounded-xl bg-[#2f5d3a] disabled:opacity-50 text-white p-3">{loading ? 'Calculando caminhada…' : 'Calcular desde minha origem'}</button>
       {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
       {result && <>
-        <p className="font-bold">{result.km.toLocaleString('pt-BR', { maximumFractionDigits: 2 })} km a pé · aproximadamente {Math.ceil(result.seconds / 60)} min</p>
+        <p className="font-bold">{result.km.toLocaleString('pt-BR', { maximumFractionDigits: 2 })} km no traçado automático · aproximadamente {Math.ceil(result.seconds / 60)} min</p>
         {result.hasFerry && <p className="text-sm bg-amber-50 rounded-xl p-3">O trajeto inclui travessia por água. O tempo é estimado e não garante operação ou horário de canoa/balsa.</p>}
         <p className="text-xs">Calculado em {new Date(result.calculatedAt).toLocaleString('pt-BR')} · Valhalla / OpenStreetMap</p>
         <div className="h-[360px] sm:h-[440px] w-full rounded-xl overflow-hidden">
@@ -46,6 +38,5 @@ export default function WalkingPanel({ home, tour, onSwitchToRoute }) {
         <p className="text-xs">Salva o traçado e as instruções para esta origem. O fundo do mapa não é baixado. Reabra o passeio em “Salvos” com a mesma origem para consultar.</p>
       </>}
       {google && <a href={google} target="_blank" rel="noopener noreferrer" className="min-h-[44px] flex items-center underline">Abrir caminhada no Google Maps</a>}
-    </>}
   </section>;
 }
