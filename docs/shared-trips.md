@@ -21,3 +21,9 @@ A execução no projeto real depende de uma conexão administrativa autorizada c
 `npm run lint`
 
 Os testes usam PostgreSQL embarcado (PGlite), três identidades simuladas e a migração real para verificar autoria, privacidade, convite, entrada, edição, versão, saída, expiração e permissões de sessão anônima. Testes React em JSDOM verificam feed único, formulário, convite, preservação antes do login, saída e erro de sincronização. Nenhuma conta Google real é criada nem são publicados dados de teste no banco real.
+
+
+## Estado da entrega nesta sessão
+Implementação e migração prontas, em branch e PR separados. Vinte e um testes passaram, incluindo seis cenários PostgreSQL e seis cenários React, além dos testes existentes de valores e PDF. Build executado e lint sem erros (há avisos de hooks no projeto).
+
+A prévia Vercel desta branch exigiu login da hospedagem, portanto a revisão visual real ficou bloqueada. A página temporária com dados fictícios foi removida. Nenhuma alteração foi integrada à produção e a migração ainda não foi executada no Supabase real: a conexão administrativa sugerida não foi confirmada.

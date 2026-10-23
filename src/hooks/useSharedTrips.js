@@ -59,7 +59,7 @@ export default function useSharedTrips(user, api = liveApi) {
     setError("");
     try {
       validateTrips(next);
-      let confirmed=[...current.current];
+      let confirmed = [...current.current];
       for (const trip of next) {
         const old = current.current.find((t) => t.id === trip.id);
         if (!old) {
@@ -68,14 +68,16 @@ export default function useSharedTrips(user, api = liveApi) {
               p.name.toLocaleLowerCase() ===
               api.profileName(user).toLocaleLowerCase(),
           )?.id;
-          const created=await api.createSharedTrip(trip, self || null);
-          if(created.people)confirmed=[created,...confirmed];
+          const created = await api.createSharedTrip(trip, self || null);
+          if (created.people) confirmed = [created, ...confirmed];
         } else if (
           JSON.stringify(api.ledgerData(old)) !==
           JSON.stringify(api.ledgerData(trip))
         ) {
           await api.saveSharedTrip(trip);
-          confirmed=confirmed.map(old=>old.id===trip.id?{...trip,version:trip.version+1}:old);
+          confirmed = confirmed.map((old) =>
+            old.id === trip.id ? { ...trip, version: trip.version + 1 } : old,
+          );
         }
       }
       assign(confirmed);

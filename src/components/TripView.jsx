@@ -68,6 +68,18 @@ export default function TripView({
     )
       setSheet(null);
   }, [trip, loading, sheet]);
+  function openLegacy() {
+    try {
+      const legacy = validateTrips(
+        JSON.parse(localStorage.getItem("rotaraiz_trips_v1") || "[]"),
+      );
+      setSheet({ type: "import", trips: legacy });
+    } catch {
+      setError(
+        "Não foi possível ler as viagens anteriores. Você pode importar uma cópia JSON.",
+      );
+    }
+  }
   async function exportPdf() {
     if (!trip || pdfBusy) return;
     setPdfBusy(true);
@@ -164,6 +176,12 @@ export default function TripView({
             onClick={() => setSheet({ type: "trip" })}
           >
             Criar minha viagem <Plus size={18} />
+          </button>
+          <button
+            className="small-action legacy-empty-action"
+            onClick={openLegacy}
+          >
+            Trazer uma viagem deste aparelho
           </button>
         </section>
       ) : trip ? (
@@ -337,23 +355,12 @@ export default function TripView({
       <details className="trip-storage">
         <summary>Cópia de segurança e restauração</summary>
         <p>
-          As viagens ficam na sua conta e são atualizadas entre os participantes. O backup JSON guarda uma cópia dos dados. Para compartilhar o acesso, use Convidar.
+          As viagens ficam na sua conta e são atualizadas entre os
+          participantes. O backup JSON guarda uma cópia dos dados. Para
+          compartilhar o acesso, use Convidar.
         </p>
         <div>
-          <button
-            onClick={() => {
-              try {
-                const legacy = validateTrips(
-                  JSON.parse(localStorage.getItem("rotaraiz_trips_v1") || "[]"),
-                );
-                setSheet({ type: "import", trips: legacy });
-              } catch {
-                setError(
-                  "Não foi possível ler as viagens anteriores. Você pode importar uma cópia JSON.",
-                );
-              }
-            }}
-          >
+          <button onClick={openLegacy}>
             Trazer viagens anteriores deste aparelho
           </button>
           <button
@@ -450,16 +457,10 @@ export default function TripView({
                 placeholder="Bahia e João Pessoa"
               />
             </label>
-            <label>
-              Seu nome
-              <input
-                name="person"
-                maxLength={60}
-                required
-                defaultValue={api.profileName(user)}
-                readOnly
-              />
-            </label>
+            <p className="field-help">
+              Você participa como <b>{api.profileName(user)}</b>.
+            </p>
+            <input type="hidden" name="person" value={api.profileName(user)} />
             <button className="primary-action" disabled={saving}>
               {saving ? "Criando…" : "Criar viagem"}
             </button>
@@ -502,7 +503,13 @@ export default function TripView({
         </Sheet>
       )}
       {sheet?.type === "people" && (
-        <People trip={trip} saving={saving} syncError={error} update={update} onClose={() => setSheet(null)} />
+        <People
+          trip={trip}
+          saving={saving}
+          syncError={error}
+          update={update}
+          onClose={() => setSheet(null)}
+        />
       )}
       {sheet?.type === "expense" && (
         <Expense

@@ -4690,3 +4690,8 @@
     padding: 14px;
   }
 }
+
+.legacy-empty-action {
+  display: flex;
+  margin: 12px auto 0;
+}

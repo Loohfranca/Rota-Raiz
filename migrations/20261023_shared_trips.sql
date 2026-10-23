@@ -141,7 +141,7 @@ begin
  if auth.uid() is null then raise exception 'Entre para abrir o convite.';end if;
  select jsonb_build_object('name',t.ledger->>'name','inviter',m.display_name,'already_joined',exists(select 1 from public.trip_members me where me.trip_id=t.id and me.user_id=auth.uid())) into result
  from public.trip_invitations i join public.shared_trips t on t.id=i.trip_id join public.trip_members m on m.trip_id=i.trip_id and m.user_id=i.created_by
- where i.token_hash=encode(sha256(convert_to(p_token,'UTF8')),'hex') and i.expires_at>now() and (i.used_at is null or i.used_by=auth.uid());
+ where i.token_hash=encode(sha256(convert_to(p_token,'UTF8')),'hex') and i.expires_at>now() and (i.used_at is null or (i.used_by=auth.uid() and exists(select 1 from public.trip_members active_member where active_member.trip_id=t.id and active_member.user_id=auth.uid())));
  if result is null then raise exception 'Este convite expirou ou já foi usado. Peça um novo link.';end if;
  return result;
 end $$;
