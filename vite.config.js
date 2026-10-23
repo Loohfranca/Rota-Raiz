@@ -19,6 +19,7 @@ export default defineConfig({
     },
     tailwindcss(),
   ],
+  build: { rolldownOptions: { input: ["index.html", "review-ui.html"] } },
   server: {
     port: 5001,
     strictPort: true,
