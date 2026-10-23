@@ -13,12 +13,7 @@ export default function LoginScreen({ loading = false }) {
     try {
       const { error: authError } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: {
-          redirectTo: window.location.origin + window.location.pathname,
-          // O endpoint OAuth é aberto por navegação do navegador (sem cabeçalhos HTTP).
-          // Encaminhar somente a chave pública para o gateway do Supabase.
-          queryParams: { apikey: supabase.supabaseKey },
-        },
+        options: { redirectTo: window.location.origin + window.location.pathname },
       });
       if (authError) throw authError;
     } catch (err) {
