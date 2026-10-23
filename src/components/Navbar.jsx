@@ -1,8 +1,8 @@
 import React from "react";
-import { Compass, WifiOff, Leaf } from "lucide-react";
+import { Compass, WifiOff, Leaf, LogOut } from "lucide-react";
 import PhotoCredits from "./PhotoCredits";
 import { TABS } from "./BottomNav";
-export default function Navbar({ activeTab, onChangeTab, isOnline }) {
+export default function Navbar({ activeTab, onChangeTab, isOnline, user, onSignOut }) {
   return (
     <header className="app-header">
       <div className="nav-shell">
@@ -32,6 +32,25 @@ export default function Navbar({ activeTab, onChangeTab, isOnline }) {
           ))}
         </nav>
         <div className="nav-status-actions"><PhotoCredits/>
+        {user && (
+          <button
+            type="button"
+            onClick={onSignOut}
+            className="account-signout"
+            title={`Sair da conta de ${user.user_metadata?.full_name || user.email || "usuário"}`}
+            aria-label="Sair da conta"
+          >
+            {user.user_metadata?.avatar_url ? (
+              <img
+                src={user.user_metadata.avatar_url}
+                alt=""
+                referrerPolicy="no-referrer"
+                className="account-avatar"
+              />
+            ) : <LogOut size={18} />}
+            <span>Sair</span>
+          </button>
+        )}
         <span
           className={`connection-status ${!isOnline ? "is-offline" : ""}`}
           role="status"

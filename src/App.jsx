@@ -10,7 +10,8 @@ import CommunityView from "./components/CommunityView";
 import { ArrowLeft, MapPin } from "lucide-react";
 import MapView from "./components/MapView";
 import AdminView from "./components/AdminView";
-import { isSupabaseConfigured } from "./lib/supabase";
+import { isSupabaseConfigured, supabase } from "./lib/supabase";
+import LoginScreen from "./components/LoginScreen";
 
 const HOME_KEY = "rotaraiz_home";
 
@@ -27,6 +28,34 @@ export default function App() {
   // "Onde estou": usado como origem das rotas e como base das distâncias dos passeios.
   // É sempre escolhido por quem usa o app (nada fixo no código).
   const [home, setHome] = useState(loadHome);
+  const [authReady, setAuthReady] = useState(false);
+  const [session, setSession] = useState(null);
+  const [signOutError, setSignOutError] = useState("");
+
+  useEffect(() => {
+    if (!supabase) { setAuthReady(true); return; }
+    let active = true;
+    supabase.auth.getSession().then(({ data, error }) => {
+      if (!active) return;
+      if (error) console.warn("Falha ao recuperar sessão:", error.message);
+      setSession(data?.session ?? null);
+      setAuthReady(true);
+    }).catch(() => { if (active) setAuthReady(true); });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      if (!active) return;
+      setSession(nextSession);
+      setAuthReady(true);
+    });
+    return () => { active = false; subscription.unsubscribe(); };
+  }, []);
+
+  async function signOut() {
+    if (!supabase) return;
+    const { error } = await supabase.auth.signOut();
+    if (error) setSignOutError("Não foi possível sair. Tente novamente.");
+    else setSignOutError("");
+  }
+
 
   const [activeTab, setActiveTab] = useState("tours");
   const [selectedRoute, setSelectedRoute] = useState(null);
@@ -93,6 +122,8 @@ export default function App() {
     setActiveTab("routes");
   };
 
+  if (!authReady || !session) return <LoginScreen loading={!authReady} />;
+
   return (
     <div className="app-root">
       <a className="skip-link" href="#main-content">
@@ -103,8 +134,11 @@ export default function App() {
         onChangeTab={handleTabChange}
         isOnline={isOnline}
         dataSource={dataSource}
+        user={session.user}
+        onSignOut={signOut}
       />
 
+      {signOutError && <p role="alert" style={{ textAlign: "center", color: "#a64425" }}>{signOutError}</p>}
       <main
         id="main-content"
         className={`app-main ${activeTab === "map" ? "app-main-map" : ""}`}
