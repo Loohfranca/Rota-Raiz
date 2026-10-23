@@ -32,9 +32,25 @@ export default function Navbar({ activeTab, onChangeTab, isOnline, user, onSignO
           ))}
         </nav>
         <div className="nav-status-actions"><PhotoCredits/>
-        {user && <button type="button" onClick={onSignOut} title={`Sair da conta de ${user.user_metadata?.full_name || user.email || "usuário"}`} aria-label="Sair da conta" style={{ display:"inline-flex", alignItems:"center", justifyContent:"center", minWidth:44, minHeight:44, borderRadius:"50%", border:"1px solid var(--border-color)", background:"var(--surface-container-lowest)", overflow:"hidden" }}>
-          {user.user_metadata?.avatar_url ? <img src={user.user_metadata.avatar_url} alt="" referrerPolicy="no-referrer" style={{ width:36,height:36,borderRadius:"50%",objectFit:"cover" }} /> : <LogOut size={19}/>}
-        </button>}
+        {user && (
+          <button
+            type="button"
+            onClick={onSignOut}
+            className="account-signout"
+            title={`Sair da conta de ${user.user_metadata?.full_name || user.email || "usuário"}`}
+            aria-label="Sair da conta"
+          >
+            {user.user_metadata?.avatar_url ? (
+              <img
+                src={user.user_metadata.avatar_url}
+                alt=""
+                referrerPolicy="no-referrer"
+                className="account-avatar"
+              />
+            ) : <LogOut size={18} />}
+            <span>Sair</span>
+          </button>
+        )}
         <span
           className={`connection-status ${!isOnline ? "is-offline" : ""}`}
           role="status"
