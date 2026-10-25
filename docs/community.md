@@ -9,3 +9,9 @@ Validação: 11 testes locais passaram, build e lint executados; houve também t
 O advisor de SECURITY DEFINER para `rr_publish_recommendation` é intencional: a operação é uma API autenticada que valida o conteúdo e usa auth.uid(), com escrita direta revogada e search_path vazio. Referência: https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable
 
 Revisão visual real pendente: o navegador disponível não alcançou o servidor local e a prévia Vercel exige login. Os testes React validam o fluxo, mas não substituem a conferência visual.
+
+## Percurso a pé das indicações
+
+Em Como ir, A pé abre o roteiro dentro do Rota Raiz. Reaproveita WalkingPanel e o serviço Valhalla já usado nos passeios, com mapa, linha, km, tempo estimado e instruções expandidas. Os outros modos mantêm a consulta externa. Endereços sem coordenadas são pesquisados e a pessoa confirma o resultado antes do cálculo; não se escolhe o primeiro candidato silenciosamente. Origem pode ser editada ou obtida pelo GPS após toque explícito. Alterações de pontos invalidam o traçado antigo; pedidos são cancelados ao sair. Falhas permitem repetir o cálculo.
+
+Verificação: 14 testes passaram, incluindo três testes React de caminhada (mapa e linha reais no DOM de teste, instruções, escolha de endereço e repetição após falha), além de build e lint sem erros. Chamada real ao serviço com pontos públicos de Copacabana retornou status 0, 1,063 km e 13 instruções. A conferência visual autenticada permanece pendente. Não há navegação GPS em tempo real nem mapa-base offline.

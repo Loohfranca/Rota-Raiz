@@ -4548,3 +4548,17 @@
     gap: 0;
   }
 }
+
+/* Caminhada das indicações: campos compactos e cálculo dentro do app. */
+.external-mode-grid button { display:flex; align-items:center; gap:12px; min-height:64px; padding:14px; border:1px solid #ded8cd; border-radius:16px; background:#fffdf8; color:#243e32; text-align:left; font-weight:600; }
+.external-mode-grid button svg:last-child { margin-left:auto; }
+.walking-journey { display:grid; gap:14px; min-width:0; }
+.walking-journey .walking-panel { margin:0; padding:16px; min-width:0; }
+.walking-address-options { margin-top:8px; border:1px solid #ded8cd; border-radius:14px; overflow:hidden; }
+.walking-address-options p { padding:10px 12px; margin:0; font-size:14px; }
+.walking-address-options button { display:flex; width:100%; gap:9px; padding:12px; min-height:44px; text-align:left; border-top:1px solid #ded8cd; }
+.walking-address-options svg { flex-shrink:0; margin-top:2px; }
+.walking-address-options span { min-width:0; overflow-wrap:anywhere; }
+.walking-address-options b,.walking-address-options small { display:block; }
+.walking-address-options small { font-size:13px; color:#596458; line-height:1.5; margin-top:4px; }
+.walking-journey .place-field { padding:12px; }

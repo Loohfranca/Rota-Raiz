@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -21,25 +21,56 @@ function Fit({ points }) {
   }, [points, map]);
   return null;
 }
-export default function WalkingPanel({ home, tour }) {
+export default function WalkingPanel({
+  home,
+  tour,
+  autoCalculate = false,
+  instructionsOpen = false,
+}) {
   const [result, setResult] = useState(() => cachedWalk(home, tour));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(() => !!cachedWalk(home, tour));
-  const calculate = async () => {
+  const request = useRef(null);
+  const calculate = useCallback(async () => {
+    request.current?.abort();
+    const controller = new AbortController();
+    request.current = controller;
+    const timeout = setTimeout(
+      () =>
+        controller.abort(
+          new Error("O cálculo demorou demais. Tente novamente."),
+        ),
+      20000,
+    );
     setLoading(true);
     setError("");
     setResult(null);
     setSaved(false);
     try {
-      const route = await fetchWalk(home, tour, AbortSignal.timeout(20000));
-      setResult(route);
+      const route = await fetchWalk(home, tour, controller.signal);
+      if (request.current === controller && !controller.signal.aborted)
+        setResult(route);
     } catch (e) {
-      setError(e.message || "Não foi possível calcular a caminhada.");
+      if (request.current === controller)
+        setError(e.message || "Não foi possível calcular a caminhada.");
     } finally {
-      setLoading(false);
+      clearTimeout(timeout);
+      if (request.current === controller) setLoading(false);
     }
-  };
+  }, [home, tour]);
+  useEffect(() => {
+    const cached = cachedWalk(home, tour);
+    setResult(cached);
+    setSaved(!!cached);
+    setError("");
+    if (autoCalculate && !cached) calculate();
+    return () => {
+      const previous = request.current;
+      request.current = null;
+      previous?.abort();
+    };
+  }, [autoCalculate, calculate, home, tour]);
   const save = () => {
     try {
       saveWalk(result);
@@ -58,7 +89,8 @@ export default function WalkingPanel({ home, tour }) {
     <section className="walking-panel">
       <h3 className="text-sm font-bold">Seu caminho a pé</h3>
       <p className="text-xs text-[#777b6a]">
-        {home?.name || "Escolha sua origem em Passeios"} → {tour.title}
+        {home?.name || "Escolha sua origem em Passeios"} →{" "}
+        {tour.title || tour.name}
       </p>
       {!valid && (
         <p className="text-sm">
@@ -67,7 +99,7 @@ export default function WalkingPanel({ home, tour }) {
       )}
       <button
         disabled={!valid || loading}
-        onClick={calculate}
+        onClick={() => calculate()}
         className="min-h-[44px] rounded-xl bg-[#2f5d3a] disabled:opacity-50 text-white p-3"
       >
         {loading ? "Calculando caminhada…" : "Calcular percurso a pé"}
@@ -117,12 +149,12 @@ export default function WalkingPanel({ home, tour }) {
                 radius={8}
                 color="#c2461f"
               >
-                <Popup>Chegada: {tour.title}</Popup>
+                <Popup>Chegada: {tour.title || tour.name}</Popup>
               </CircleMarker>
               <Fit points={result.points} />
             </MapContainer>
           </div>
-          <details>
+          <details open={instructionsOpen || undefined}>
             <summary className="min-h-[44px] flex items-center font-bold cursor-pointer">
               Ver instruções da caminhada
             </summary>
@@ -140,9 +172,9 @@ export default function WalkingPanel({ home, tour }) {
               : "Salvar caminhada e instruções"}
           </button>
           <p className="text-xs">
-            Salva o traçado e as instruções para esta origem. O fundo do mapa
-            não é baixado. Reabra o passeio em “Salvos” com a mesma origem para
-            consultar.
+            Salva o traçado e as instruções neste dispositivo. O fundo do mapa
+            não é baixado. Reabra a caminhada com a mesma origem e o mesmo
+            destino para consultar.
           </p>
         </>
       )}
