@@ -41,9 +41,11 @@ export async function getRecommendations() {
   if (!supabase) return { items: [], available: false };
   const { data, error } = await supabase
     .from("community_recommendations")
-    .select("id,name,category,city,address,instagram,note,reviewed_at")
+    .select(
+      "id,name,category,city,address,instagram,note,author_name,user_id,created_at,reviewed_at",
+    )
     .eq("status", "approved")
-    .order("reviewed_at", { ascending: false });
+    .order("created_at", { ascending: false });
   if (error) return { items: [], available: false };
   return {
     items: (data || []).filter(
@@ -58,22 +60,30 @@ export async function getRecommendations() {
 export async function submitRecommendation(item) {
   if (!supabase)
     throw new Error(
-      "A publicação compartilhada ainda não está conectada. Sua indicação continua salva neste aparelho.",
+      "A comunidade está sem conexão. Sua indicação não foi publicada.",
     );
-  const { error } = await supabase
-    .from("community_recommendations")
-    .insert({
-      id: item.id,
+  const { data, error } = await supabase.rpc("rr_publish_recommendation", {
+    p: {
       name: item.name,
       category: item.category,
       city: item.city,
       address: item.address,
       instagram: item.instagram,
       note: item.note,
-      status: "pending",
-    });
+    },
+  });
   if (error)
     throw new Error(
-      "Não foi possível enviar para revisão. Sua indicação continua salva neste aparelho.",
+      ["PGRST202", "42883"].includes(error.code)
+        ? "A publicação da comunidade precisa ser ativada no banco. Sua indicação não foi publicada."
+        : "Não foi possível publicar agora. Tente novamente; os campos foram mantidos.",
     );
+  return data;
 }
+
+export const profileName = (user) => {
+  const name = user?.user_metadata?.full_name || user?.user_metadata?.name;
+  return typeof name === "string" && name.trim()
+    ? name.trim().slice(0, 60)
+    : "Viajante";
+};
