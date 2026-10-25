@@ -1,299 +1,303 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Plus,
   MapPin,
-  ExternalLink,
+  ArrowUpRight,
   Camera,
   Search,
-  Send,
-  Download,
-  Trash2,
   Users,
+  RefreshCw,
+  Utensils,
+  Waves,
+  Compass,
+  BedDouble,
+  ChevronRight,
 } from "lucide-react";
 import Sheet from "./Sheet";
+import * as liveCommunity from "../lib/community";
 import {
+  profileName,
   COMMUNITY_CATEGORIES,
-  getRecommendations,
   instagramUrl,
   safeInstagram,
   validRecommendation,
-  submitRecommendation,
 } from "../lib/community";
-import { downloadJson } from "../lib/tripLedger";
-const KEY = "rotaraiz_recommendations_v1";
-export default function CommunityView({ onRoute }) {
-  const [drafts, setDrafts] = useState(() => {
+
+const icons = {
+  Comida: Utensils,
+  Praia: Waves,
+  Passeio: Compass,
+  Hospedagem: BedDouble,
+  Outros: MapPin,
+};
+const LEGACY = "rotaraiz_recommendations_v1";
+export default function CommunityView({ onRoute, user, api = liveCommunity }) {
+  const [items, setItems] = useState([]),
+    [loading, setLoading] = useState(true),
+    [error, setError] = useState(""),
+    [query, setQuery] = useState(""),
+    [category, setCategory] = useState("Todos"),
+    [form, setForm] = useState(null),
+    [notice, setNotice] = useState(""),
+    [legacy, setLegacy] = useState(() => {
       try {
-        const d = JSON.parse(localStorage.getItem(KEY) || "[]");
-        return Array.isArray(d) ? d.filter(validRecommendation) : [];
+        return JSON.parse(localStorage.getItem(LEGACY) || "[]").filter(
+          validRecommendation,
+        );
       } catch {
         return [];
       }
-    }),
-    [items, setItems] = useState([]),
-    [available, setAvailable] = useState(false),
-    [loading, setLoading] = useState(true),
-    [query, setQuery] = useState(""),
-    [category, setCategory] = useState("Todos"),
-    [own, setOwn] = useState(false),
-    [form, setForm] = useState(false),
-    [error, setError] = useState(""),
-    [busy, setBusy] = useState(null),
-    [notice, setNotice] = useState("");
-  useEffect(() => {
-    let active = true;
-    getRecommendations()
-      .then((r) => {
-        if (active) {
-          setItems(r.items);
-          setAvailable(r.available);
-          setLoading(false);
-        }
-      })
-      .catch(() => {
-        if (active) setLoading(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
-  function save(next) {
+    });
+  const refresh = useCallback(async () => {
     try {
-      localStorage.setItem(KEY, JSON.stringify(next));
-      setDrafts(next);
+      const r = await api.getRecommendations();
+      if (!r.available)
+        throw new Error(
+          "Não foi possível carregar as indicações compartilhadas. Tente novamente.",
+        );
+      setItems(r.items);
       setError("");
-      return true;
-    } catch {
-      setError("Não foi possível salvar neste aparelho.");
-      return false;
-    }
-  }
-  async function send(item) {
-    setBusy(item.id);
-    setNotice("");
-    try {
-      await submitRecommendation(item);
-      save(
-        drafts.map((d) => (d.id === item.id ? { ...d, submitted: true } : d)),
-      );
-      setNotice(
-        "Indicação enviada para revisão. Ela ainda não está publicada.",
-      );
     } catch (e) {
       setError(e.message);
     } finally {
-      setBusy(null);
+      setLoading(false);
     }
-  }
-  const list = (own ? drafts : items).filter(
+  }, [api]);
+  useEffect(() => {
+    refresh();
+    const focus = () => {
+      if (!document.hidden) refresh();
+    };
+    const timer = setInterval(focus, 15000);
+    window.addEventListener("focus", focus);
+    window.addEventListener("online", focus);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener("focus", focus);
+      window.removeEventListener("online", focus);
+    };
+  }, [refresh]);
+  const list = items.filter(
     (i) =>
       (category === "Todos" || i.category === category) &&
-      `${i.name} ${i.city} ${i.address}`
+      `${i.name} ${i.city} ${i.address} ${i.author_name || ""}`
         .toLocaleLowerCase()
         .includes(query.toLocaleLowerCase()),
   );
+  async function publish(item) {
+    const published = await api.submitRecommendation(item);
+    setItems((current) => [
+      published,
+      ...current.filter((i) => i.id !== published.id),
+    ]);
+    if (form?.legacyId) {
+      const next = legacy.filter((i) => i.id !== form.legacyId);
+      setLegacy(next);
+      try {
+        localStorage.setItem(LEGACY, JSON.stringify(next));
+      } catch {
+        /* Published row already exists in database. */
+      }
+    }
+    setForm(null);
+    setNotice("Indicação publicada para toda a comunidade.");
+  }
   return (
-    <div className="travel-page">
-      <div className="travel-heading">
+    <div className="travel-page community-page">
+      <div className="community-heading">
         <div>
-          <span className="eyebrow">DICAS QUE PASSAM DE MÃO EM MÃO</span>
-          <h1>Comunidade</h1>
-          <p>Um lugar bom merece ser compartilhado.</p>
+          <span className="eyebrow">DE VIAJANTE PARA VIAJANTE</span>
+          <h1>
+            Boas descobertas
+            <br />
+            <span>circulam por aqui.</span>
+          </h1>
+          <p>Lugares e dicas de quem viveu o caminho.</p>
         </div>
+        <button className="community-add" onClick={() => setForm({})}>
+          <Plus size={20} />
+          <span>Indicar lugar</span>
+        </button>
+      </div>
+      <div className="community-searchbar">
+        <Search size={19} />
+        <input
+          aria-label="Buscar indicação por lugar ou cidade"
+          placeholder="Lugar, cidade ou quem indicou"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
         <button
-          className="small-action"
-          aria-label="Indicar lugar"
-          title="Indicar lugar"
-          onClick={() => setForm({})}
+          className="icon-button"
+          aria-label="Atualizar indicações"
+          onClick={refresh}
         >
-          <Plus size={18} /> <span>Indicar lugar</span>
+          <RefreshCw size={17} />
         </button>
       </div>
-      <div className="community-controls">
-        <label className="community-search">
-          <Search size={18} />
-          <input
-            aria-label="Buscar indicação por lugar ou cidade"
-            placeholder="Lugar ou cidade"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-        </label>
-        <select
-          aria-label="Categoria da indicação"
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-        >
-          {["Todos", ...COMMUNITY_CATEGORIES].map((c) => (
-            <option key={c}>{c}</option>
-          ))}
-        </select>
+      <div
+        className="community-filters"
+        role="group"
+        aria-label="Categorias de indicações"
+      >
+        {["Todos", ...COMMUNITY_CATEGORIES].map((c) => (
+          <button
+            key={c}
+            aria-pressed={c === category}
+            onClick={() => setCategory(c)}
+          >
+            {c}
+          </button>
+        ))}
       </div>
-      <div className="segmented-control">
-        <button aria-pressed={!own} onClick={() => setOwn(false)}>
-          Descobrir
-        </button>
-        <button aria-pressed={own} onClick={() => setOwn(true)}>
-          Minhas indicações <span>{drafts.length}</span>
-        </button>
-      </div>
+      {notice && (
+        <p className="community-notice" role="status">
+          {notice}
+        </p>
+      )}
       {error && (
-        <p role="alert" className="form-error">
+        <p className="form-error" role="alert">
           {error}
         </p>
       )}
-      {notice && <p role="status">{notice}</p>}
-      {loading && !own ? (
-        <p role="status">Buscando indicações…</p>
+      {legacy.length > 0 && (
+        <details className="community-legacy">
+          <summary>
+            {legacy.length}{" "}
+            {legacy.length === 1
+              ? "indicação ainda não publicada"
+              : "indicações ainda não publicadas"}
+          </summary>
+          <p>
+            São os cadastros antigos deste aparelho. Abra para conferir e
+            publicar com seu perfil.
+          </p>
+          {legacy.map((i) => (
+            <button
+              key={i.id}
+              onClick={() => setForm({ initial: i, legacyId: i.id })}
+            >
+              <span>{i.name}</span>
+              <ChevronRight size={16} />
+            </button>
+          ))}
+        </details>
+      )}
+      <div className="community-feed-heading">
+        <h2>Indicações da comunidade</h2>
+        <span>
+          {loading
+            ? "Carregando…"
+            : `${list.length} ${list.length === 1 ? "lugar" : "lugares"}`}
+        </span>
+      </div>
+      {loading ? (
+        <p role="status">Buscando as últimas descobertas…</p>
       ) : !list.length ? (
-        <section className="travel-empty">
-          <Users size={30} />
+        <section className="community-empty">
+          <Users size={29} />
           <h2>
             {query || category !== "Todos"
-              ? "Nenhuma indicação nesse filtro."
-              : own
-                ? "Sua próxima descoberta começa aqui."
-                : "Vamos construir esse caminho juntos."}
+              ? "Nenhuma dica nesse filtro."
+              : "Qual lugar merece entrar nessa roda?"}
           </h2>
           <p>
-            {own
-              ? "Guarde um lugar com nome, endereço e uma dica pessoal."
-              : available
-                ? "As indicações aparecem aqui depois da revisão."
-                : "A publicação comunitária ainda precisa ser conectada. Você já pode preparar suas indicações neste aparelho."}
+            {query || category !== "Todos"
+              ? "Experimente outra cidade ou categoria."
+              : "Indique seu restaurante favorito, uma praia ou aquele passeio que valeu o caminho."}
           </p>
-          <button
-            className="small-action"
-            aria-label="Indicar lugar"
-            title="Indicar lugar"
-            onClick={() => setForm({})}
-          >
-            Indicar um lugar <Plus size={16} />
+          <button className="small-action" onClick={() => setForm({})}>
+            <Plus size={17} /> Compartilhar uma descoberta
           </button>
         </section>
       ) : (
-        <div className="recommendation-grid">
-          {list.map((i) => (
-            <article className="recommendation" key={i.id}>
-              <span className="eyebrow">
-                {i.category} · {i.city}
-              </span>
-              <h2>{i.name}</h2>
-              <p className="recommendation-address">
-                <MapPin size={16} />
-                {i.address}
-              </p>
-              <p>{i.note}</p>
-              <small>
-                {own
-                  ? items.some((p) => p.id === i.id)
-                    ? "Publicada na comunidade"
-                    : i.submitted
-                      ? "Enviada para revisão"
-                      : "Rascunho neste aparelho"
-                  : `Cadastro conferido em ${new Date(i.reviewed_at).toLocaleDateString("pt-BR")}. Dica pessoal; confirme a operação.`}
-              </small>
-              <div className="recommendation-actions">
-                <button
-                  onClick={() =>
-                    onRoute({
-                      name: `${i.name}, ${i.address}, ${i.city}`,
-                      address: `${i.name}, ${i.address}, ${i.city}`,
-                      route_by_name: true,
-                    })
-                  }
-                >
-                  Como chegar <ExternalLink size={15} />
-                </button>
-                {safeInstagram(i.instagram) && (
-                  <a
-                    href={safeInstagram(i.instagram)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <Camera size={17} /> Instagram
-                  </a>
-                )}
-                {own && !i.submitted && (
-                  <button onClick={() => setForm({ draft: i })}>Editar</button>
-                )}
-                {own && !i.submitted && (
-                  <button disabled={busy === i.id} onClick={() => send(i)}>
-                    <Send size={16} />
-                    {busy === i.id ? "Enviando…" : "Enviar para revisão"}
-                  </button>
-                )}
-                {own && (
-                  <button
-                    aria-label={`Excluir cópia local de ${i.name}`}
-                    onClick={() => {
-                      if (
-                        window.confirm(
-                          "Excluir a cópia neste aparelho? Um envio já feito não será removido da revisão.",
-                        )
-                      )
-                        save(drafts.filter((d) => d.id !== i.id));
-                    }}
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                )}
-              </div>
-            </article>
-          ))}
+        <div className="community-feed">
+          {list.map((i) => {
+            const Icon = icons[i.category] || MapPin;
+            const author = i.author_name || "Viajante";
+            return (
+              <article className="community-card" key={i.id}>
+                <div className="community-card-top">
+                  <span className="community-place-icon">
+                    <Icon size={21} />
+                  </span>
+                  <span>
+                    {i.category}
+                    <small>{i.city}</small>
+                  </span>
+                </div>
+                <h2>{i.name}</h2>
+                <p className="community-tip">{i.note}</p>
+                <p className="community-location">
+                  <MapPin size={14} />
+                  <span>{i.address}</span>
+                </p>
+                <div className="community-card-bottom">
+                  <div className="community-author">
+                    <span aria-hidden="true">{author[0].toUpperCase()}</span>
+                    <p>
+                      <b>{author}</b>
+                      <small>indicou este lugar</small>
+                    </p>
+                  </div>
+                  <div className="community-card-links">
+                    <button
+                      aria-label={`Como chegar a ${i.name}`}
+                      onClick={() =>
+                        onRoute({
+                          name: `${i.name}, ${i.address}, ${i.city}`,
+                          address: `${i.name}, ${i.address}, ${i.city}`,
+                          route_by_name: true,
+                        })
+                      }
+                    >
+                      <span>Como ir</span>
+                      <ArrowUpRight size={19} />
+                    </button>
+                    {safeInstagram(i.instagram) && (
+                      <a
+                        href={safeInstagram(i.instagram)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`Instagram de ${i.name}`}
+                      >
+                        <Camera size={19} />
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </article>
+            );
+          })}
         </div>
       )}
-      {own && drafts.length > 0 && (
-        <button
-          className="small-action"
-          onClick={() =>
-            downloadJson("rota-raiz-indicacoes.json", {
-              version: 1,
-              recommendations: drafts,
-            })
-          }
-        >
-          <Download size={16} /> Baixar minhas indicações
-        </button>
-      )}
+      <p className="community-footnote">
+        Dicas de viajantes. Confirme o funcionamento diretamente com o lugar.
+      </p>
       {form && (
-        <Sheet title="Indicar um lugar" onClose={() => setForm(false)}>
+        <Sheet title="Compartilhe uma descoberta" onClose={() => setForm(null)}>
           <RecommendationForm
-            initial={form.draft}
-            onSave={(item) => {
-              if (
-                save(
-                  form.draft
-                    ? drafts.map((d) => (d.id === item.id ? item : d))
-                    : [...drafts, item],
-                )
-              ) {
-                setOwn(true);
-                setForm(false);
-                setNotice(
-                  "Indicação salva neste aparelho. Use “Enviar para revisão” para solicitar a publicação.",
-                );
-                return true;
-              }
-              return false;
-            }}
+            user={user}
+            initial={form.initial}
+            onSave={publish}
           />
         </Sheet>
       )}
     </div>
   );
 }
-function RecommendationForm({ onSave, initial }) {
-  const [error, setError] = useState("");
+function RecommendationForm({ user, initial, onSave }) {
+  const [error, setError] = useState(""),
+    [busy, setBusy] = useState(false);
   return (
     <form
       className="compact-form"
-      onSubmit={(e) => {
+      onSubmit={async (e) => {
         e.preventDefault();
+        if (busy) return;
         try {
           const f = new FormData(e.currentTarget);
           const item = {
-            id: initial?.id || crypto.randomUUID(),
             name: f.get("name").trim(),
             category: f.get("category"),
             city: f.get("city").trim(),
@@ -303,13 +307,19 @@ function RecommendationForm({ onSave, initial }) {
           };
           if (!item.name || !item.city || !item.address || !item.note)
             throw new Error("Preencha nome, cidade, endereço e sua dica.");
-          if (!onSave(item))
-            setError("Não foi possível salvar neste aparelho.");
+          setBusy(true);
+          setError("");
+          await onSave(item);
         } catch (err) {
           setError(err.message);
+        } finally {
+          setBusy(false);
         }
       }}
     >
+      <p className="community-publish-as">
+        Você indica como <b>{profileName(user)}</b>.
+      </p>
       <label>
         Nome do lugar
         <input
@@ -317,6 +327,7 @@ function RecommendationForm({ onSave, initial }) {
           defaultValue={initial?.name}
           required
           maxLength={120}
+          placeholder="Qual é a sua descoberta?"
         />
       </label>
       <div className="form-pair">
@@ -354,8 +365,8 @@ function RecommendationForm({ onSave, initial }) {
         <input
           name="instagram"
           defaultValue={initial?.instagram}
-          maxLength={120}
           placeholder="@nomedolugar"
+          maxLength={120}
           autoCapitalize="none"
         />
       </label>
@@ -367,19 +378,21 @@ function RecommendationForm({ onSave, initial }) {
           required
           maxLength={500}
           rows={3}
-          placeholder="O que você conheceu e recomenda?"
+          placeholder="O que vale conhecer por lá?"
         />
       </label>
       <p className="field-help">
-        Cadastre o endereço público do estabelecimento. A indicação precisa de
-        revisão antes de aparecer para outras pessoas.
+        Seu nome e esta indicação ficam visíveis para as pessoas do app. Use o
+        endereço público do estabelecimento.
       </p>
       {error && (
-        <p role="alert" className="form-error">
+        <p className="form-error" role="alert">
           {error}
         </p>
       )}
-      <button className="primary-action">Guardar indicação</button>
+      <button className="primary-action" disabled={busy}>
+        {busy ? "Publicando…" : "Publicar na comunidade"}
+      </button>
     </form>
   );
 }

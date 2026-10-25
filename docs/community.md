@@ -1,0 +1,11 @@
+# Comunidade compartilhada
+
+Feed único para contas autenticadas, com nome de quem indicou, busca e filtros por categoria. A autoria é obtida da sessão no servidor. Publicações aparecem para outras contas; não são apresentadas como informações verificadas pelo app. Rascunhos antigos continuam no aparelho até a pessoa revisá-los e publicar.
+
+A migração `20261025_community_feed.sql` foi aplicada ao projeto Rota-Raiz em 25/10/2026. Nenhuma tabela de viagens compartilhadas foi ativada nesta entrega. Gastos e PDF atuais permanecem como estavam.
+
+Validação: 11 testes locais passaram, build e lint executados; houve também teste no banco real com duas identidades temporárias, publicação, autoria, leitura pela outra conta e bloqueio de escrita direta e publicação anônima. Toda a transação de teste foi revertida. Nenhuma indicação fictícia foi mantida.
+
+O advisor de SECURITY DEFINER para `rr_publish_recommendation` é intencional: a operação é uma API autenticada que valida o conteúdo e usa auth.uid(), com escrita direta revogada e search_path vazio. Referência: https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable
+
+Revisão visual real pendente: o navegador disponível não alcançou o servidor local e a prévia Vercel exige login. Os testes React validam o fluxo, mas não substituem a conferência visual.

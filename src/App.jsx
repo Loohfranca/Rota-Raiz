@@ -200,7 +200,7 @@ export default function App() {
         ) : activeTab === "trip" ? (
           <TripView onOpenTour={setSelectedTour} />
         ) : activeTab === "community" ? (
-          <CommunityView onRoute={goToRoutesWith} />
+          <CommunityView key={session.user.id} user={session.user} onRoute={goToRoutesWith} />
         ) : activeTab === "tours" ? null : activeTab === "admin" ? (
           <AdminView onBack={() => setActiveTab("routes")} />
         ) : null}
