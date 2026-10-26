@@ -1,3 +1,4 @@
+import { RIO_PLACES } from './rioPlaces.js';
 import tripPlaces from './tripPlaces.json';
 import { TRANCOSO_PLACES } from './trancosoPlaces.js';
 import { CARAIVA_BEACHES } from './caraivaBeaches.js';
@@ -352,7 +353,7 @@ export const BEACHES = [
     "coordinate_note": "Ponto de referência da praia no OpenStreetMap; confirme o acesso público no mapa.",
     "reviewed_at": "2026-10-21"
   }
-].map(item => ({...item, ...BEACH_GUIDES[item.id]})).concat(CARAIVA_BEACHES, TRANCOSO_PLACES, tripPlaces);
+].map(item => ({...item, ...BEACH_GUIDES[item.id]})).concat(CARAIVA_BEACHES, TRANCOSO_PLACES, tripPlaces, RIO_PLACES);
 export const LODGINGS = [
   {
     "id": "eco-glamping-caraiva",

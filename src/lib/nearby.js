@@ -1,6 +1,7 @@
 import { haversineDistance, normalizeText } from './router.js';
 import { hasCoordinates } from './walking.js';
 export const REGIONS = [
+  {id:'rio-de-janeiro',name:'Rio de Janeiro',lat:-22.9068,lng:-43.1729},
   {id:'salvador',name:'Salvador',lat:-12.974,lng:-38.513},
   {id:'joao-pessoa',name:'João Pessoa',lat:-7.1195,lng:-34.845},
   { id: 'trancoso', name: 'Trancoso', lat: -16.5901, lng: -39.0975 },

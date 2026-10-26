@@ -606,12 +606,12 @@ test("escolher aeroporto ambíguo atualiza também a origem do formulário", asy
 test("Explorar permite escolher fotos e pausar o destaque", async () => {
   window.matchMedia = () => ({ matches: false, addEventListener() {}, removeEventListener() {} });
   const tour = { id: "hero-test", title: "Praia de teste", location: "Cidade, Brasil", photos: [{ url: "/first.jpg", caption: "Primeira foto" }, { url: "/second.jpg", caption: "Segunda foto" }] };
-  render(React.createElement(ExploreHero, { tour }));
+  render(React.createElement(ExploreHero, { destinations: tour.photos.map((photo, index) => ({ ...tour, id: tour.id + index, title: tour.title + (index ? " dois" : ""), photos: [photo] })) }));
   assert.ok(screen.getByRole("heading", { name: /Menos pressa/ }));
   const user = userEvent.setup();
-  await user.click(screen.getByRole("button", { name: "Ver foto 2 de Praia de teste" }));
+  await user.click(screen.getByRole("button", { name: "Ver destino 2: Praia de teste dois" }));
   assert.equal(screen.getByRole("img").getAttribute("src"), "/second.jpg");
-  assert.equal(screen.getByRole("button", { name: "Ver foto 2 de Praia de teste" }).getAttribute("aria-pressed"), "true");
+  assert.equal(screen.getByRole("button", { name: "Ver destino 2: Praia de teste dois" }).getAttribute("aria-pressed"), "true");
   await user.click(screen.getByRole("button", { name: "Retomar animações do destaque" }));
   assert.ok(screen.getByRole("button", { name: "Pausar animações do destaque" }));
 });
@@ -619,10 +619,10 @@ test("Explorar permite escolher fotos e pausar o destaque", async () => {
 test("Explorar respeita redução de movimento e mantém navegação manual", async () => {
   window.matchMedia = () => ({ matches: true, addEventListener() {}, removeEventListener() {} });
   const tour = { id: "hero-reduced", title: "Outra praia", location: "Cidade", photos: [{ url: "/a.jpg" }, { url: "/b.jpg" }] };
-  render(React.createElement(ExploreHero, { tour }));
+  render(React.createElement(ExploreHero, { destinations: tour.photos.map((photo, index) => ({ ...tour, id: tour.id + index, title: tour.title + (index ? " dois" : ""), photos: [photo] })) }));
   assert.equal(screen.queryByRole("button", { name: /Pausar animações/ }), null);
   assert.equal(document.querySelector(".type-cursor.is-running"), null);
-  await userEvent.setup().click(screen.getByRole("button", { name: "Ver foto 2 de Outra praia" }));
+  await userEvent.setup().click(screen.getByRole("button", { name: "Ver destino 2: Outra praia dois" }));
   assert.equal(screen.getByRole("img").getAttribute("src"), "/b.jpg");
 });
 
@@ -633,7 +633,7 @@ test("Explorar alterna fotos sozinho e interrompe ao interagir", async context =
   context.mock.timers.enable({ apis: ["setInterval"] });
   const tour = { id: "hero-auto", title: "Praia automática", location: "Cidade", photos: [{ url: "/auto-a.jpg" }, { url: "/auto-b.jpg" }] };
   const { act, fireEvent } = await import("@testing-library/react");
-  render(React.createElement(ExploreHero, { tour }));
+  render(React.createElement(ExploreHero, { destinations: tour.photos.map((photo, index) => ({ ...tour, id: tour.id + index, title: tour.title + (index ? " dois" : ""), photos: [photo] })) }));
   act(() => context.mock.timers.tick(7000));
   assert.equal(screen.getByRole("img").getAttribute("src"), "/auto-b.jpg");
   fireEvent.mouseEnter(document.querySelector(".explore-hero"));
@@ -644,4 +644,21 @@ test("Explorar alterna fotos sozinho e interrompe ao interagir", async context =
   assert.equal(screen.getByRole("img").getAttribute("src"), "/auto-a.jpg");
   cleanup();
   context.mock.timers.reset();
+});
+
+test("destaque mostra cinco destinos reais e abre o destino selecionado", async () => {
+  const { BEACHES } = await server.ssrLoadModule("/src/data/beachCatalog.js");
+  const ids = ["rj-copacabana", "caraiva-praia", "trancoso-quadrado", "ssa-farol-barra", "jpa-tambau"];
+  const destinations = ids.map(id => BEACHES.find(place => place.id === id));
+  assert.equal(new Set(destinations.map(place => place.region)).size, 5);
+  let opened;
+  render(React.createElement(ExploreHero, { destinations, onSelect: place => { opened = place; } }));
+  const user = userEvent.setup();
+  assert.equal(screen.getByRole("group", { name: "Escolher destino em destaque" }).querySelectorAll("button").length, 5);
+  await user.click(screen.getByRole("button", { name: "Ver destino 5: Praia de Tambaú" }));
+  assert.ok(screen.getByRole("button", { name: /Explorar Praia de Tambaú, João Pessoa/ }));
+  await user.click(screen.getByRole("button", { name: /Explorar Praia de Tambaú, João Pessoa/ }));
+  assert.equal(opened.id, "jpa-tambau");
+  assert.ok(document.querySelector(".hero-carousel-controls .hero-motion-toggle") || window.matchMedia().matches);
+  assert.equal(document.querySelector(".hero-destination-open .hero-motion-toggle"), null);
 });

@@ -4660,3 +4660,25 @@
   .explore-hero-interactive *, .explore-hero-interactive *::after { animation: none !important; transition: none !important; }
   .type-cursor { display: none; }
 }
+
+/* Cinco destinos, com a imagem inteira acionável e controles fora da paisagem. */
+.hero-destination-open { display: block; width: 100%; border: 0; padding: 0; text-align: left; color: var(--secondary); }
+.hero-destination-open .hero-photo-label { right: 14px; left: 14px; pointer-events: none; }
+.hero-destination-open .hero-photo-label > span { flex: 1; min-width: 0; }
+.hero-carousel-controls { display: flex; justify-content: center; align-items: center; gap: 4px; min-height: 44px; margin-top: 4px; }
+.hero-carousel-controls .hero-photo-dots { position: static; transform: none; width: auto; display: flex; min-width: 220px; }
+.hero-carousel-controls .hero-motion-toggle { position: static; width: 60px; height: 44px; border: 0; border-radius: 10px; box-shadow: none; background: transparent; color: var(--on-surface-variant); font-size: 12px; text-decoration: underline; text-underline-offset: 3px; }
+.explore-hero-interactive { margin-bottom: 22px; }
+@media (max-width: 600px) {
+  .explore-hero-interactive { grid-template-columns: 1fr; gap: 16px; }
+  .explore-hero-interactive .explore-intro h1 { font-size: 34px; margin: 10px 0; }
+  .explore-hero-interactive .explore-type-line { min-height: 1.6em; max-width: none; font-size: 15px; }
+  .explore-hero-interactive .explore-hero-description { max-width: none; margin-top: 5px; }
+  .explore-hero-interactive .hero-beach-photo { height: 210px; min-height: 210px; border-radius: 40px 18px 18px; }
+  .hero-destination-open .hero-photo-label { font-size: 14px; padding: 10px 12px; }
+  .hero-destination-open .hero-photo-label small { font-size: 12px; }
+  .hero-destination-open .hero-photo-label > svg { display: block; }
+}
+@media (min-width: 601px) and (max-width: 767px) {
+  .explore-hero-interactive .hero-beach-photo { height: 260px; min-height: 260px; }
+}

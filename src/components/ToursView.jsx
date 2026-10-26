@@ -25,6 +25,8 @@ import OriginPicker from "./OriginPicker";
 import { BEACHES, LODGINGS } from "../data/beachCatalog";
 import { selectBeaches, nearestRegion, REGIONS } from "../lib/nearby";
 import { hasCoordinates } from "../lib/walking";
+const FEATURED_DESTINATIONS = ["rj-copacabana", "caraiva-praia", "trancoso-quadrado", "ssa-farol-barra", "jpa-tambau"].map(id => BEACHES.find(place => place.id === id)).filter(Boolean);
+
 export default function ToursView({
   home,
   onChangeHome,
@@ -102,23 +104,9 @@ export default function ToursView({
     if (onlySaved && place.savedOrigin) onChangeHome(place.savedOrigin);
     onSelectTour(place);
   };
-  const regionalHero = BEACHES.find(
-    (p) => p.region === (region === "auto" ? near?.id : region),
-  );
-  const hero =
-    regionalHero ||
-    BEACHES.find(
-      (i) =>
-        i.id ===
-        (regionName === "Porto Seguro"
-          ? "taperapua"
-          : regionName === "Arraial d’Ajuda"
-            ? "pitinga"
-            : "satu"),
-    );
   return (
     <div className="explore-page">
-      <ExploreHero key={hero.id} tour={hero} visible={visible} />
+      <ExploreHero destinations={FEATURED_DESTINATIONS} visible={visible} onSelect={open} />
       <OriginPicker
         home={home}
         onChange={onChangeHome}
