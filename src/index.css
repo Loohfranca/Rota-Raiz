@@ -4621,3 +4621,42 @@
 .flight-connection-note b { display:block; color:#243e32; font-weight:600; margin-bottom:4px; }
 .maps-handoff .airport-access { margin:0; }
 @media(max-width:359px){.flight-option small{font-size:11px;}.airport-choice select{font-size:14px;}}
+
+/* Explorar: movimento concentrado no destaque, com pausa e leitura estável. */
+.explore-hero-interactive .explore-intro h1 { font-weight: 800; font-size: clamp(32px, 3.8vw, 52px); letter-spacing: -.055em; line-height: 1.05; text-wrap: balance; }
+.explore-hero-interactive .explore-intro h1 > span { color: #596c48; }
+.explore-hero-interactive .explore-type-line { min-height: 3.3em; margin: 0; max-width: 28ch; font-weight: 700; color: var(--secondary); line-height: 1.5; font-size: 17px; }
+.explore-hero-interactive .explore-hero-description { margin: 8px 0 0; font-size: 14px; max-width: 31ch; }
+.type-cursor { display: inline-block; height: 1em; border-right: 2px solid var(--primary); margin-left: 3px; vertical-align: -.12em; }
+.type-cursor.is-running { animation: explore-cursor 1s step-end infinite; }
+.hero-slideshow { background: var(--secondary-container); touch-action: pan-y; }
+.hero-slide-image { animation: explore-photo-in .6s ease-out both; }
+.hero-fallback-photo { height: 100%; }
+.hero-motion-toggle { position: absolute; top: 12px; right: 12px; display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid #fff8; border-radius: 50%; background: #fffefaed; color: var(--secondary); box-shadow: 0 3px 12px #243e3215; }
+.hero-photo-dots { display: flex; justify-content: center; position: absolute; bottom: 0; transform: translateY(100%); width: 100%; }
+.hero-photo-dots button { width: 44px; height: 44px; display: grid; place-items: center; border: 0; background: none; padding: 0; }
+.hero-photo-dots button span { width: 6px; height: 6px; border-radius: 8px; background: #899080; transition: width .2s, background .2s; }
+.hero-photo-dots button[aria-pressed="true"] span { width: 20px; background: var(--secondary); }
+.explore-hero-interactive { margin-bottom: 48px; }
+.explore-page .discovery-top h2 { letter-spacing: -.035em; font-weight: 700; }
+@keyframes explore-cursor { 50% { opacity: 0; } }
+@keyframes explore-photo-in { from { opacity: .3; } to { opacity: 1; } }
+@media (max-width: 767px) {
+  .explore-hero-interactive { gap: 14px; }
+  .explore-hero-interactive .explore-intro h1 { font-size: clamp(27px, 6vw, 38px); margin: 12px 0; }
+  .explore-hero-interactive .explore-type-line { font-size: 14px; min-height: 4.5em; }
+  .explore-hero-interactive .explore-hero-description { font-size: 12px; }
+  .explore-hero-interactive .hero-beach-photo { min-height: 240px; }
+  .hero-motion-toggle { top: 8px; right: 8px; }
+  .hero-photo-dots button { width: 44px; min-height: 44px; }
+}
+@media (max-width: 359px) {
+  .explore-hero-interactive { grid-template-columns: 1fr; gap: 18px; }
+  .explore-hero-interactive .explore-type-line { min-height: 3em; }
+  .explore-hero-interactive .hero-beach-photo { height: 190px; min-height: 190px; border-radius: 40px 18px 18px; }
+  .explore-hero-interactive .hero-photo-label { right: auto; font-size: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .explore-hero-interactive *, .explore-hero-interactive *::after { animation: none !important; transition: none !important; }
+  .type-cursor { display: none; }
+}
