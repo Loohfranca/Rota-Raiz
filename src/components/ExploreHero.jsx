@@ -1,19 +1,19 @@
 import React, { useEffect, useRef, useState } from "react";
-import { MapPin, Pause, Play } from "lucide-react";
+import { MapPin, ArrowUpRight } from "lucide-react";
 import BeachPhoto from "./BeachPhoto";
 import { getTourPhotos } from "../lib/photos";
 
 const PHRASES = ["Encontre sua próxima praia.", "Descubra novos caminhos.", "Vá no seu ritmo."];
 
-export default function ExploreHero({ tour, visible = true }) {
-  const root = useRef(null), touch = useRef(null);
+export default function ExploreHero({ destinations, visible = true, onSelect }) {
+  const root = useRef(null), touch = useRef(null), swiped = useRef(false);
   const [paused, setPaused] = useState(false), [hovered, setHovered] = useState(false),
     [focused, setFocused] = useState(false), [inView, setInView] = useState(true),
     [pageVisible, setPageVisible] = useState(true), [reduced, setReduced] = useState(true),
     [index, setIndex] = useState(0), [failed, setFailed] = useState([]),
     [typing, setTyping] = useState({ phrase: 0, count: PHRASES[0].length, deleting: false });
-  const photos = getTourPhotos(tour).filter(photo => !failed.includes(photo.url)).slice(0, 3);
-  const activeIndex = index % Math.max(photos.length, 1);
+  const slides = destinations.slice(0, 5).map(tour => ({ tour, photo: getTourPhotos(tour).find(photo => !failed.includes(photo.url)) }));
+  const activeIndex = index % Math.max(slides.length, 1);
   const running = visible && pageVisible && inView && !reduced && !paused && !hovered && !focused;
 
   useEffect(() => {
@@ -33,10 +33,10 @@ export default function ExploreHero({ tour, visible = true }) {
   }, []);
 
   useEffect(() => {
-    if (!running || photos.length < 2) return;
+    if (!running || slides.length < 2) return;
     const timer = setInterval(() => setIndex(value => value + 1), 7000);
     return () => clearInterval(timer);
-  }, [running, photos.length]);
+  }, [running, slides.length]);
 
   useEffect(() => {
     if (!running) return;
@@ -51,7 +51,9 @@ export default function ExploreHero({ tour, visible = true }) {
   }, [running, typing]);
 
   const choose = next => { setIndex(next); setPaused(true); };
-  const active = photos[activeIndex];
+  const active = slides[activeIndex];
+  if (!active) return null;
+  const { tour, photo } = active;
   return <section ref={root} className="explore-hero explore-hero-interactive"
     onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
     onFocusCapture={() => setFocused(true)} onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false); }}>
@@ -62,17 +64,20 @@ export default function ExploreHero({ tour, visible = true }) {
       <p className="explore-hero-description">Escolha um lugar. A gente ajuda com o caminho.</p>
     </div>
     <div className="hero-landscape">
-      <div className="beach-photo hero-beach-photo hero-slideshow" onTouchStart={event => { touch.current = event.touches[0]?.clientX; }} onTouchEnd={event => {
-        if (touch.current == null) return;
-        const delta = (event.changedTouches[0]?.clientX ?? touch.current) - touch.current;
-        touch.current = null;
-        if (Math.abs(delta) > 45 && photos.length > 1) choose((activeIndex + (delta < 0 ? 1 : -1) + photos.length) % photos.length);
-      }}>
-        {active ? <img key={active.url} className={running ? "hero-slide-image is-running" : "hero-slide-image"} src={active.url} alt={active.caption || tour.title} onError={() => setFailed(previous => [...previous, active.url])} draggable="false" /> : <BeachPhoto tour={tour} className="hero-fallback-photo" />}
+      <button type="button" className="beach-photo hero-beach-photo hero-slideshow hero-destination-open" aria-label={`Explorar ${tour.title}, ${tour.location}`} onClick={event => { if (event.detail === 0 || !swiped.current) onSelect?.(tour); swiped.current = false; }}
+        onTouchStart={event => { swiped.current = false; touch.current = event.touches[0]?.clientX; }} onTouchCancel={() => { touch.current = null; }} onTouchEnd={event => {
+          if (touch.current == null) return;
+          const delta = (event.changedTouches[0]?.clientX ?? touch.current) - touch.current;
+          touch.current = null;
+          if (Math.abs(delta) > 45 && slides.length > 1) { swiped.current = true; choose((activeIndex + (delta < 0 ? 1 : -1) + slides.length) % slides.length); }
+        }}>
+        {photo ? <img key={photo.url} className="hero-slide-image" src={photo.url} alt={photo.caption || tour.title} onError={() => setFailed(previous => [...previous, photo.url])} draggable="false" /> : <BeachPhoto tour={{ title: tour.title }} className="hero-fallback-photo" />}
+        <span className="hero-photo-label"><MapPin size={15} /><span>{tour.title}<small>{tour.location}</small></span><ArrowUpRight size={17} /></span>
+      </button>
+      <div className="hero-carousel-controls">
+        {slides.length > 1 && <div className="hero-photo-dots" role="group" aria-label="Escolher destino em destaque">{slides.map((slide, n) => <button key={slide.tour.id} aria-label={`Ver destino ${n + 1}: ${slide.tour.title}`} aria-pressed={n === activeIndex} onClick={() => choose(n)}><span /></button>)}</div>}
+        {!reduced && <button className="hero-motion-toggle" onClick={() => setPaused(value => !value)} aria-label={paused ? "Retomar animações do destaque" : "Pausar animações do destaque"}>{paused ? "Retomar" : "Pausar"}</button>}
       </div>
-      <div className="hero-photo-label"><MapPin size={15} /><span>{tour.title}<small>{tour.location?.split(",")[0]}</small></span></div>
-      {!reduced && <button className="hero-motion-toggle" onClick={() => setPaused(value => !value)} aria-label={paused ? "Retomar animações do destaque" : "Pausar animações do destaque"}>{paused ? <Play size={15} /> : <Pause size={15} />}</button>}
-      {photos.length > 1 && <div className="hero-photo-dots" role="group" aria-label={`Fotos de ${tour.title}`}>{photos.map((photo, n) => <button key={photo.url} aria-label={`Ver foto ${n + 1} de ${tour.title}`} aria-pressed={n === activeIndex} onClick={() => choose(n)}><span /></button>)}</div>}
     </div>
   </section>;
 }
