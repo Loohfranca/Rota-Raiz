@@ -4603,3 +4603,21 @@
 .brazil-discovery-link:disabled { opacity:.55; }
 .brazil-discovery-note { margin:10px 0 0; font-size:12px; line-height:1.5; color:#596458; }
 @media(max-width:767px){ .brazil-discovery { padding:16px; } .brazil-discovery-fields { grid-template-columns:repeat(2,minmax(0,1fr)); } .brazil-discovery-fields label:first-child { grid-column:1/-1; } .brazil-discovery-heading h2 { font-size:18px; } }
+
+/* Escolha contextual: voo, conexão de terminais e trajetos locais. */
+.journey-context-label { display:flex; margin-bottom:-4px; }
+.journey-context-label span { font-size:12px; font-weight:600; color:#4c6240; background:#e9eee1; border-radius:999px; padding:5px 10px; }
+.maps-mode-picker .flight-option { grid-column:1/-1; }
+.flight-option small { margin-left:auto; font-size:12px; color:#596458; }
+.airport-choice { display:grid; gap:6px; margin-top:8px; min-width:0; }
+.airport-choice span { font-size:12px; color:#596458; }
+.airport-choice select { width:100%; min-width:0; max-width:100%; min-height:46px; padding:10px; border:1px solid #8e9f82; border-radius:12px; background:#fffdf8; color:#243e32; font-size:16px; }
+.journey-choice-help { padding:10px 12px; border-radius:12px; background:#f2ede2; color:#515a48; font-size:14px; line-height:1.5; margin:0; }
+.journey-more-modes { min-height:44px; display:flex; align-items:center; justify-content:center; gap:7px; color:#596458; font-size:13px; margin:-8px 0; }
+.journey-more-modes[aria-expanded=true] svg { transform:rotate(180deg); }
+.flight-connection-note { display:flex; align-items:flex-start; gap:10px; padding:14px; background:#edf0e6; border-radius:14px; }
+.flight-connection-note svg { flex-shrink:0; color:#526a43; margin-top:2px; }
+.flight-connection-note p { margin:0; font-size:14px; line-height:1.55; color:#596458; }
+.flight-connection-note b { display:block; color:#243e32; font-weight:600; margin-bottom:4px; }
+.maps-handoff .airport-access { margin:0; }
+@media(max-width:359px){.flight-option small{font-size:11px;}.airport-choice select{font-size:14px;}}

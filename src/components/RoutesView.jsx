@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   ArrowUpDown,
   Navigation,
@@ -19,6 +19,7 @@ import PageHeading from "./PageHeading";
 import AirportJourney from "./AirportJourney";
 import { getAirportJourney } from "../data/airportJourney";
 import JourneyLookup from "./JourneyLookup";
+import { journeyError } from "../lib/journeyIntent";
 import AirportAccess from "./AirportAccess";
 import { AIRPORTS } from "../data/travelNetwork";
 
@@ -64,8 +65,16 @@ export default function RoutesView({
   const [mode, setMode] = useState("fastest");
   const [formError, setFormError] = useState("");
   const [gpsLoading, setGpsLoading] = useState(false);
+  const gpsEpoch = useRef(0);
+  useEffect(
+    () => () => {
+      gpsEpoch.current += 1;
+    },
+    [],
+  );
 
   useEffect(() => {
+    let active = true;
     async function load() {
       const [s, l, p, c] = await Promise.all([
         getStops(),
@@ -73,12 +82,21 @@ export default function RoutesView({
         getPlaces(),
         getCities(),
       ]);
+      if (!active) return;
       setStops(s);
       setLegs(l);
       setPlaces(p);
       setCities(c);
     }
-    load();
+    load().catch(() => {
+      if (active)
+        setFormError(
+          "Não foi possível carregar os roteiros locais. Você ainda pode consultar o trajeto no Maps.",
+        );
+    });
+    return () => {
+      active = false;
+    };
   }, []);
 
   // Destino enviado por outra tela (Mapa ou Passeios)
@@ -90,22 +108,32 @@ export default function RoutesView({
           : initialDestination,
       );
       setResult(null);
+      setJourneyRequest(null);
+      setFormError("");
     }
   }, [initialDestination]);
 
   // Qualquer mudança nos campos limpa o resultado antigo
   const changeOrigin = (v) => {
+    gpsEpoch.current += 1;
+    setGpsLoading(false);
+    setJourneyRequest(null);
     onChangeOrigin(v);
     setResult(null);
     setFormError("");
   };
   const changeDest = (v) => {
+    setJourneyRequest(null);
     setDest(v);
     setResult(null);
     setFormError("");
   };
 
   const handleSwap = () => {
+    gpsEpoch.current += 1;
+    setGpsLoading(false);
+    setJourneyRequest(null);
+    setFormError("");
     const prevOrigin = origin;
     onChangeOrigin(dest);
     setDest(prevOrigin);
@@ -117,10 +145,12 @@ export default function RoutesView({
       setFormError("Seu navegador não tem GPS.");
       return;
     }
+    const epoch = ++gpsEpoch.current;
     setGpsLoading(true);
     setFormError("");
     navigator.geolocation.getCurrentPosition(
       (pos) => {
+        if (epoch !== gpsEpoch.current) return;
         setGpsLoading(false);
         changeOrigin({
           name: "Minha localização",
@@ -130,6 +160,7 @@ export default function RoutesView({
         });
       },
       () => {
+        if (epoch !== gpsEpoch.current) return;
         setGpsLoading(false);
         setFormError(
           "Não consegui pegar sua localização. Verifique a permissão do GPS.",
@@ -140,8 +171,11 @@ export default function RoutesView({
   };
 
   const runCalculation = (o, d) => {
-    if (!o?.name?.trim() || !d?.name?.trim()) {
-      setFormError("Preencha de onde você sai e para onde vai.");
+    const validation = journeyError(o, d);
+    if (validation) {
+      setJourneyRequest(null);
+      setResult(null);
+      setFormError(validation);
       return;
     }
     setFormError("");
@@ -153,6 +187,15 @@ export default function RoutesView({
     );
     setMode("fastest");
     setJourneyRequest({ origin: { ...o }, destination: { ...d } });
+  };
+
+  const resolveAirportPoint = (side, point) => {
+    gpsEpoch.current += 1;
+    setGpsLoading(false);
+    if (side === "origin") onChangeOrigin(point);
+    else setDest(point);
+    setResult(null);
+    setJourneyRequest((current) => current && { ...current, [side]: point });
   };
 
   // Destinos reais que saem direto da origem escolhida (vindos dos trechos cadastrados)
@@ -256,7 +299,10 @@ export default function RoutesView({
             </div>
 
             {formError && (
-              <p className="text-sm text-[#ba1a1a] flex items-center gap-1.5">
+              <p
+                role="alert"
+                className="text-sm text-[#ba1a1a] flex items-center gap-1.5"
+              >
                 <AlertCircle size={16} className="shrink-0" />
                 {formError}
               </p>
@@ -458,6 +504,10 @@ export default function RoutesView({
         <JourneyLookup
           origin={journeyRequest.origin}
           destination={journeyRequest.destination}
+          onResolveOrigin={(point) => resolveAirportPoint("origin", point)}
+          onResolveDestination={(point) =>
+            resolveAirportPoint("destination", point)
+          }
           defaultOpen
           hideTrigger
           onClose={() => setJourneyRequest(null)}
