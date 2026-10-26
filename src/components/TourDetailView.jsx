@@ -7,6 +7,7 @@ import {
   ArrowUpRight,
   Coffee,
 } from "lucide-react";
+import { hasCoordinates } from "../lib/walking";
 import AccessGuide from "./AccessGuide";
 import PhotoGallery from "./PhotoGallery";
 import { getSavedTours, toggleSaveTourOffline } from "../lib/supabase";
@@ -47,7 +48,19 @@ export default function TourDetailView({
           {saved ? "Passeio salvo" : "Salvar passeio"}
         </button>
       </div>
-      <PhotoGallery key={tour.id} tour={tour} onOpenMap={() => onOpenMapWithTour(tour)} />
+      <PhotoGallery
+        key={tour.id}
+        tour={tour}
+        onOpenMap={() => {
+          if (hasCoordinates(tour)) onOpenMapWithTour(tour);
+          else
+            window.open(
+              `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(tour.address || `${tour.title}, ${tour.location}`)}`,
+              "_blank",
+              "noopener,noreferrer",
+            );
+        }}
+      />
       <header className="detail-intro">
         <p className="eyebrow">
           <MapPin size={14} />
@@ -78,17 +91,26 @@ export default function TourDetailView({
               <Waves size={23} />
             </span>
             <p className="eyebrow">Antes de sair</p>
-            <h2>{tour.category === "Cultura" ? "Antes de visitar" : "De olho na maré"}</h2>
+            <h2>
+              {tour.category === "Cultura"
+                ? "Antes de visitar"
+                : "De olho na maré"}
+            </h2>
             <p>
-              {tour.category === "Cultura" ? "Confira horários de visita, acessibilidade e eventuais ingressos antes de sair." : (tour.tide_note || "Consulte a maré e os acessos antes de sair.")}
+              {tour.category === "Cultura"
+                ? "Confira horários de visita, acessibilidade e eventuais ingressos antes de sair."
+                : tour.tide_note ||
+                  "Consulte a maré e os acessos antes de sair."}
             </p>
-            {tour.category !== "Cultura" && <a
-              href="https://www.marinha.mil.br/chm/dados-do-segnav-publicacoes/tabuas-das-mares"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Consultar a tábua <ArrowUpRight size={16} />
-            </a>}
+            {tour.category !== "Cultura" && (
+              <a
+                href="https://www.marinha.mil.br/chm/dados-do-segnav-publicacoes/tabuas-das-mares"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Consultar a tábua <ArrowUpRight size={16} />
+              </a>
+            )}
           </section>
           <section className="travel-note">
             <span className="note-icon">
@@ -108,7 +130,6 @@ export default function TourDetailView({
           {error}
         </p>
       )}
-
     </div>
   );
 }
