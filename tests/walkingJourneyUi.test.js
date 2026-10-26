@@ -13,6 +13,8 @@ let server,
   JourneyLookup,
   RoutesView,
   TourDetailView,
+  BrazilDiscovery,
+  ToursView,
   userEvent,
   dom;
 before(async () => {
@@ -67,6 +69,12 @@ before(async () => {
   ));
   ({ default: TourDetailView } = await server.ssrLoadModule(
     "/src/components/TourDetailView.jsx",
+  ));
+  ({ default: BrazilDiscovery } = await server.ssrLoadModule(
+    "/src/components/BrazilDiscovery.jsx",
+  ));
+  ({ default: ToursView } = await server.ssrLoadModule(
+    "/src/components/ToursView.jsx",
   ));
 });
 afterEach(() => {
@@ -345,6 +353,63 @@ test("praia sem coordenada abre busca pelo endereço em vez de criar mapa com pi
     assert.equal(new URL(opened).searchParams.get("query"), tour.address);
   } finally {
     window.open = oldOpen;
+    window.scrollTo = oldScroll;
+  }
+});
+
+test("buscar atrações em outra cidade atualiza o link sem consumir serviço enquanto digita", async () => {
+  let requests = 0;
+  globalThis.fetch = async () => {
+    requests++;
+    throw Error("Não consultar API");
+  };
+  render(React.createElement(BrazilDiscovery));
+  assert.ok(
+    screen.getByRole("button", { name: "Buscar no Google Maps" }).disabled,
+  );
+  const ui = userEvent.setup();
+  await ui.type(screen.getByLabelText("Cidade ou região"), "Bonito, MS");
+  await ui.selectOptions(
+    screen.getByLabelText("O que descobrir"),
+    "waterfalls",
+  );
+  const link = screen.getByRole("link", { name: "Buscar no Google Maps" });
+  assert.equal(
+    new URL(link.href).searchParams.get("query"),
+    "cachoeiras em Bonito, MS, Brasil",
+  );
+  assert.equal(link.target, "_blank");
+  assert.equal(requests, 0);
+  assert.ok(screen.getByText(/não são importados para o catálogo/));
+});
+test("Explorar mostra Trancoso e abre seis lugares cadastrados nessa região", async () => {
+  const oldScroll = window.scrollTo;
+  window.scrollTo = () => {};
+  globalThis.requestAnimationFrame = (cb) => setTimeout(cb, 0);
+  globalThis.cancelAnimationFrame = clearTimeout;
+  try {
+    render(
+      React.createElement(ToursView, {
+        home: { name: "Trancoso", lat: -16.5901, lng: -39.0975 },
+        onChangeHome: () => {},
+        onSelectTour: () => {},
+        onRoute: () => {},
+      }),
+    );
+    const ui = userEvent.setup();
+    await ui.click(
+      await screen.findByRole("button", { name: "Trancoso", exact: true }),
+    );
+    await screen.findByRole("heading", { name: "Explore Trancoso" });
+    await screen.findByRole("heading", { name: "Quadrado de Trancoso" });
+    assert.ok(screen.getByRole("heading", { name: "Praia dos Coqueiros" }));
+    assert.ok(screen.getByRole("heading", { name: "Praia de Itapororoca" }));
+    assert.equal(
+      screen.queryByRole("heading", { name: "Praia do Satu" }),
+      null,
+    );
+  } finally {
+    cleanup();
     window.scrollTo = oldScroll;
   }
 });
