@@ -15,6 +15,7 @@ let server,
   TourDetailView,
   BrazilDiscovery,
   ToursView,
+  ExploreHero,
   userEvent,
   dom;
 before(async () => {
@@ -73,6 +74,7 @@ before(async () => {
   ({ default: BrazilDiscovery } = await server.ssrLoadModule(
     "/src/components/BrazilDiscovery.jsx",
   ));
+  ({ default: ExploreHero } = await server.ssrLoadModule("/src/components/ExploreHero.jsx"));
   ({ default: ToursView } = await server.ssrLoadModule(
     "/src/components/ToursView.jsx",
   ));
@@ -598,4 +600,48 @@ test("escolher aeroporto ambíguo atualiza também a origem do formulário", asy
   await screen.findByRole("link", { name: "Pesquisar voos no Google" });
   await ui.click(screen.getByRole("button", { name: "Fechar", exact: true }));
   assert.ok(screen.getByLabelText("Origem").value.includes("Galeão"));
+});
+
+
+test("Explorar permite escolher fotos e pausar o destaque", async () => {
+  window.matchMedia = () => ({ matches: false, addEventListener() {}, removeEventListener() {} });
+  const tour = { id: "hero-test", title: "Praia de teste", location: "Cidade, Brasil", photos: [{ url: "/first.jpg", caption: "Primeira foto" }, { url: "/second.jpg", caption: "Segunda foto" }] };
+  render(React.createElement(ExploreHero, { tour }));
+  assert.ok(screen.getByRole("heading", { name: /Menos pressa/ }));
+  const user = userEvent.setup();
+  await user.click(screen.getByRole("button", { name: "Ver foto 2 de Praia de teste" }));
+  assert.equal(screen.getByRole("img").getAttribute("src"), "/second.jpg");
+  assert.equal(screen.getByRole("button", { name: "Ver foto 2 de Praia de teste" }).getAttribute("aria-pressed"), "true");
+  await user.click(screen.getByRole("button", { name: "Retomar animações do destaque" }));
+  assert.ok(screen.getByRole("button", { name: "Pausar animações do destaque" }));
+});
+
+test("Explorar respeita redução de movimento e mantém navegação manual", async () => {
+  window.matchMedia = () => ({ matches: true, addEventListener() {}, removeEventListener() {} });
+  const tour = { id: "hero-reduced", title: "Outra praia", location: "Cidade", photos: [{ url: "/a.jpg" }, { url: "/b.jpg" }] };
+  render(React.createElement(ExploreHero, { tour }));
+  assert.equal(screen.queryByRole("button", { name: /Pausar animações/ }), null);
+  assert.equal(document.querySelector(".type-cursor.is-running"), null);
+  await userEvent.setup().click(screen.getByRole("button", { name: "Ver foto 2 de Outra praia" }));
+  assert.equal(screen.getByRole("img").getAttribute("src"), "/b.jpg");
+});
+
+test("Explorar alterna fotos sozinho e interrompe ao interagir", async context => {
+  window.matchMedia = () => ({ matches: false, addEventListener() {}, removeEventListener() {} });
+  Object.defineProperty(document, "hidden", { configurable: true, value: false });
+  context.after(() => { delete document.hidden; });
+  context.mock.timers.enable({ apis: ["setInterval"] });
+  const tour = { id: "hero-auto", title: "Praia automática", location: "Cidade", photos: [{ url: "/auto-a.jpg" }, { url: "/auto-b.jpg" }] };
+  const { act, fireEvent } = await import("@testing-library/react");
+  render(React.createElement(ExploreHero, { tour }));
+  act(() => context.mock.timers.tick(7000));
+  assert.equal(screen.getByRole("img").getAttribute("src"), "/auto-b.jpg");
+  fireEvent.mouseEnter(document.querySelector(".explore-hero"));
+  act(() => context.mock.timers.tick(7000));
+  assert.equal(screen.getByRole("img").getAttribute("src"), "/auto-b.jpg");
+  fireEvent.mouseLeave(document.querySelector(".explore-hero"));
+  act(() => context.mock.timers.tick(7000));
+  assert.equal(screen.getByRole("img").getAttribute("src"), "/auto-a.jpg");
+  cleanup();
+  context.mock.timers.reset();
 });

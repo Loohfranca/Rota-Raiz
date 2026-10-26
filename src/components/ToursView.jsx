@@ -1,3 +1,4 @@
+import ExploreHero from "./ExploreHero";
 import BrazilDiscovery from "./BrazilDiscovery";
 import React, { useState, useEffect, useRef } from "react";
 import {
@@ -5,7 +6,6 @@ import {
   ArrowUpRight,
   Bookmark,
   Search,
-  Compass,
   Navigation,
   ArrowRight,
 } from "lucide-react";
@@ -118,38 +118,7 @@ export default function ToursView({
     );
   return (
     <div className="explore-page">
-      <section className="explore-hero">
-        <div className="explore-intro">
-          <p className="eyebrow">
-            <span className="tiny-line" />
-            Entre o rio e o mar
-          </p>
-          <h1>
-            Seu próximo
-            <br />
-            <span>caminho é por aqui.</span>
-          </h1>
-          <p>
-            Praias, travessias e descobertas.
-            <br />
-            Encontre seu lugar e veja como chegar.
-          </p>
-          <span className="hero-signature">
-            <Compass size={17} />
-            Viva o lugar. Vá no seu ritmo.
-          </span>
-        </div>
-        <div className="hero-landscape">
-          <BeachPhoto tour={hero} className="hero-beach-photo" />
-          <div className="hero-photo-label">
-            <MapPin size={15} />
-            <span>
-              {hero.title}
-              <small>{hero.location.split(",")[0]}</small>
-            </span>
-          </div>
-        </div>
-      </section>
+      <ExploreHero key={hero.id} tour={hero} visible={visible} />
       <OriginPicker
         home={home}
         onChange={onChangeHome}
