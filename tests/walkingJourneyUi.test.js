@@ -216,7 +216,7 @@ test("falha de roteamento exibe erro e permite tentar de novo sem inventar traje
 
 test("Ver como ir abre o painel direto com origem e destino livres e troca o modo do Maps", async () => {
   const from = { name: "Praça XV, Rio de Janeiro, RJ" };
-  const to = { name: "Aeroporto do Galeão, Rio de Janeiro, RJ" };
+  const to = { name: "Praça Mauá, Rio de Janeiro, RJ" };
   render(
     React.createElement(RoutesView, {
       origin: from,
@@ -412,4 +412,190 @@ test("Explorar mostra Trancoso e abre seis lugares cadastrados nessa região", a
     cleanup();
     window.scrollTo = oldScroll;
   }
+});
+
+const flightFrom = { name: "Aeroporto do Galeão" };
+const flightTo = { name: "Aeroporto de Porto Seguro" };
+test("entre Galeão e Porto Seguro, avião é selecionado e não aparece caminhada ou bicicleta por padrão", async () => {
+  render(
+    React.createElement(JourneyLookup, {
+      origin: flightFrom,
+      destination: flightTo,
+      defaultOpen: true,
+    }),
+  );
+  assert.equal(
+    screen.getByRole("button", { name: /Avião/ }).getAttribute("aria-pressed"),
+    "true",
+  );
+  assert.equal(
+    screen.queryByRole("button", { name: "A pé", exact: true }),
+    null,
+  );
+  assert.equal(
+    screen.queryByRole("button", { name: "Bicicleta", exact: true }),
+    null,
+  );
+  const link = screen.getByRole("link", { name: "Pesquisar voos no Google" });
+  assert.equal(
+    new URL(link.href).searchParams.get("q"),
+    "voos de GIG para BPS",
+  );
+  assert.equal(
+    screen.queryByRole("link", { name: "Continuar no Google Maps" }),
+    null,
+  );
+  assert.ok(screen.getByText(/O voo é uma parte do caminho/));
+});
+test("aeroporto do Rio pede o terminal e só libera a pesquisa após escolher Santos Dumont", async () => {
+  render(
+    React.createElement(JourneyLookup, {
+      origin: { name: "aeropoto rio" },
+      destination: flightTo,
+      defaultOpen: true,
+    }),
+  );
+  assert.ok(screen.getByLabelText("Aeroporto de saída"));
+  assert.equal(
+    screen.queryByRole("link", { name: "Pesquisar voos no Google" }),
+    null,
+  );
+  const ui = userEvent.setup();
+  await ui.selectOptions(
+    screen.getByLabelText("Aeroporto de saída"),
+    "airport-sdu",
+  );
+  assert.equal(
+    new URL(
+      screen.getByRole("link", { name: "Pesquisar voos no Google" }).href,
+    ).searchParams.get("q"),
+    "voos de SDU para BPS",
+  );
+  assert.equal(
+    screen.getByRole("button", { name: /Avião/ }).getAttribute("aria-pressed"),
+    "true",
+  );
+});
+test("dois aeroportos do Rio mantêm acesso terrestre e outras opções são uma escolha explícita", async () => {
+  render(
+    React.createElement(JourneyLookup, {
+      origin: flightFrom,
+      destination: { name: "Santos Dumont" },
+      defaultOpen: true,
+    }),
+  );
+  assert.ok(screen.getByText("Conexão entre terminais"));
+  assert.equal(
+    screen.queryByRole("button", { name: "Avião", exact: true }),
+    null,
+  );
+  assert.ok(screen.getByRole("link", { name: "Continuar no Google Maps" }));
+  const ui = userEvent.setup();
+  await ui.click(screen.getByRole("button", { name: "Outras formas de ir" }));
+  await ui.click(screen.getByRole("button", { name: "Avião", exact: true }));
+  assert.ok(screen.getByRole("link", { name: "Pesquisar voos no Google" }));
+});
+test("pontos iguais por apelidos do aeroporto impedem pesquisa e painel inválidos", async () => {
+  render(
+    React.createElement(RoutesView, {
+      origin: { name: "GIG" },
+      onChangeOrigin: () => {},
+      initialDestination: { name: "Aeroporto do Galeão" },
+    }),
+  );
+  await screen.findByDisplayValue("Aeroporto do Galeão");
+  const ui = userEvent.setup();
+  await ui.click(screen.getByRole("button", { name: "Ver como ir" }));
+  assert.ok(
+    screen.getByRole("alert").textContent.includes("destino diferente"),
+  );
+  assert.equal(screen.queryByRole("dialog"), null);
+});
+test("trocar os pontos descarta a escolha de avião da pesquisa anterior", () => {
+  const view = render(
+    React.createElement(JourneyLookup, {
+      origin: flightFrom,
+      destination: flightTo,
+      defaultOpen: true,
+    }),
+  );
+  assert.ok(screen.getByRole("link", { name: "Pesquisar voos no Google" }));
+  view.rerender(
+    React.createElement(JourneyLookup, {
+      origin,
+      destination,
+      defaultOpen: true,
+    }),
+  );
+  assert.equal(
+    screen.queryByRole("link", { name: "Pesquisar voos no Google" }),
+    null,
+  );
+  assert.ok(screen.getByRole("button", { name: "A pé", exact: true }));
+  assert.equal(
+    new URL(
+      screen.getByRole("link", { name: "Continuar no Google Maps" }).href,
+    ).searchParams.get("origin"),
+    `${origin.lat},${origin.lng}`,
+  );
+});
+test("resposta atrasada do GPS não substitui origem editada manualmente", async () => {
+  let success;
+  const previous = Object.getOwnPropertyDescriptor(navigator, "geolocation");
+  Object.defineProperty(navigator, "geolocation", {
+    configurable: true,
+    value: {
+      getCurrentPosition: (cb) => {
+        success = cb;
+      },
+    },
+  });
+  function Harness() {
+    const [from, setFrom] = React.useState({ name: "Centro do Rio" });
+    return React.createElement(RoutesView, {
+      origin: from,
+      onChangeOrigin: setFrom,
+    });
+  }
+  try {
+    render(React.createElement(Harness));
+    const ui = userEvent.setup();
+    await ui.click(
+      screen.getByRole("button", { name: "Usar localização", exact: true }),
+    );
+    await ui.clear(screen.getByLabelText("Origem"));
+    await ui.type(screen.getByLabelText("Origem"), "Origem escolhida por mim");
+    await React.act(async () =>
+      success({ coords: { latitude: -22.1, longitude: -43.1 } }),
+    );
+    assert.equal(
+      screen.getByLabelText("Origem").value,
+      "Origem escolhida por mim",
+    );
+  } finally {
+    if (previous) Object.defineProperty(navigator, "geolocation", previous);
+    else delete navigator.geolocation;
+  }
+});
+
+test("escolher aeroporto ambíguo atualiza também a origem do formulário", async () => {
+  function Harness() {
+    const [from, setFrom] = React.useState({ name: "Aeroporto do Rio" });
+    return React.createElement(RoutesView, {
+      origin: from,
+      onChangeOrigin: setFrom,
+      initialDestination: flightTo,
+    });
+  }
+  render(React.createElement(Harness));
+  await screen.findByDisplayValue(flightTo.name);
+  const ui = userEvent.setup();
+  await ui.click(screen.getByRole("button", { name: "Ver como ir" }));
+  await ui.selectOptions(
+    screen.getByLabelText("Aeroporto de saída"),
+    "airport-gig",
+  );
+  await screen.findByRole("link", { name: "Pesquisar voos no Google" });
+  await ui.click(screen.getByRole("button", { name: "Fechar", exact: true }));
+  assert.ok(screen.getByLabelText("Origem").value.includes("Galeão"));
 });
