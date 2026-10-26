@@ -5,7 +5,8 @@ import RoutesView from "./components/RoutesView";
 import RouteDetailView from "./components/RouteDetailView";
 import ToursView from "./components/ToursView";
 import TourDetailView from "./components/TourDetailView";
-import TripView from "./components/TripView";
+import AccountsView from "./components/AccountsView";
+import { captureInvite, clearInvite } from "./lib/sharedTrips";
 import CommunityView from "./components/CommunityView";
 import { ArrowLeft, MapPin } from "lucide-react";
 import MapView from "./components/MapView";
@@ -28,6 +29,7 @@ export default function App() {
   // "Onde estou": usado como origem das rotas e como base das distâncias dos passeios.
   // É sempre escolhido por quem usa o app (nada fixo no código).
   const [home, setHome] = useState(loadHome);
+  const [inviteToken, setInviteToken] = useState(captureInvite);
   const [authReady, setAuthReady] = useState(false);
   const [session, setSession] = useState(null);
   const [signOutError, setSignOutError] = useState("");
@@ -57,7 +59,7 @@ export default function App() {
   }
 
 
-  const [activeTab, setActiveTab] = useState("tours");
+  const [activeTab, setActiveTab] = useState(inviteToken ? "trip" : "tours");
   const [selectedRoute, setSelectedRoute] = useState(null);
   const [selectedTour, setSelectedTour] = useState(null);
   const [mapReturnTab, setMapReturnTab] = useState("tours");
@@ -206,7 +208,7 @@ export default function App() {
             </div></div>
           </section>
         ) : activeTab === "trip" ? (
-          <TripView onOpenTour={setSelectedTour} />
+          <AccountsView key={session.user.id} user={session.user} inviteToken={inviteToken} onInviteHandled={() => { clearInvite(); setInviteToken(null); }} />
         ) : activeTab === "community" ? (
           <CommunityView key={session.user.id} user={session.user} onRoute={goToRoutesWith} />
         ) : activeTab === "tours" ? null : activeTab === "admin" ? (

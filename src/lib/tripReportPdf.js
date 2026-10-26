@@ -14,8 +14,8 @@ const text = (value) =>
     .replace(/→/g, " para ")
     .replace(/[^\x20-\x7e\xa1-\xff\n]/gu, "")
     .trim();
-export const tripPdfFilename = (name) =>
-  `rota-raiz-${
+export const tripPdfFilename = (name, scope) =>
+  `rota-raiz-${scope === "individual" ? "individual-" : scope === "shared" ? "compartilhado-" : ""}${
     name
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
@@ -257,5 +257,5 @@ export function createTripPdf(trip, generatedAt = new Date()) {
 
 export function downloadTripPdf(trip) {
   const doc = createTripPdf(trip);
-  doc.save(tripPdfFilename(trip.name));
+  doc.save(tripPdfFilename(trip.name, trip.scope));
 }

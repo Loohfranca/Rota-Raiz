@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Plus,
   Wallet,
@@ -7,12 +7,15 @@ import {
   Upload,
   ArrowUpRight,
   Trash2,
-  Bookmark,
   FileText,
   Pencil,
+  UserPlus,
+  LogOut,
 } from "lucide-react";
 import Sheet from "./Sheet";
-import { getSavedTours } from "../lib/supabase";
+import useSharedTrips from "../hooks/useSharedTrips";
+import * as liveApi from "../lib/sharedTrips";
+import { TripInvite, JoinTrip, LeaveTrip, ImportTrip } from "./TripSharing";
 import {
   CATEGORIES,
   money,
@@ -22,53 +25,59 @@ import {
   validateTrips,
   downloadJson,
 } from "../lib/tripLedger";
-const KEY = "rotaraiz_trips_v1";
 const today = () => {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 };
-function load() {
-  try {
-    return {
-      trips: validateTrips(JSON.parse(localStorage.getItem(KEY) || "[]")),
-      error: "",
-    };
-  } catch {
-    return {
-      trips: [],
-      error:
-        "Não foi possível ler suas viagens. O conteúdo anterior não foi alterado. Restaure uma cópia antes de salvar.",
-    };
-  }
-}
-export default function TripView({ onOpenTour }) {
-  const [initial] = useState(load),
-    [trips, setTrips] = useState(initial.trips),
-    [active, setActive] = useState(initial.trips[0]?.id),
-    [sheet, setSheet] = useState(null),
-    [error, setError] = useState(initial.error),
-    [blocked, setBlocked] = useState(!!initial.error),
+export default function TripView({
+  user,
+  inviteToken,
+  onInviteHandled,
+  api = liveApi,
+  scope = "shared",
+}) {
+  const {
+    trips,
+    active,
+    setActive,
+    loading,
+    saving,
+    error,
+    setError,
+    persist,
+    refresh,
+    leave,
+  } = useSharedTrips(user, api, scope);
+  const [sheet, setSheet] = useState(null),
     [notice, setNotice] = useState(""),
     [pdfBusy, setPdfBusy] = useState(false);
   const file = useRef(null),
     trip = trips.find((t) => t.id === active),
     stats = trip ? summarize(trip) : null;
-  const saved = Object.values(getSavedTours());
-  function persist(next, restoring = false) {
-    if (blocked && !restoring) {
-      setError("Restaure uma cópia para preservar os dados anteriores.");
-      return false;
-    }
+  const shared = scope === "shared";
+  const myPerson = trip?.members?.find(member => member.user_id === user.id)?.person_id;
+  const myStats = stats?.people.find(person => person.id === myPerson);
+  useEffect(() => {
+    if (
+      !loading &&
+      sheet &&
+      ["expense", "people", "invite", "rename", "leave", "report"].includes(
+        sheet.type,
+      ) &&
+      !trip
+    )
+      setSheet(null);
+  }, [trip, loading, sheet]);
+  function openLegacy() {
     try {
-      validateTrips(next);
-      localStorage.setItem(KEY, JSON.stringify(next));
-      setTrips(next);
-      setBlocked(false);
-      setError("");
-      return true;
-    } catch (e) {
-      setError(e.message || "Não foi possível salvar neste aparelho.");
-      return false;
+      const legacy = validateTrips(
+        JSON.parse(localStorage.getItem("rotaraiz_trips_v1") || "[]"),
+      );
+      setSheet({ type: "import", trips: legacy });
+    } catch {
+      setError(
+        "Não foi possível ler as viagens anteriores. Você pode importar uma cópia JSON.",
+      );
     }
   }
   async function exportPdf() {
@@ -98,23 +107,7 @@ export default function TripView({ onOpenTour }) {
       if (data.version !== 1)
         throw new Error("Formato de cópia não reconhecido.");
       const incoming = validateTrips(data.trips);
-      const merged = [...trips];
-      for (const t of incoming) {
-        const old = merged.find((x) => x.id === t.id);
-        if (old && JSON.stringify(old) !== JSON.stringify(t)) {
-          if (
-            !window.confirm(
-              `Substituir a versão local de “${old.name}” pela cópia?`,
-            )
-          )
-            continue;
-          merged.splice(merged.indexOf(old), 1, t);
-        } else if (!old) merged.push(t);
-      }
-      if (persist(merged, true)) {
-        setActive(merged[0]?.id);
-        setNotice("Cópia restaurada.");
-      }
+      setSheet({ type: "import", trips: incoming });
     } catch (err) {
       setError(err.message);
     }
@@ -124,9 +117,8 @@ export default function TripView({ onOpenTour }) {
     <div className="travel-page">
       <div className="travel-heading">
         <div>
-          <span className="eyebrow">SEU CADERNO DE CAMINHO</span>
-          <h1>Minha viagem</h1>
-          <p>Lugares guardados. Contas em dia.</p>
+          <h2>{shared ? "Gastos do grupo" : "Seus gastos"}</h2>
+          <p>{shared ? "Cada gasto às claras. A divisão fica mais fácil." : "Seus gastos pessoais, só para você."}</p>
         </div>
         <button
           className="small-action"
@@ -137,6 +129,19 @@ export default function TripView({ onOpenTour }) {
           <Plus size={18} /> <span>Nova viagem</span>
         </button>
       </div>
+      {inviteToken && (
+        <JoinTrip
+          token={inviteToken}
+          api={api}
+          onDismiss={onInviteHandled}
+          onJoined={async (id) => {
+            await refresh(true);
+            setActive(id);
+            onInviteHandled();
+          }}
+        />
+      )}
+      {loading && <p role="status">Carregando suas viagens…</p>}
       {error && (
         <p role="alert" className="form-error">
           {error}
@@ -158,12 +163,12 @@ export default function TripView({ onOpenTour }) {
           </select>
         </label>
       )}
-      {!trip ? (
+      {!loading && !trip ? (
         <section className="travel-empty">
           <Wallet size={32} />
-          <h2>A viagem também fica na memória.</h2>
+          <h2>{shared ? "As contas também vão juntas." : "Sua viagem, suas contas."}</h2>
           <p>
-            Crie uma viagem, adicione as pessoas e anote os gastos pelo caminho.
+            {shared ? "Crie o grupo, convide quem vai junto e registrem os gastos. No final, vejam quem deve a quem." : "Registre passagens, hospedagem, refeições e tudo o que sair do seu bolso. Este espaço é privado."}
           </p>
           <button
             className="primary-action"
@@ -171,8 +176,14 @@ export default function TripView({ onOpenTour }) {
           >
             Criar minha viagem <Plus size={18} />
           </button>
+          <button
+            className="small-action legacy-empty-action"
+            onClick={openLegacy}
+          >
+            Trazer uma viagem deste aparelho
+          </button>
         </section>
-      ) : (
+      ) : trip ? (
         <>
           <section className="trip-overview">
             <div>
@@ -186,17 +197,23 @@ export default function TripView({ onOpenTour }) {
             <button
               className="primary-action"
               aria-label="Adicionar gasto"
-              onClick={() => setSheet({ type: "expense" })}
+              onClick={() => setSheet({ type: "expense", snapshot: trip })}
             >
               <Plus size={18} />{" "}
               <span className="wide-label">Adicionar gasto</span>
               <span className="short-label">Gasto</span>
             </button>
           </section>
+          <p className="finance-sync-note">{shared ? "Todos os convidados podem ver e registrar gastos. Atualização automática a cada 8 segundos com esta tela aberta." : "Estes gastos ficam na sua conta e não aparecem para os grupos."}</p>
+          {shared && myStats && <div className="finance-my-summary"><span>Você pagou <b>{money(myStats.paid)}</b></span><span>Sua parte <b>{money(myStats.share)}</b></span><span>{myStats.balance > 0 ? "A receber" : myStats.balance < 0 ? "A acertar" : "Em dia"} <b>{money(Math.abs(myStats.balance))}</b></span></div>}
           <div className="trip-actions">
-            <button onClick={() => setSheet({ type: "people" })}>
+            <button disabled={loading || saving} onClick={() => refresh()} aria-label="Atualizar gastos">Atualizar</button>
+            {shared && <button onClick={() => setSheet({ type: "invite" })}>
+              <UserPlus size={17} /> Convidar
+            </button>}
+            {shared && <button onClick={() => setSheet({ type: "people" })}>
               <Users size={17} /> Pessoas
-            </button>
+            </button>}
             <button onClick={() => setSheet({ type: "report" })}>
               <FileText size={17} /> Relatório
             </button>
@@ -206,6 +223,12 @@ export default function TripView({ onOpenTour }) {
             >
               <Pencil size={17} />
             </button>
+            {shared && <button
+              aria-label="Sair da viagem"
+              onClick={() => setSheet({ type: "leave" })}
+            >
+              <LogOut size={17} />
+            </button>}
           </div>
           <div className="trip-columns">
             <section>
@@ -236,7 +259,13 @@ export default function TripView({ onOpenTour }) {
                     )}
                     <button
                       className="expense-row"
-                      onClick={() => setSheet({ type: "expense", expense: e })}
+                      onClick={() =>
+                        setSheet({
+                          type: "expense",
+                          expense: e,
+                          snapshot: trip,
+                        })
+                      }
                     >
                       <span className="expense-symbol">
                         <Wallet size={18} />
@@ -276,7 +305,7 @@ export default function TripView({ onOpenTour }) {
                     </div>
                   ))
               )}
-              <details className="settlement">
+              {shared && <details className="settlement">
                 <summary>Acertos entre as pessoas</summary>
                 <p>Proposta de divisão. Não registra pagamentos de acerto.</p>
                 {stats.settlements.map((s, i) => (
@@ -285,33 +314,11 @@ export default function TripView({ onOpenTour }) {
                   </p>
                 ))}
                 {!stats.settlements.length && <p>Nenhum acerto pendente.</p>}
-              </details>
+              </details>}
             </section>
           </div>
         </>
-      )}
-      <details className="saved-trip">
-        <summary>
-          <Bookmark size={18} /> Lugares salvos <span>{saved.length}</span>
-        </summary>
-        {saved.length ? (
-          saved.map((p) => (
-            <button
-              key={p.id}
-              className="expense-row"
-              onClick={() => onOpenTour(p)}
-            >
-              <span>
-                <b>{p.title}</b>
-                <small>{p.location}</small>
-              </span>
-              <ArrowUpRight size={18} />
-            </button>
-          ))
-        ) : (
-          <p>Salve lugares no Explorar para encontrá-los aqui.</p>
-        )}
-      </details>
+      ) : null}
       {trip && (
         <div className="trip-report-download">
           <button
@@ -328,11 +335,12 @@ export default function TripView({ onOpenTour }) {
       <details className="trip-storage">
         <summary>Cópia de segurança e restauração</summary>
         <p>
-          Os gastos ficam neste navegador. O backup JSON serve para restaurar os
-          dados ou levar a outro aparelho. As pessoas cadastradas não recebem
-          convite nem acesso automático.
+          {shared ? "Os gastos ficam na sua conta e são atualizados entre os participantes. Para compartilhar o acesso, use Convidar." : "Os gastos ficam privados na sua conta."} O backup JSON é uma cópia dos dados; para um documento visual, use Baixar relatório em PDF.
         </p>
         <div>
+          <button onClick={openLegacy}>
+            Trazer viagens anteriores deste aparelho
+          </button>
           <button
             disabled={!trips.length}
             onClick={() =>
@@ -342,7 +350,7 @@ export default function TripView({ onOpenTour }) {
             <Download size={16} /> Backup dos dados (.json)
           </button>
           <button onClick={() => file.current.click()}>
-            <Upload size={16} /> Restaurar backup
+            <Upload size={16} /> Importar backup JSON
           </button>
           <input
             ref={file}
@@ -353,6 +361,41 @@ export default function TripView({ onOpenTour }) {
           />
         </div>
       </details>
+      {sheet?.type === "import" && (
+        <ImportTrip
+          trips={sheet.trips}
+          user={user}
+          scope={scope}
+          api={api}
+          onClose={() => setSheet(null)}
+          onImported={async (id) => {
+            await refresh(true);
+            setActive(id);
+            setSheet(null);
+            setNotice(
+              "Viagem importada para sua conta. A cópia anterior foi preservada.",
+            );
+          }}
+        />
+      )}
+      {sheet?.type === "invite" && trip && (
+        <TripInvite trip={trip} api={api} onClose={() => setSheet(null)} />
+      )}
+      {sheet?.type === "leave" && trip && (
+        <LeaveTrip
+          trip={trip}
+          saving={saving}
+          onClose={() => setSheet(null)}
+          onLeave={async () => {
+            if (await leave(trip.id)) {
+              setSheet(null);
+              setNotice(
+                "Você saiu da viagem. O histórico continua com os outros participantes.",
+              );
+            }
+          }}
+        />
+      )}
       {sheet?.type === "trip" && (
         <Sheet title="Uma nova viagem" onClose={() => setSheet(null)}>
           {error && (
@@ -362,16 +405,17 @@ export default function TripView({ onOpenTour }) {
           )}
           <form
             className="compact-form"
-            onSubmit={(e) => {
+            onSubmit={async (e) => {
               e.preventDefault();
               const f = new FormData(e.currentTarget),
                 id = crypto.randomUUID();
               if (
-                persist([
+                await persist([
                   ...trips,
                   {
                     id,
                     name: f.get("name").trim(),
+                    scope,
                     people: [
                       { id: crypto.randomUUID(), name: f.get("person").trim() },
                     ],
@@ -393,16 +437,13 @@ export default function TripView({ onOpenTour }) {
                 placeholder="Bahia e João Pessoa"
               />
             </label>
-            <label>
-              Seu nome
-              <input
-                name="person"
-                maxLength={60}
-                required
-                placeholder="Como você quer aparecer"
-              />
-            </label>
-            <button className="primary-action">Criar viagem</button>
+            <p className="field-help">
+              Você participa como <b>{api.profileName(user)}</b>.
+            </p>
+            <input type="hidden" name="person" value={api.profileName(user)} />
+            <button className="primary-action" disabled={saving}>
+              {saving ? "Criando…" : "Criar viagem"}
+            </button>
           </form>
         </Sheet>
       )}
@@ -415,10 +456,10 @@ export default function TripView({ onOpenTour }) {
           )}
           <form
             className="compact-form"
-            onSubmit={(e) => {
+            onSubmit={async (e) => {
               e.preventDefault();
               if (
-                update({
+                await update({
                   ...trip,
                   name: new FormData(e.currentTarget).get("name").trim(),
                 })
@@ -435,16 +476,27 @@ export default function TripView({ onOpenTour }) {
                 defaultValue={trip.name}
               />
             </label>
-            <button className="primary-action">Salvar nome</button>
+            <button className="primary-action" disabled={saving}>
+              Salvar nome
+            </button>
           </form>
         </Sheet>
       )}
       {sheet?.type === "people" && (
-        <People trip={trip} update={update} onClose={() => setSheet(null)} />
+        <People
+          trip={trip}
+          saving={saving}
+          syncError={error}
+          update={update}
+          onClose={() => setSheet(null)}
+        />
       )}
       {sheet?.type === "expense" && (
         <Expense
-          trip={trip}
+          saving={saving}
+          syncError={error}
+          individual={!shared}
+          trip={sheet.snapshot || trip}
           expense={sheet.expense}
           update={update}
           onClose={() => setSheet(null)}
@@ -529,13 +581,12 @@ export default function TripView({ onOpenTour }) {
               </p>
             ))}
           </article>
-
         </Sheet>
       )}
     </div>
   );
 }
-function People({ trip, update, onClose }) {
+function People({ trip, update, onClose, saving, syncError }) {
   const [error, setError] = useState("");
   return (
     <Sheet title="Quem vai junto" onClose={onClose}>
@@ -548,12 +599,14 @@ function People({ trip, update, onClose }) {
               aria-label={`Remover ${p.name}`}
               disabled={
                 trip.people.length === 1 ||
+                saving ||
+                trip.members?.some((m) => m.person_id === p.id) ||
                 trip.expenses.some(
                   (e) => e.payer === p.id || Object.hasOwn(e.shares, p.id),
                 )
               }
-              onClick={() =>
-                update({
+              onClick={async () =>
+                await update({
                   ...trip,
                   people: trip.people.filter((x) => x.id !== p.id),
                 })
@@ -565,14 +618,15 @@ function People({ trip, update, onClose }) {
         ))}
       </div>
       <p className="field-help">
-        Pessoas com despesas ficam no histórico. Cadastros são locais, sem
-        convite.
+        Pessoas com despesas ficam no histórico. Adicionar um nome organiza a
+        divisão; use Convidar para a pessoa entrar com sua conta.
       </p>
       <form
         className="compact-form"
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
-          const name = new FormData(e.currentTarget).get("name").trim();
+          const form = e.currentTarget;
+          const name = new FormData(form).get("name").trim();
           if (!name) return;
           if (
             trip.people.some(
@@ -583,29 +637,34 @@ function People({ trip, update, onClose }) {
             return;
           }
           if (
-            update({
+            await update({
               ...trip,
               people: [...trip.people, { id: crypto.randomUUID(), name }],
             })
           ) {
-            e.currentTarget.reset();
+            form.reset();
             setError("");
-          } else setError("Não foi possível salvar neste aparelho.");
+          } else setError("Não foi possível sincronizar a alteração.");
         }}
       >
         <label>
           Adicionar pessoa
           <input name="name" required maxLength={60} placeholder="Nome" />
         </label>
-        {error && <p role="alert">{error}</p>}
-        <button className="primary-action" disabled={trip.people.length >= 50}>
+        {(syncError || error) && <p role="alert">{syncError || error}</p>}
+        <button
+          className="primary-action"
+          disabled={saving || trip.people.length >= 50}
+        >
           Adicionar pessoa
         </button>
       </form>
     </Sheet>
   );
 }
-function Expense({ trip, expense, update, onClose }) {
+function Expense({ trip, expense, update, onClose, saving, syncError, individual }) {
+  const [amountInput, setAmountInput] = useState(expense ? String(expense.amount / 100) : "");
+  let preview = {};
   const [selected, setSelected] = useState(
       expense ? Object.keys(expense.shares) : trip.people.map((p) => p.id),
     ),
@@ -620,7 +679,8 @@ function Expense({ trip, expense, update, onClose }) {
         : false,
     ),
     [error, setError] = useState("");
-  function submit(e) {
+  try { if (!custom && selected.length) preview = splitAmount(parseMoney(amountInput), selected); } catch { /* valor ainda em digitação */ }
+  async function submit(e) {
     e.preventDefault();
     try {
       const f = new FormData(e.currentTarget),
@@ -656,10 +716,10 @@ function Expense({ trip, expense, update, onClose }) {
       const expenses = expense
         ? trip.expenses.map((x) => (x.id === expense.id ? item : x))
         : [...trip.expenses, item];
-      if (update({ ...trip, expenses })) onClose();
+      if (await update({ ...trip, expenses })) onClose();
       else
         setError(
-          "Não foi possível salvar. Confira o armazenamento do navegador.",
+          "Não foi possível salvar. Se outra pessoa atualizou a conta, feche este formulário e abra o gasto novamente para conferir a divisão.",
         );
     } catch (err) {
       setError(err.message);
@@ -676,6 +736,7 @@ function Expense({ trip, expense, update, onClose }) {
             Valor (R$)
             <input
               name="amount"
+              onChange={event => setAmountInput(event.target.value)}
               inputMode="decimal"
               required
               defaultValue={
@@ -732,7 +793,7 @@ function Expense({ trip, expense, update, onClose }) {
             </select>
           </label>
         </div>
-        <fieldset>
+        {!individual && <fieldset>
           <legend>Dividir com quem?</legend>
           <div className="person-options">
             {trip.people.map((p) => (
@@ -752,15 +813,15 @@ function Expense({ trip, expense, update, onClose }) {
               </label>
             ))}
           </div>
-        </fieldset>
-        <label className="check-row">
+        </fieldset>}
+        {!individual && <label className="check-row">
           <input
             type="checkbox"
             checked={custom}
             onChange={(e) => setCustom(e.target.checked)}
           />{" "}
           Ajustar valores por pessoa
-        </label>
+        </label>}
         {custom ? (
           selected.map((id) => (
             <label key={id}>
@@ -780,27 +841,30 @@ function Expense({ trip, expense, update, onClose }) {
           ))
         ) : (
           <p className="field-help">
-            Divisão igual. Centavos restantes são distribuídos na ordem
-            selecionada.
+            {individual ? "Gasto pessoal: o valor fica todo na sua conta." : "Divisão igual. Centavos restantes são distribuídos na ordem selecionada."}
           </p>
         )}
-        {error && (
+        {!individual && !custom && Object.keys(preview).length > 0 && <div className="expense-split-preview" aria-label="Prévia da divisão"><strong>Como fica para cada um</strong>{selected.map(id => <p key={id}><span>{trip.people.find(person => person.id === id)?.name}</span><b>{money(preview[id])}</b></p>)}</div>}
+        {(syncError || error) && (
           <p className="form-error" role="alert">
-            {error}
+            {syncError || error}
           </p>
         )}
-        <button className="primary-action">Salvar gasto</button>
+        <button className="primary-action" disabled={saving}>
+          {saving ? "Salvando…" : "Salvar gasto"}
+        </button>
         {expense && (
           <button
             type="button"
+            disabled={saving}
             className="danger-action"
-            onClick={() => {
+            onClick={async () => {
               if (
                 window.confirm("Excluir esta despesa?") &&
-                update({
+                (await update({
                   ...trip,
                   expenses: trip.expenses.filter((x) => x.id !== expense.id),
-                })
+                }))
               )
                 onClose();
             }}
