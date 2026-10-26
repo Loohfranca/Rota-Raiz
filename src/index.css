@@ -4682,3 +4682,16 @@
 @media (min-width: 601px) and (max-width: 767px) {
   .explore-hero-interactive .hero-beach-photo { height: 260px; min-height: 260px; }
 }
+
+/* Navegação: roteiro e gastos têm entradas próprias. */
+@media (max-width: 767px) {
+  .mobile-nav { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0; left: 8px; right: 8px; padding: 4px; }
+  .mobile-nav button { font-size: 10px; min-height: 62px; padding: 7px 1px; line-height: 1.15; }
+}
+@media (min-width: 1051px) and (max-width: 1200px) {
+  .nav-shell { flex-wrap: wrap; gap: 12px; height: auto; min-height: 88px; padding: 12px 32px; }
+  .brand { flex: 1; }
+  .desktop-nav { order: 3; width: 100%; justify-content: space-between; min-width: 0; }
+  .desktop-nav button { flex: 1; justify-content: center; padding: 10px 12px; }
+  .nav-status-actions { flex-shrink: 0; }
+}
