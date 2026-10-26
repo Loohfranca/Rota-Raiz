@@ -11,6 +11,7 @@ let server,
   React,
   WalkingJourney,
   JourneyLookup,
+  RoutesView,
   userEvent,
   dom;
 before(async () => {
@@ -59,6 +60,9 @@ before(async () => {
   ));
   ({ default: JourneyLookup } = await server.ssrLoadModule(
     "/src/components/JourneyLookup.jsx",
+  ));
+  ({ default: RoutesView } = await server.ssrLoadModule(
+    "/src/components/RoutesView.jsx",
   ));
 });
 afterEach(() => {
@@ -133,6 +137,9 @@ test("A pé abre mapa, distância e instruções no app sem navegar para link ex
   await ui.click(screen.getByRole("button", { name: /Consultar como chegar/ }));
   assert.equal(screen.queryByRole("link", { name: "A pé" }), null);
   await ui.click(screen.getByRole("button", { name: "A pé" }));
+  await ui.click(
+    screen.getByRole("button", { name: "Ver caminhada aqui no Rota Raiz" }),
+  );
   await screen.findByText(/Siga pela Rua de Teste/);
   assert.equal(body.costing, "pedestrian");
   assert.ok(screen.getByText(/aproximadamente/).textContent.includes("15"));
@@ -193,4 +200,113 @@ test("falha de roteamento exibe erro e permite tentar de novo sem inventar traje
     screen.getByRole("button", { name: "Calcular percurso a pé" }),
   );
   await screen.findByText(/Siga pela Rua de Teste/);
+});
+
+test("Ver como ir abre o painel direto com origem e destino livres e troca o modo do Maps", async () => {
+  const from = { name: "Praça XV, Rio de Janeiro, RJ" };
+  const to = { name: "Aeroporto do Galeão, Rio de Janeiro, RJ" };
+  render(
+    React.createElement(RoutesView, {
+      origin: from,
+      onChangeOrigin: () => {},
+      initialDestination: to,
+    }),
+  );
+  await screen.findByDisplayValue(to.name);
+  const ui = userEvent.setup();
+  await ui.click(screen.getByRole("button", { name: "Ver como ir" }));
+  await screen.findByRole("dialog", { name: "Escolha como ir" });
+  let link = screen.getByRole("link", { name: "Continuar no Google Maps" });
+  let url = new URL(link.href);
+  assert.equal(url.searchParams.get("origin"), from.name);
+  assert.equal(url.searchParams.get("destination"), to.name);
+  assert.equal(url.searchParams.get("travelmode"), "transit");
+  for (const [label, mode] of [
+    ["A pé", "walking"],
+    ["Carro / táxi", "driving"],
+    ["Bicicleta", "bicycling"],
+  ]) {
+    await ui.click(screen.getByRole("button", { name: label, exact: true }));
+    assert.equal(new URL(link.href).searchParams.get("travelmode"), mode);
+    assert.equal(
+      screen
+        .getByRole("button", { name: label, exact: true })
+        .getAttribute("aria-pressed"),
+      "true",
+    );
+  }
+  await ui.click(screen.getByRole("button", { name: "Fechar", exact: true }));
+  assert.equal(screen.queryByRole("dialog"), null);
+  assert.equal(screen.getByLabelText("Destino").value, to.name);
+});
+test("passo a passo offline é recolhido e informa limites sem fingir que baixou o mapa", async () => {
+  render(
+    React.createElement(JourneyLookup, {
+      origin,
+      destination,
+      defaultOpen: true,
+      hideTrigger: true,
+    }),
+  );
+  const title = screen.getByText("Antes de sair, baixe a área");
+  const details = title.closest("details");
+  assert.equal(details.open, false);
+  const ui = userEvent.setup();
+  await ui.click(title);
+  assert.equal(details.open, true);
+  assert.ok(screen.getByText("Mapas off-line"));
+  assert.ok(
+    screen.getByText(/Ônibus, bicicleta e caminhada precisam de internet/),
+  );
+  assert.ok(screen.getByText(/não baixa nem confirma esse download/));
+  assert.match(
+    screen.getByRole("link", { name: "Ver a orientação do Google" }).href,
+    /support.google.com/,
+  );
+});
+test("origem ou destino vazios não abrem um link de rota incompleto", async () => {
+  render(
+    React.createElement(RoutesView, { origin: null, onChangeOrigin: () => {} }),
+  );
+  const ui = userEvent.setup();
+  await ui.click(screen.getByRole("button", { name: "Ver como ir" }));
+  assert.ok(screen.getByText("Preencha de onde você sai e para onde vai."));
+  assert.equal(screen.queryByRole("dialog"), null);
+});
+
+test("modo restrito acompanha a troca entre transporte público e bicicleta", async () => {
+  const view = render(
+    React.createElement(JourneyLookup, {
+      origin,
+      destination,
+      modes: ["transit"],
+      defaultOpen: true,
+    }),
+  );
+  assert.equal(
+    new URL(
+      screen.getByRole("link", { name: "Continuar no Google Maps" }).href,
+    ).searchParams.get("travelmode"),
+    "transit",
+  );
+  view.rerender(
+    React.createElement(JourneyLookup, {
+      origin,
+      destination,
+      modes: ["bicycling"],
+      defaultOpen: true,
+    }),
+  );
+  assert.equal(
+    new URL(
+      screen.getByRole("link", { name: "Continuar no Google Maps" }).href,
+    ).searchParams.get("travelmode"),
+    "bicycling",
+  );
+  assert.equal(
+    screen
+      .getByRole("button", { name: "Bicicleta", exact: true })
+      .getAttribute("aria-pressed"),
+    "true",
+  );
 });
