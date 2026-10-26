@@ -13,12 +13,31 @@ import {
 } from "lucide-react";
 import JourneyLookup from "./JourneyLookup";
 import WalkingPanel from "./WalkingPanel";
-const icons = { walk: Footprints, boat: Ship, road: Car, transit: Bus, bike: Bike };
+import WalkingJourney from "./WalkingJourney";
+import { hasCoordinates } from "../lib/walking";
+const icons = {
+  walk: Footprints,
+  boat: Ship,
+  road: Car,
+  transit: Bus,
+  bike: Bike,
+};
 export default function AccessGuide({ tour, home, onSwitchToRoute }) {
   const options = tour.access_options || [],
     [active, setActive] = useState(options[0]?.id || "walk");
   const choice = options.find((i) => i.id === active);
-  if (!choice) return <WalkingPanel home={home} tour={tour} />;
+  const walking = hasCoordinates(tour) ? (
+    <WalkingPanel home={home} tour={tour} />
+  ) : (
+    <WalkingJourney
+      origin={home}
+      destination={{
+        name: tour.title,
+        address: tour.address || `${tour.title}, ${tour.location}`,
+      }}
+    />
+  );
+  if (!choice) return walking;
   return (
     <section className="access-guide">
       <div className="access-heading">
@@ -46,7 +65,11 @@ export default function AccessGuide({ tour, home, onSwitchToRoute }) {
           <Navigation size={17} />
           <div>
             <span>Saindo de</span>
-            <strong>{choice.dynamic_origin ? (home?.name || "Escolha sua origem") : choice.from}</strong>
+            <strong>
+              {choice.dynamic_origin
+                ? home?.name || "Escolha sua origem"
+                : choice.from}
+            </strong>
           </div>
         </div>
         <div className="access-metrics">
@@ -92,13 +115,44 @@ export default function AccessGuide({ tour, home, onSwitchToRoute }) {
                 O roteiro costeiro acima depende de canoa e maré. O cálculo
                 automático pode seguir outro caminho.
               </p>
-              <WalkingPanel home={home} tour={tour} />
+              {walking}
             </details>
           ) : (
-            <WalkingPanel home={home} tour={tour} />
+            walking
           ))}
-        {(active === "transit" || active === "bike") && (home?.name ? <JourneyLookup origin={home} destination={{...tour,name:tour.title,address:`${tour.title}, ${tour.location}`,route_by_name:true}} modes={[active==='bike'?'bicycling':'transit']} /> : <p className="inline-notice">Escolha seu ponto de partida em Explorar para consultar este trajeto.</p>)}
-        {active === "transit" && <button onClick={() => onSwitchToRoute({...tour,name:tour.title,address:`${tour.title}, ${tour.location}`,route_by_name:true})} className="button button-secondary">Abrir no Como chegar <ArrowUpRight size={17}/></button>}
+        {(active === "transit" || active === "bike") &&
+          (home?.name ? (
+            <JourneyLookup
+              origin={home}
+              destination={{
+                ...tour,
+                name: tour.title,
+                address: `${tour.title}, ${tour.location}`,
+                route_by_name: true,
+              }}
+              modes={[active === "bike" ? "bicycling" : "transit"]}
+            />
+          ) : (
+            <p className="inline-notice">
+              Escolha seu ponto de partida em Explorar para consultar este
+              trajeto.
+            </p>
+          ))}
+        {active === "transit" && (
+          <button
+            onClick={() =>
+              onSwitchToRoute({
+                ...tour,
+                name: tour.title,
+                address: `${tour.title}, ${tour.location}`,
+                route_by_name: true,
+              })
+            }
+            className="button button-secondary"
+          >
+            Abrir no Como chegar <ArrowUpRight size={17} />
+          </button>
+        )}
       </div>
     </section>
   );

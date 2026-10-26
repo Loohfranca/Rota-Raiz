@@ -12,6 +12,7 @@ let server,
   WalkingJourney,
   JourneyLookup,
   RoutesView,
+  TourDetailView,
   userEvent,
   dom;
 before(async () => {
@@ -63,6 +64,9 @@ before(async () => {
   ));
   ({ default: RoutesView } = await server.ssrLoadModule(
     "/src/components/RoutesView.jsx",
+  ));
+  ({ default: TourDetailView } = await server.ssrLoadModule(
+    "/src/components/TourDetailView.jsx",
   ));
 });
 afterEach(() => {
@@ -309,4 +313,38 @@ test("modo restrito acompanha a troca entre transporte público e bicicleta", as
       .getAttribute("aria-pressed"),
     "true",
   );
+});
+
+test("praia sem coordenada abre busca pelo endereço em vez de criar mapa com pino inválido", async () => {
+  globalThis.fetch = async () => ({ ok: true, json: async () => [] });
+  const oldOpen = window.open,
+    oldScroll = window.scrollTo;
+  let opened;
+  window.open = (url) => {
+    opened = url;
+  };
+  window.scrollTo = () => {};
+  try {
+    const { CARAIVA_BEACHES } = await server.ssrLoadModule(
+      "/src/data/caraivaBeaches.js",
+    );
+    const tour = CARAIVA_BEACHES.find((i) => i.id === "caraiva-barra");
+    render(
+      React.createElement(TourDetailView, {
+        tour,
+        home: origin,
+        onBack: () => {},
+        onSwitchToRoute: () => {},
+        onOpenMapWithTour: () => {
+          throw Error("Não abrir mapa sem coordenada");
+        },
+      }),
+    );
+    const ui = userEvent.setup();
+    await ui.click(screen.getByRole("button", { name: "Ver no mapa" }));
+    assert.equal(new URL(opened).searchParams.get("query"), tour.address);
+  } finally {
+    window.open = oldOpen;
+    window.scrollTo = oldScroll;
+  }
 });

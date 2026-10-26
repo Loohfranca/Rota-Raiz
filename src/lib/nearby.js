@@ -19,6 +19,6 @@ export function selectBeaches(places, {home, region = 'auto', query = '', savedI
     if (savedIds && !savedIds.includes(place.id)) return false;
     if (!savedIds && selectedRegion && region !== 'all' && place.region !== selectedRegion) return false;
     const q = normalizeText(query);
-    return !q || normalizeText(`${place.title} ${place.location} ${place.subtitle || ''}`).includes(q);
+    return !q || normalizeText(`${place.title} ${place.location} ${place.region || ''} ${place.subtitle || ''} ${(place.aliases || []).join(' ')}`).includes(q);
   }).map(place => ({ ...place, distanceKm: distanceFrom(home, place) })).sort((a,b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity) || a.title.localeCompare(b.title));
 }
