@@ -197,6 +197,14 @@ export default function App() {
               onOpenTour={setSelectedTour}
             />
           </>
+        ) : activeTab === "itinerary" ? (
+          <section className="travel-page" aria-labelledby="itinerary-title">
+            <div className="travel-heading"><div>
+              <span className="eyebrow">SEU ROTEIRO</span>
+              <h1 id="itinerary-title">Minhas viagens</h1>
+              <p>Este espaço está em preparação para guardar os caminhos da sua viagem.</p>
+            </div></div>
+          </section>
         ) : activeTab === "trip" ? (
           <TripView onOpenTour={setSelectedTour} />
         ) : activeTab === "community" ? (
