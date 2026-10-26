@@ -40,7 +40,11 @@ const ModeIcon = ({ mode, size = 16 }) => {
 };
 
 const formatMoney = (v) =>
-  v == null ? "Consultar valor" : Number(v) === 0 ? "Grátis" : `R$ ${Number(v).toFixed(2).replace(".", ",")}`;
+  v == null
+    ? "Consultar valor"
+    : Number(v) === 0
+      ? "Grátis"
+      : `R$ ${Number(v).toFixed(2).replace(".", ",")}`;
 
 export default function RoutesView({
   origin,
@@ -55,6 +59,7 @@ export default function RoutesView({
   const [cities, setCities] = useState([]);
 
   const [dest, setDest] = useState(null);
+  const [journeyRequest, setJourneyRequest] = useState(null);
   const [result, setResult] = useState(null);
   const [mode, setMode] = useState("fastest");
   const [formError, setFormError] = useState("");
@@ -79,7 +84,11 @@ export default function RoutesView({
   // Destino enviado por outra tela (Mapa ou Passeios)
   useEffect(() => {
     if (initialDestination) {
-      setDest(typeof initialDestination === "string" ? { name: initialDestination } : initialDestination);
+      setDest(
+        typeof initialDestination === "string"
+          ? { name: initialDestination }
+          : initialDestination,
+      );
       setResult(null);
     }
   }, [initialDestination]);
@@ -137,8 +146,13 @@ export default function RoutesView({
     }
     setFormError("");
     const journey = getAirportJourney(o, d);
-    setResult(journey ? { curated: journey } : calculateRoute(o, d, stops, legs, places, cities));
+    setResult(
+      journey
+        ? { curated: journey }
+        : calculateRoute(o, d, stops, legs, places, cities),
+    );
     setMode("fastest");
+    setJourneyRequest({ origin: { ...o }, destination: { ...d } });
   };
 
   // Destinos reais que saem direto da origem escolhida (vindos dos trechos cadastrados)
@@ -199,8 +213,24 @@ export default function RoutesView({
       />
       <div className="routes-layout">
         <div className="routes-primary">
-          <section className="route-search-card" aria-label="Escolha sua viagem">
-            <div className="route-form-actions"><button type="button" onClick={handleGps} disabled={gpsLoading}><Navigation size={16}/>{gpsLoading?'Localizando…':'Usar localização'}</button><button type="button" onClick={handleSwap} aria-label="Inverter origem e destino"><ArrowUpDown size={16}/>Inverter</button></div>
+          <section
+            className="route-search-card"
+            aria-label="Escolha sua viagem"
+          >
+            <div className="route-form-actions">
+              <button type="button" onClick={handleGps} disabled={gpsLoading}>
+                <Navigation size={16} />
+                {gpsLoading ? "Localizando…" : "Usar localização"}
+              </button>
+              <button
+                type="button"
+                onClick={handleSwap}
+                aria-label="Inverter origem e destino"
+              >
+                <ArrowUpDown size={16} />
+                Inverter
+              </button>
+            </div>
             <div className="route-fields">
               <PlaceInput
                 label="Origem"
@@ -224,7 +254,6 @@ export default function RoutesView({
                 accent="#2f5d3a"
               />
             </div>
-
 
             {formError && (
               <p className="text-sm text-[#ba1a1a] flex items-center gap-1.5">
@@ -347,9 +376,20 @@ export default function RoutesView({
             </section>
           )}
 
-          {result && !result.found && !result.curated && result.reason !== 'same' && <JourneyLookup origin={origin} destination={dest} uncovered />}
-          {result?.reason === 'same' && <p role="status" className="journey-context">Escolha um destino diferente da sua origem.</p>}
-          {result && (result.found || result.curated) && <JourneyLookup origin={origin} destination={dest} />}
+          {result &&
+            !result.found &&
+            !result.curated &&
+            result.reason !== "same" && (
+              <JourneyLookup origin={origin} destination={dest} uncovered />
+            )}
+          {result?.reason === "same" && (
+            <p role="status" className="journey-context">
+              Escolha um destino diferente da sua origem.
+            </p>
+          )}
+          {result && (result.found || result.curated) && (
+            <JourneyLookup origin={origin} destination={dest} />
+          )}
 
           {!result && !nextDestinations.length && (
             <section className="route-welcome">
@@ -363,8 +403,8 @@ export default function RoutesView({
                 Mais viagem.
               </h2>
               <p>
-                Informe um endereço, bairro ou cidade em cada campo.
-                Os resultados seguem os pontos que você escolher.
+                Informe um endereço, bairro ou cidade em cada campo. Os
+                resultados seguem os pontos que você escolher.
               </p>
               <div className="transport-legend">
                 <span>
@@ -412,9 +452,17 @@ export default function RoutesView({
               ))}
             </section>
           )}
-
         </div>
       </div>
+      {journeyRequest && (
+        <JourneyLookup
+          origin={journeyRequest.origin}
+          destination={journeyRequest.destination}
+          defaultOpen
+          hideTrigger
+          onClose={() => setJourneyRequest(null)}
+        />
+      )}
       {onNavigateToAdmin && (
         <button
           type="button"
