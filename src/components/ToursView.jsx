@@ -1,3 +1,4 @@
+import BrazilDiscovery from "./BrazilDiscovery";
 import React, { useState, useEffect, useRef } from "react";
 import {
   MapPin,
@@ -160,6 +161,7 @@ export default function ToursView({
           ...LODGINGS.map((i) => ({ ...i, title: i.name })),
         ]}
       />
+      {!onlySaved && <BrazilDiscovery key={regionName || "brasil"} initialCity={regionName || ""} />}
       <section className="discovery-section">
         <div className="discovery-top">
           <div>
