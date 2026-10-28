@@ -33,6 +33,7 @@ export default function ToursView({
   onSelectTour,
   visible = true,
   onRoute,
+  onSaveTour,
 }) {
   const [places, setPlaces] = useState(BEACHES),
     [stops, setStops] = useState([]),
@@ -42,6 +43,7 @@ export default function ToursView({
     [onlySaved, setOnlySaved] = useState(false),
     [saved, setSaved] = useState(getSavedTours),
     [error, setError] = useState("");
+  const [savingPlace,setSavingPlace] = useState(null);
   const returnPosition = useRef(null);
   useEffect(() => {
     let active = true;
@@ -90,14 +92,16 @@ export default function ToursView({
   const regionName =
     REGIONS.find((i) => i.id === region)?.name ||
     (region === "auto" ? near?.name : null);
-  const toggle = (place) => {
+  const toggle = async (place) => {
+    if(savingPlace)return;setSavingPlace(place.id);
     try {
+      if(!saved[place.id] && onSaveTour && !(await onSaveTour(place))) return;
       toggleSaveTourOffline(place.id, { ...place, savedOrigin: home });
       setSaved(getSavedTours());
       setError("");
     } catch {
       setError("Não foi possível salvar neste aparelho.");
-    }
+    } finally {setSavingPlace(null);}
   };
   const open = (place) => {
     returnPosition.current = window.scrollY;
@@ -250,6 +254,7 @@ export default function ToursView({
                           : `Salvar ${place.title}`
                       }
                       aria-pressed={!!saved[place.id]}
+                      disabled={!!savingPlace}
                       onClick={() => toggle(place)}
                     >
                       <Bookmark

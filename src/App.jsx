@@ -13,6 +13,9 @@ import MapView from "./components/MapView";
 import AdminView from "./components/AdminView";
 import { isSupabaseConfigured, supabase } from "./lib/supabase";
 import LoginScreen from "./components/LoginScreen";
+import ItineraryView, { SavePlaceSheet } from "./components/ItineraryView";
+import useItineraries from "./hooks/useItineraries";
+import { placeVisit } from "./lib/itinerary";
 
 const HOME_KEY = "rotaraiz_home";
 
@@ -33,6 +36,21 @@ export default function App() {
   const [authReady, setAuthReady] = useState(false);
   const [session, setSession] = useState(null);
   const [signOutError, setSignOutError] = useState("");
+  const itineraries = useItineraries(session?.user?.id);
+  const [pendingPlace,setPendingPlace] = useState(null);
+  const [itineraryNotice,setItineraryNotice] = useState("");
+  const [savePlaceError,setSavePlaceError] = useState("");
+  useEffect(()=>{ setItineraryNotice("");setSavePlaceError("");setPendingPlace(previous=>{previous?.resolve(false);return null;}); },[session?.user?.id]);
+  async function addPlaceToTrip(place) {
+    setSavePlaceError("");
+    if(itineraries.loading||itineraries.busy) {setSavePlaceError("Aguarde o roteiro carregar ou terminar de salvar.");return false;}
+    if(itineraries.error){setSavePlaceError(itineraries.error);return false;}
+    if(itineraries.plans.length===1) {
+      const plan=itineraries.plans[0];
+      try {if(!plan.visits.some(v=>v.placeId===String(place.id)))await itineraries.save({...plan,visits:[...plan.visits,placeVisit(place)]});itineraries.select(plan.id);setItineraryNotice(`${place.title} está em ${plan.title}, em Minhas viagens.`);return true;}catch(e){setSavePlaceError(e.message);return false;}
+    }
+    return new Promise(resolve=>setPendingPlace({place,resolve}));
+  }
 
   useEffect(() => {
     if (!supabase) { setAuthReady(true); return; }
@@ -140,6 +158,8 @@ export default function App() {
         onSignOut={signOut}
       />
 
+      {itineraryNotice && !itineraries.loading && <p className="itinerary-app-notice" role="status">{itineraryNotice}<button onClick={()=>{setItineraryNotice("");handleTabChange("itinerary");}}>Ver viagem</button></p>}
+      {savePlaceError && <p className="form-error itinerary-app-notice" role="alert">{savePlaceError}<button onClick={()=>{setSavePlaceError("");itineraries.refresh();}}>Tentar carregar novamente</button></p>}
       {signOutError && <p role="alert" style={{ textAlign: "center", color: "#a64425" }}>{signOutError}</p>}
       <main
         id="main-content"
@@ -158,6 +178,7 @@ export default function App() {
             onBack={() => setSelectedTour(null)}
             onOpenMapWithTour={handleOpenMapWithTour}
             onSwitchToRoute={goToRoutesWith}
+            onSaveTour={addPlaceToTrip}
           />
         ) : activeTab === "routes" ? (
           <>
@@ -200,13 +221,7 @@ export default function App() {
             />
           </>
         ) : activeTab === "itinerary" ? (
-          <section className="travel-page" aria-labelledby="itinerary-title">
-            <div className="travel-heading"><div>
-              <span className="eyebrow">SEU ROTEIRO</span>
-              <h1 id="itinerary-title">Minhas viagens</h1>
-              <p>Este espaço está em preparação para guardar os caminhos da sua viagem.</p>
-            </div></div>
-          </section>
+          <ItineraryView store={itineraries} onOpenPlace={setSelectedTour} onRoute={goToRoutesWith} />
         ) : activeTab === "trip" ? (
           <AccountsView key={session.user.id} user={session.user} inviteToken={inviteToken} onInviteHandled={() => { clearInvite(); setInviteToken(null); }} />
         ) : activeTab === "community" ? (
@@ -232,11 +247,13 @@ export default function App() {
               visible={!selectedTour && !selectedRoute}
               home={home}
               onChangeHome={changeHome}
+              onSaveTour={addPlaceToTrip}
               onSelectTour={setSelectedTour}
             />
           </div>
         )}
       </main>
+      {pendingPlace && !itineraries.loading && <SavePlaceSheet place={pendingPlace.place} store={itineraries} onClose={()=>{pendingPlace.resolve(false);setPendingPlace(null);}} onComplete={title=>{setItineraryNotice(`${pendingPlace.place.title} está em ${title}, em Minhas viagens.`);pendingPlace.resolve(true);setPendingPlace(null);}} />}
 
       <BottomNav
         activeTab={activeTab === "map" ? mapReturnTab : activeTab}
