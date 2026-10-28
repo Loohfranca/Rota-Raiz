@@ -4818,3 +4818,52 @@
 .finance-my-summary b { display: block; color: var(--secondary); font-size: 18px; margin-top: 3px; }
 .expense-split-preview { border-radius: 14px; padding: 12px 14px; background: var(--secondary-container); font-size: 13px; }
 .expense-split-preview p { display: flex; justify-content: space-between; gap: 12px; margin: 7px 0 0; }
+
+/* Minhas viagens: bilhetes e registros do caminho. */
+.itinerary-page .travel-heading h1 { font-size: clamp(30px,4vw,44px); margin: 8px 0; letter-spacing: -.04em; }
+.itinerary-tools { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; margin: 18px 0; }
+.itinerary-tools .trip-select { flex: 1; margin: 0; }
+.itinerary-summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 20px 0; border-bottom: 1px solid var(--border-color); }
+.itinerary-summary h2 { font-size: 26px; margin: 0 0 7px; letter-spacing: -.03em; }
+.itinerary-summary span { font-size: 13px; color: var(--on-surface-variant); }
+.itinerary-section { margin-top: 30px; }
+.itinerary-section .section-heading { align-items: center; gap: 12px; }
+.itinerary-section .section-heading h2 { font-size: 25px; margin: 6px 0 0; }
+.itinerary-tickets,.itinerary-places { display: grid; gap: 16px; }
+.journey-ticket { background: var(--surface-container-lowest); border: 1px solid var(--border-color); border-radius: 22px; overflow: hidden; }
+.ticket-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 18px; background: var(--secondary-container); font-size: 13px; }
+.ticket-status { display: inline-flex; border-radius: 20px; padding: 4px 9px; background: #f4eee3; color: #705429; font-size: 11px; white-space: nowrap; }
+.ticket-status.is-done { color: #243e32; background: #dce9d7; }
+.ticket-points { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); gap: 14px; align-items: center; padding: 22px 18px; }
+.ticket-points > div { min-width: 0; overflow-wrap: anywhere; }
+.ticket-points small { display: block; font-size: 11px; color: var(--on-surface-variant); }
+.ticket-points h3 { font-size: 21px; line-height: 1.2; margin: 7px 0; letter-spacing: -.02em; }
+.ticket-points b { display: block; font-size: 13px; margin-bottom: 3px; }
+.ticket-bottom { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 18px; border-top: 1px dashed #b4bdac; font-size: 13px; }
+.ticket-details { padding: 0 18px 12px; font-size: 13px; }
+.ticket-details summary,.segment-zones summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; text-decoration: underline; text-underline-offset: 3px; }
+.ticket-details p { margin: 5px 0; overflow-wrap: anywhere; }
+.connection-time { background: var(--surface-container-low); padding: 10px; border-radius: 10px; }
+.itinerary-comment { white-space: pre-wrap; color: var(--on-surface-variant); font-size: 14px; overflow-wrap: anywhere; }
+.itinerary-state-action { border: 0; background: transparent; min-height: 44px; padding: 10px 18px; display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--secondary); }
+.ticket-segment { min-width: 0; border: 1px solid var(--border-color); border-radius: 16px; padding: 14px; display: grid; gap: 14px; }
+.ticket-segment legend { font-size: 13px; font-weight: 700; padding: 0 5px; }
+.segment-zones { font-size: 12px; }
+.segment-zones label { margin-top: 10px; }
+.ticket-duration-preview { padding: 14px; background: var(--secondary-container); border-radius: 14px; font-size: 13px; }
+.ticket-duration-preview > span { margin-left: 12px; }
+.ticket-duration-preview p { margin: 6px 0 0; }
+.itinerary-place { padding: 18px; border-radius: 18px; border: 1px solid var(--border-color); background: var(--surface-container-lowest); }
+.itinerary-place-heading { display: flex; gap: 10px; align-items: start; }
+.itinerary-place-heading > div { flex: 1; min-width: 0; }
+.itinerary-place h3 { font-size: 21px; margin: 0 0 5px; overflow-wrap: anywhere; }
+.itinerary-place-heading p,.visit-date { font-size: 12px; color: var(--on-surface-variant); margin: 0; }
+.visit-date { margin-top: 12px; }
+.itinerary-place-actions { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 12px; }
+.itinerary-place-actions button { display: flex; gap: 5px; align-items: center; border: 0; min-height: 44px; background: transparent; color: var(--secondary); font-size: 12px; padding: 4px 0; }
+.itinerary-export { margin: 30px 0; }
+.itinerary-export p { color: var(--on-surface-variant); font-size: 13px; }
+.itinerary-app-notice { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; padding: 10px 16px; font-size: 13px; background: var(--secondary-container); margin: 0; }
+.itinerary-app-notice button { min-height: 44px; background: transparent; border: 0; text-decoration: underline; color: var(--secondary); }
+@media (min-width: 1000px) { .itinerary-tickets,.itinerary-places { grid-template-columns: 1fr 1fr; align-items: start; } }
+@media (max-width: 420px) { .ticket-points { gap: 8px; padding: 18px 14px; } .ticket-points h3 { font-size: 18px; } .ticket-points b { font-size: 12px; } .ticket-editor .form-pair { grid-template-columns: 1fr; } .itinerary-place-heading { flex-wrap: wrap; } .itinerary-place-heading .ticket-status { margin-left: 30px; } }

@@ -17,20 +17,24 @@ export default function TourDetailView({
   onBack,
   onOpenMapWithTour,
   onSwitchToRoute,
+  onSaveTour,
 }) {
   const [saved, setSaved] = useState(() => !!getSavedTours()[tour?.id]),
     [error, setError] = useState("");
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
   }, [tour?.id]);
+  const [saving,setSaving] = useState(false);
   if (!tour) return null;
-  const toggle = () => {
+  const toggle = async () => {
+    if(saving)return;setSaving(true);
     try {
+      if(!saved && onSaveTour && !(await onSaveTour(tour))) return;
       setSaved(toggleSaveTourOffline(tour.id, { ...tour, savedOrigin: home }));
       setError("");
     } catch {
       setError("Não foi possível salvar neste aparelho.");
-    }
+    } finally {setSaving(false);}
   };
   return (
     <div className="tour-detail">
@@ -41,12 +45,14 @@ export default function TourDetailView({
         </button>
         <button
           className={`button button-secondary ${saved ? "is-saved" : ""}`}
+          disabled={saving}
           onClick={toggle}
           aria-pressed={saved}
         >
           <Bookmark size={17} fill={saved ? "currentColor" : "none"} />
           {saved ? "Passeio salvo" : "Salvar passeio"}
         </button>
+        {saved && onSaveTour && <button className="small-action" onClick={()=>onSaveTour(tour)}>Adicionar à viagem</button>}
       </div>
       <PhotoGallery
         key={tour.id}

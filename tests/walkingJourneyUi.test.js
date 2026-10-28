@@ -16,6 +16,10 @@ let server,
   BrazilDiscovery,
   ToursView,
   ExploreHero,
+  ItineraryView,
+  useItineraries,
+  LegEditor,
+  SavePlaceSheet,
   userEvent,
   dom;
 before(async () => {
@@ -74,6 +78,8 @@ before(async () => {
   ({ default: BrazilDiscovery } = await server.ssrLoadModule(
     "/src/components/BrazilDiscovery.jsx",
   ));
+  ({ default: useItineraries } = await server.ssrLoadModule("/src/hooks/useItineraries.js"));
+  ({ default: ItineraryView, LegEditor, SavePlaceSheet } = await server.ssrLoadModule("/src/components/ItineraryView.jsx"));
   ({ default: ExploreHero } = await server.ssrLoadModule("/src/components/ExploreHero.jsx"));
   ({ default: ToursView } = await server.ssrLoadModule(
     "/src/components/ToursView.jsx",
@@ -661,4 +667,53 @@ test("destaque mostra cinco destinos reais e abre o destino selecionado", async 
   assert.equal(opened.id, "jpa-tambau");
   assert.ok(document.querySelector(".hero-carousel-controls .hero-motion-toggle") || window.matchMedia().matches);
   assert.equal(document.querySelector(".hero-destination-open .hero-motion-toggle"), null);
+});
+
+
+const itinerarySample = {id:"trip-itin",title:"Nordeste",version:1,legs:[{id:"leg-a",mode:"flight",company:"Companhia",comment:"Bagagem na conexão",status:"planned",segments:[{from:"Rio",to:"Salvador",departure:"2026-11-01T22:00",arrival:"2026-11-01T23:50",fromZone:"America/Sao_Paulo",toZone:"America/Bahia"},{from:"Salvador",to:"João Pessoa",departure:"2026-11-02T02:00",arrival:"2026-11-02T03:20",fromZone:"America/Bahia",toZone:"America/Fortaleza"}]}],visits:[{id:"v",placeId:"espelho",title:"Praia do Espelho",location:"Bahia",address:"Praia do Espelho, BA",visited:false,date:"",comment:""}]};
+test("bilhete mostra duração e parada correta com chegada no dia seguinte",async()=>{
+  const store={plans:[itinerarySample],activeId:itinerarySample.id,loading:false,busy:false,refresh(){},select(){},save:async()=>{}};
+  render(React.createElement(ItineraryView,{store,onOpenPlace(){},onRoute(){}}));
+  assert.ok(screen.getByText("5h 20min"));
+  await userEvent.setup().click(screen.getByText("Ver percurso e conexões"));
+  assert.ok(screen.getByText("2h 10min"));
+  assert.ok(screen.getByText("Quero ir"));
+});
+test("salvar no Explorar escolhe a viagem sem marcar a visita automaticamente",async()=>{
+  let saved,selected,completed;
+  const store={plans:[{id:"one",title:"Primeira",legs:[],visits:[],version:1},{id:"two",title:"Segunda",legs:[],visits:[],version:1}],activeId:"one",busy:false,loading:false,save:async plan=>{saved=plan;},select:id=>{selected=id;}};
+  render(React.createElement(SavePlaceSheet,{place:{id:"satu",title:"Praia do Satu",location:"Caraíva"},store,onClose(){},onComplete:title=>{completed=title;}}));
+  const ui=userEvent.setup();await ui.selectOptions(screen.getByLabelText("Em qual viagem?"),"two");await ui.click(screen.getByRole("button",{name:"Adicionar à viagem"}));
+  assert.equal(saved.id,"two");assert.equal(saved.visits[0].visited,false);assert.equal(saved.visits[0].comment,"");assert.equal(selected,"two");assert.equal(completed,"Segunda");
+});
+test("erro de salvamento preserva o bilhete e os comentários",async()=>{
+  let closed=false;
+  render(React.createElement(LegEditor,{plan:itinerarySample,leg:itinerarySample.legs[0],busy:false,onSave:async()=>{throw new Error("Sem conexão para salvar");},onClose:()=>{closed=true;}}));
+  await userEvent.setup().click(screen.getByRole("button",{name:"Salvar trecho"}));
+  assert.ok(await screen.findByText("Sem conexão para salvar"));assert.equal(screen.getByLabelText("Comentário (opcional)").value,"Bagagem na conexão");assert.equal(closed,false);
+});
+test("registro do lugar permite marcar visita e adicionar comentário",async()=>{
+  let saved;
+  const store={plans:[itinerarySample],activeId:itinerarySample.id,loading:false,busy:false,refresh(){},select(){},save:async plan=>{saved=plan;}};
+  render(React.createElement(ItineraryView,{store,onOpenPlace(){},onRoute(){}}));
+  const ui=userEvent.setup();await ui.click(screen.getByRole("button",{name:"Comentar ou editar Praia do Espelho"}));await ui.selectOptions(screen.getByLabelText("Situação"),"visited");await ui.type(screen.getByLabelText("Seu comentário (opcional)"),"Fui pela manhã.");await ui.click(screen.getByRole("button",{name:"Salvar registro"}));
+  assert.equal(saved.visits[0].visited,true);assert.equal(saved.visits[0].comment,"Fui pela manhã.");
+});
+
+test("salvar um lugar espera o roteiro e cancelar não cria salvo local",async()=>{
+  const {BEACHES}=await server.ssrLoadModule('/src/data/beachCatalog.js');const tour=BEACHES.find(p=>p.id==='satu');let accepted=false,calls=0;
+  render(React.createElement(TourDetailView,{tour,home:null,onBack(){},onOpenMapWithTour(){},onSwitchToRoute(){},onSaveTour:async()=>{calls++;return accepted;}}));
+  const ui=userEvent.setup();await ui.click(screen.getByRole('button',{name:'Salvar passeio',exact:true}));
+  assert.equal(JSON.parse(localStorage.getItem('rotaraiz_tour_details')||'{}').satu,undefined);
+  accepted=true;await ui.click(screen.getByRole('button',{name:'Salvar passeio',exact:true}));
+  assert.ok(JSON.parse(localStorage.getItem('rotaraiz_tour_details')).satu);assert.equal(calls,2);assert.ok(screen.getByRole('button',{name:'Passeio salvo',exact:true}));
+});
+
+
+test("trocar de conta descarta resposta atrasada do roteiro anterior",async()=>{
+  let finishFirst;let calls=0;const api={listItineraries:()=>++calls===1?new Promise(resolve=>{finishFirst=resolve;}):Promise.resolve([{...itinerarySample,id:"b",title:"Roteiro da segunda conta"}])};
+  function Harness({id}){const store=useItineraries(id,api);return React.createElement('div',null,store.plans.map(plan=>React.createElement('p',{key:plan.id},plan.title)));}
+  const ui=render(React.createElement(Harness,{id:'first-user'}));ui.rerender(React.createElement(Harness,{id:'second-user'}));await screen.findByText('Roteiro da segunda conta');
+  const {act}=await import('@testing-library/react');await act(async()=>{finishFirst([{...itinerarySample,title:'Roteiro privado anterior'}]);});
+  assert.equal(screen.queryByText('Roteiro privado anterior'),null);assert.ok(screen.getByText('Roteiro da segunda conta'));
 });
