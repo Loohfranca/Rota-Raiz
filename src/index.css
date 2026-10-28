@@ -4887,3 +4887,10 @@
   .itinerary-summary .itinerary-manage-actions { width: auto; }
 }
 .itinerary-page .itinerary-header .itinerary-new-trip > span { display: inline; white-space: nowrap; }
+
+.itinerary-area-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; background: var(--secondary-container); border-radius: 17px; padding: 5px; margin: 22px 0; }
+.itinerary-area-tabs button { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; border: 0; border-radius: 12px; background: transparent; color: var(--secondary); font-size: 14px; font-weight: 700; padding: 10px; }
+.itinerary-area-tabs button[aria-pressed="true"] { background: var(--secondary); color: var(--on-secondary); }
+.itinerary-area-tabs b { font-size: 11px; background: #ffffff30; padding: 2px 7px; border-radius: 12px; }
+.itinerary-area-tabs + .itinerary-section { margin-top: 0; }
+@media (max-width: 359px) { .itinerary-area-tabs button { font-size: 12px; gap: 5px; padding: 10px 6px; } .itinerary-area-tabs svg { width: 16px; } }

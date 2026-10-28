@@ -677,6 +677,7 @@ test("bilhete mostra duração e parada correta com chegada no dia seguinte",asy
   assert.ok(screen.getByText("5h 20min"));
   await userEvent.setup().click(screen.getByText("Ver percurso e conexões"));
   assert.ok(screen.getByText("2h 10min"));
+  await userEvent.setup().click(screen.getByRole("button",{name:"Experiências",exact:true}));
   assert.ok(screen.getByText("Quero ir"));
 });
 test("salvar no Explorar escolhe a viagem sem marcar a visita automaticamente",async()=>{
@@ -696,7 +697,7 @@ test("registro do lugar permite marcar visita e adicionar comentário",async()=>
   let saved;
   const store={plans:[itinerarySample],activeId:itinerarySample.id,loading:false,busy:false,refresh(){},select(){},save:async plan=>{saved=plan;}};
   render(React.createElement(ItineraryView,{store,onOpenPlace(){},onRoute(){}}));
-  const ui=userEvent.setup();await ui.click(screen.getByRole("button",{name:"Comentar ou editar Praia do Espelho"}));await ui.selectOptions(screen.getByLabelText("Situação"),"visited");await ui.type(screen.getByLabelText("Seu comentário (opcional)"),"Fui pela manhã.");await ui.click(screen.getByRole("button",{name:"Salvar registro"}));
+  const ui=userEvent.setup();await ui.click(screen.getByRole("button",{name:"Experiências",exact:true}));await ui.click(screen.getByRole("button",{name:"Comentar ou editar Praia do Espelho"}));await ui.selectOptions(screen.getByLabelText("Situação"),"visited");await ui.type(screen.getByLabelText("Seu comentário (opcional)"),"Fui pela manhã.");await ui.click(screen.getByRole("button",{name:"Salvar registro"}));
   assert.equal(saved.visits[0].visited,true);assert.equal(saved.visits[0].comment,"Fui pela manhã.");
 });
 
@@ -724,4 +725,19 @@ test("viagem tem ações editar e excluir com confirmação e desfazer",async()=
   assert.ok(screen.getByRole('button',{name:'Renomear viagem'}));await ui.click(screen.getByRole('button',{name:'Excluir viagem',exact:true}));assert.equal(removed,undefined);
   await ui.click(screen.getByRole('button',{name:'Excluir esta viagem'}));assert.equal(removed.id,itinerarySample.id);
   await ui.click(screen.getByRole('button',{name:'Desfazer exclusão'}));assert.equal(restored.version,2);
+});
+
+
+test("abas separam voos e experiências e restaurante tem criar editar excluir",async()=>{
+  let latest;const originalConfirm=window.confirm;window.confirm=()=>true;
+  function Harness(){const [plan,setPlan]=React.useState({...itinerarySample,visits:[]});return React.createElement(ItineraryView,{store:{plans:[plan],activeId:plan.id,loading:false,busy:false,refresh(){},select(){},save:async next=>{latest=next;setPlan(next);}},onOpenPlace(){},onRoute(){}});}
+  try{
+    render(React.createElement(Harness));const ui=userEvent.setup();assert.ok(screen.getByRole('heading',{name:'Seus trechos'}));assert.equal(screen.queryByRole('heading',{name:'Suas experiências'}),null);
+    await ui.click(screen.getByRole('button',{name:'Experiências',exact:true}));assert.equal(screen.queryByRole('heading',{name:'Seus trechos'}),null);
+    await ui.click(screen.getByRole('button',{name:'Adicionar',exact:true}));await ui.type(screen.getByLabelText('Nome do lugar'),'Restaurante da praça');await ui.selectOptions(screen.getByLabelText('Tipo de experiência'),'Restaurante');await ui.type(screen.getByLabelText('Seu comentário (opcional)'),'Gostei do almoço.');await ui.click(screen.getByRole('button',{name:'Salvar registro'}));
+    assert.equal(latest.visits[0].category,'Restaurante');assert.equal(latest.visits[0].visited,true);assert.equal(latest.legs.length,1);
+    await ui.click(screen.getByRole('button',{name:'Comentar ou editar Restaurante da praça'}));await ui.clear(screen.getByLabelText('Nome do lugar'));await ui.type(screen.getByLabelText('Nome do lugar'),'Restaurante do centro');await ui.click(screen.getByRole('button',{name:'Salvar registro'}));assert.ok(screen.getByRole('heading',{name:'Restaurante do centro'}));
+    await ui.click(screen.getByRole('button',{name:'Comentar ou editar Restaurante do centro'}));await ui.click(screen.getByRole('button',{name:'Excluir experiência'}));assert.equal(latest.visits.length,0);assert.equal(latest.legs.length,1);
+    await ui.click(screen.getByRole('button',{name:'Voos e trechos',exact:true}));assert.ok(screen.getByRole('heading',{name:'Seus trechos'}));
+  }finally{window.confirm=originalConfirm;}
 });
