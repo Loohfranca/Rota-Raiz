@@ -28,3 +28,9 @@ PDF de amostra renderizado e revisado em duas páginas, inclusive cabeçalho, av
 Viagens têm ações visíveis Editar e Excluir. Excluir exige confirmação e usa deleted_at: o roteiro sai da lista, preserva registros e pode ser restaurado por Desfazer exclusão na tela. Exclusão e restauração também condicionam a escrita à versão e permanecem sob RLS por proprietário. Nenhum privilégio DELETE foi concedido. Trechos e lugares já têm seus formulários de edição e remoção individuais.
 
 No celular, Nova viagem ocupa uma linha própria abaixo da apresentação. O botão mantém ícone e texto juntos e não comprime o título. Dados reais fornecidos em anexos são cadastrados apenas na conta solicitada, sem inclusão no repositório ou fixtures de testes.
+
+## Abas internas e experiências livres
+
+Minhas viagens tem duas áreas: Voos e trechos e Experiências. Trocar de área muda a visualização; o PDF continua reunindo o roteiro completo.
+
+Em Experiências é possível criar registros de Praia, Restaurante, Passeio, Hospedagem ou Outro, incluindo nome, cidade/região, referência/endereço, situação, data e comentário. Nome é obrigatório; as demais informações de localização e o comentário são opcionais. Novos registros manuais vêm com Já fui selecionado, editável antes de salvar. Itens vindos do Explorar continuam entrando como Quero ir. Todos têm edição e exclusão com confirmação, sem publicação na comunidade e sem alteração dos trechos.
