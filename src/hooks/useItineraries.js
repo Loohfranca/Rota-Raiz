@@ -11,11 +11,11 @@ export default function useItineraries(userId,api=live) {
     catch(e){if(ticket===epoch.current&&request===sequence.current)setError(e.message);}finally{if(ticket===epoch.current)setLoading(false);}
   },[userId,api]);
   useEffect(()=>{epoch.current++;setStateOwner(userId);current.current=[];setPlans([]);setError('');setLoading(!!userId);let previous='';try{previous=sessionStorage.getItem(`rotaraiz_itinerary_${userId}`)||'';}catch{}setActiveId(previous);if(userId)refresh();return()=>{epoch.current++;};},[userId,refresh]);
-  async function mutate(operation) {
+  async function mutate(operation,removing=false) {
     if(stateOwner!==userId||!userId)throw new Error('Aguarde o roteiro da sua conta carregar.');
     if(lock.current)throw new Error('Aguarde o salvamento atual.');lock.current=true;sequence.current++;setBusy(true);const ticket=epoch.current;
-    try{const updated=await operation();if(ticket!==epoch.current)throw new Error('A conta mudou. Reabra o roteiro.');const next=[updated,...current.current.filter(p=>p.id!==updated.id)];current.current=next;setPlans(next);select(updated.id);setError('');return updated;}
+    try{const updated=await operation();if(ticket!==epoch.current)throw new Error('A conta mudou. Reabra o roteiro.');const remaining=current.current.filter(p=>p.id!==updated.id);const next=removing?remaining:[updated,...remaining];current.current=next;setPlans(next);select(removing?next[0]?.id||'':updated.id);setError('');return updated;}
     finally{lock.current=false;if(ticket===epoch.current)setBusy(false);}
   }
-  return {plans:stateOwner===userId?plans:[],activeId:stateOwner===userId?activeId:'',select,loading:stateOwner!==userId||loading,busy,error:stateOwner===userId?error:'',refresh,create:title=>mutate(()=>api.createItinerary(title)),save:plan=>mutate(()=>api.saveItinerary(plan))};
+  return {plans:stateOwner===userId?plans:[],activeId:stateOwner===userId?activeId:'',select,loading:stateOwner!==userId||loading,busy,error:stateOwner===userId?error:'',refresh,create:title=>mutate(()=>api.createItinerary(title)),save:plan=>mutate(()=>api.saveItinerary(plan)),remove:plan=>mutate(()=>api.deleteItinerary(plan),true),restore:plan=>mutate(()=>api.restoreItinerary(plan))};
 }

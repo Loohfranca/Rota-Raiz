@@ -4867,3 +4867,23 @@
 .itinerary-app-notice button { min-height: 44px; background: transparent; border: 0; text-decoration: underline; color: var(--secondary); }
 @media (min-width: 1000px) { .itinerary-tickets,.itinerary-places { grid-template-columns: 1fr 1fr; align-items: start; } }
 @media (max-width: 420px) { .ticket-points { gap: 8px; padding: 18px 14px; } .ticket-points h3 { font-size: 18px; } .ticket-points b { font-size: 12px; } .ticket-editor .form-pair { grid-template-columns: 1fr; } .itinerary-place-heading { flex-wrap: wrap; } .itinerary-place-heading .ticket-status { margin-left: 30px; } }
+
+/* Cabeçalho não comprime a ação de criar viagem em telas estreitas. */
+.itinerary-page .itinerary-header { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: end; gap: 16px; }
+.itinerary-header > div { min-width: 0; }
+.itinerary-header .itinerary-new-trip { display: inline-flex; flex: none; align-items: center; justify-content: center; gap: 8px; min-height: 46px; width: auto; padding: 11px 16px; white-space: nowrap; border-radius: 14px; background: var(--secondary); color: var(--on-secondary); border-color: var(--secondary); }
+.itinerary-new-trip svg { flex-shrink: 0; }
+.itinerary-manage-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.itinerary-manage-actions .small-action { min-height: 44px; padding: 9px 12px; display: flex; gap: 6px; align-items: center; border-radius: 12px; }
+.itinerary-delete-trip { color: #923b29; }
+.itinerary-deleted-notice { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; background: var(--secondary-container); border-radius: 14px; padding: 10px 14px; font-size: 14px; }
+.itinerary-deleted-notice button { border: 0; background: none; text-decoration: underline; min-height: 44px; color: var(--secondary); }
+.itinerary-delete-confirm { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 20px; }
+@media (max-width: 600px) {
+  .itinerary-page .itinerary-header { grid-template-columns: 1fr; gap: 14px; }
+  .itinerary-header .itinerary-new-trip { justify-self: start; }
+  .itinerary-summary { flex-wrap: wrap; align-items: start; gap: 14px; }
+  .itinerary-summary > div:first-child { flex: 1 1 100%; }
+  .itinerary-summary .itinerary-manage-actions { width: auto; }
+}
+.itinerary-page .itinerary-header .itinerary-new-trip > span { display: inline; white-space: nowrap; }

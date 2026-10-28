@@ -717,3 +717,11 @@ test("trocar de conta descarta resposta atrasada do roteiro anterior",async()=>{
   const {act}=await import('@testing-library/react');await act(async()=>{finishFirst([{...itinerarySample,title:'Roteiro privado anterior'}]);});
   assert.equal(screen.queryByText('Roteiro privado anterior'),null);assert.ok(screen.getByText('Roteiro da segunda conta'));
 });
+
+test("viagem tem ações editar e excluir com confirmação e desfazer",async()=>{
+  let removed,restored;const store={plans:[itinerarySample],activeId:itinerarySample.id,loading:false,busy:false,refresh(){},select(){},save:async()=>{},remove:async plan=>{removed=plan;return {...plan,version:2};},restore:async plan=>{restored=plan;}};
+  render(React.createElement(ItineraryView,{store,onOpenPlace(){},onRoute(){}}));const ui=userEvent.setup();
+  assert.ok(screen.getByRole('button',{name:'Renomear viagem'}));await ui.click(screen.getByRole('button',{name:'Excluir viagem',exact:true}));assert.equal(removed,undefined);
+  await ui.click(screen.getByRole('button',{name:'Excluir esta viagem'}));assert.equal(removed.id,itinerarySample.id);
+  await ui.click(screen.getByRole('button',{name:'Desfazer exclusão'}));assert.equal(restored.version,2);
+});
