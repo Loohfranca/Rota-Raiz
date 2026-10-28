@@ -22,3 +22,9 @@ Sem API paga, consulta de voos, geocodificação ou importação de bilhetes. Os
 Testes de modelo, banco local com RLS, interface, integração com Salvar e PDF cobrem conexões noturnas, diferenças de fuso, horários ambíguos, estados planejado/visitado, comentários e falhas de salvamento. Teste no banco real com usuários sintéticos confirmou criação, visita planejada, versão concorrente e isolamento; ROLLBACK removeu os registros de teste.
 
 PDF de amostra renderizado e revisado em duas páginas, inclusive cabeçalho, avião ilustrativo e separação entre visitados e planos. A interface autenticada ainda depende de revisão visual após login: o navegador remoto não acessa a prévia local. Nenhuma rota pública de bypass foi adicionada.
+
+## CRUD e cabeçalho
+
+Viagens têm ações visíveis Editar e Excluir. Excluir exige confirmação e usa deleted_at: o roteiro sai da lista, preserva registros e pode ser restaurado por Desfazer exclusão na tela. Exclusão e restauração também condicionam a escrita à versão e permanecem sob RLS por proprietário. Nenhum privilégio DELETE foi concedido. Trechos e lugares já têm seus formulários de edição e remoção individuais.
+
+No celular, Nova viagem ocupa uma linha própria abaixo da apresentação. O botão mantém ícone e texto juntos e não comprime o título. Dados reais fornecidos em anexos são cadastrados apenas na conta solicitada, sem inclusão no repositório ou fixtures de testes.
