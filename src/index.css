@@ -4985,3 +4985,10 @@
 .rr-social-own-actions { display:flex; gap:8px; flex-wrap:wrap; }
 .rr-social-own-actions button { display:inline-flex; align-items:center; gap:6px; padding:9px 12px; min-height:39px; border:1px solid var(--border-color); border-radius:11px; font-size:12px; font-weight:600; }
 .rr-social-own-actions button:last-child { color:#994037; }
+
+/* Comunidade: múltiplas experiências para o mesmo local, sem repetir cards */
+.rr-social-multiple { display:inline-flex; font-size:11px; font-weight:700; color:var(--secondary); border-radius:7px; background:var(--secondary-container); padding:4px 7px; margin-top:4px; }
+.rr-social-gallery-nav { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:9px 6px; border-radius:12px; background:var(--surface-container-low); }
+.rr-social-gallery-nav span { font-size:12px; font-weight:600; color:var(--on-surface-variant); text-align:center; flex:1; }
+.rr-social-gallery-nav button { display:grid; place-items:center; flex-shrink:0; width:35px; height:35px; border:1px solid var(--border-color); background:var(--surface-container-lowest); border-radius:50%; }
+.rr-social-gallery-nav button:disabled { opacity:.35; }
