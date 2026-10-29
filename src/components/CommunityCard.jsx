@@ -10,7 +10,7 @@ function Instagram({size=18}) {
     <circle cx="18" cy="6" r="1" fill="currentColor" stroke="none" />
   </svg>;
 }
-export default function CommunityCard({ groupItems, openRequest, onOpenHandled, user, allStats, onRoute, onSavePlace, onViewExperiences, onRefresh, onError, onEdit, onDelete }) {
+export default function CommunityCard({ groupItems, openRequest, onOpenHandled, user, allStats, onRoute, onSavePlace, onViewExperiences, onOpenProfile, onRefresh, onError, onEdit, onDelete }) {
   const [activeIndex,setActiveIndex]=useState(0);
   const touchStart=React.useRef(null);
   const item=groupItems[activeIndex] || groupItems[0];
@@ -143,7 +143,7 @@ export default function CommunityCard({ groupItems, openRequest, onOpenHandled, 
         <ChevronRight size={19} className="rr-social-chevron"/>
       </button>
       <div className="rr-social-bottom">
-        <span className="rr-social-author"><span className="rr-social-author-icon">{item.editorial?"R":author[0]?.toUpperCase()}</span><span><b>{author}</b><small>{item.editorial?"sugestão editorial":"indicou este lugar"}</small></span></span>
+        <button type="button" className="rr-social-author rr-author-profile-link" disabled={!item.user_id} onClick={()=>onOpenProfile?.(item.user_id)}><span className="rr-social-author-icon">{item.editorial?"R":author[0]?.toUpperCase()}</span><span><b>{author}</b><small>{item.editorial?"sugestão editorial":"Ver perfil"}</small></span></button>
         <button type="button" disabled={busy} onClick={toggleLike} aria-label={liked?"Descurtir":"Curtir"} aria-pressed={liked}><Heart size={18} fill={liked?"currentColor":"none"}/><span>{likes}</span></button>
         <button type="button" onClick={openDetail} aria-label={"Ver "+count+" comentários"}><MessageCircle size={18}/><span>{count}</span></button>
         {insta && <a href={insta} target="_blank" rel="noopener noreferrer" title="Instagram do lugar" aria-label={"Instagram de "+item.name}><Instagram size={18}/></a>}
