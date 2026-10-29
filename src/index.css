@@ -4894,3 +4894,10 @@
 .itinerary-area-tabs b { font-size: 11px; background: #ffffff30; padding: 2px 7px; border-radius: 12px; }
 .itinerary-area-tabs + .itinerary-section { margin-top: 0; }
 @media (max-width: 359px) { .itinerary-area-tabs button { font-size: 12px; gap: 5px; padding: 10px 6px; } .itinerary-area-tabs svg { width: 16px; } }
+
+/* Payment detail stays compact inside the existing expense form. */
+.expense-payment { display: grid; gap: 12px; padding: 14px; border-radius: 16px; background: var(--bg-secondary, #E5ECE2); }
+.expense-payment .check-row { margin: 0; min-height: 44px; }
+.expense-payment > strong { color: #243E32; font-size: 16px; overflow-wrap: anywhere; }
+.expense-payment .field-help { margin: 0; }
+.expense-row .expense-installment-label { color: #243E32; font-weight: 600; }

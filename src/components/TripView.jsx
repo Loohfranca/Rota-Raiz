@@ -18,6 +18,7 @@ import * as liveApi from "../lib/sharedTrips";
 import { TripInvite, JoinTrip, LeaveTrip, ImportTrip } from "./TripSharing";
 import {
   CATEGORIES,
+  installmentLabel,
   money,
   parseMoney,
   splitAmount,
@@ -277,6 +278,7 @@ export default function TripView({
                           {trip.people.find((p) => p.id === e.payer)?.name}{" "}
                           pagou
                         </small>
+                        {e.installments > 1 && <small className="expense-installment-label">{installmentLabel(e.amount, e.installments)}</small>}
                       </span>
                       <strong>{money(e.amount)}</strong>
                       <ArrowUpRight size={16} />
@@ -664,6 +666,10 @@ function People({ trip, update, onClose, saving, syncError }) {
 }
 function Expense({ trip, expense, update, onClose, saving, syncError, individual }) {
   const [amountInput, setAmountInput] = useState(expense ? String(expense.amount / 100) : "");
+  const [parcelled, setParcelled] = useState((expense?.installments || 1) > 1);
+  const [installments, setInstallments] = useState(String(expense?.installments || 2));
+  let installmentPreview = "";
+  try { if (parcelled) installmentPreview = installmentLabel(parseMoney(amountInput), Number(installments)); } catch { /* incomplete input */ }
   let preview = {};
   const [selected, setSelected] = useState(
       expense ? Object.keys(expense.shares) : trip.people.map((p) => p.id),
@@ -685,6 +691,8 @@ function Expense({ trip, expense, update, onClose, saving, syncError, individual
     try {
       const f = new FormData(e.currentTarget),
         amount = parseMoney(f.get("amount"));
+      const count = parcelled ? Number(installments) : 1;
+      installmentLabel(amount, count);
       let shares = splitAmount(amount, selected);
       if (custom) {
         shares = Object.fromEntries(
@@ -707,6 +715,7 @@ function Expense({ trip, expense, update, onClose, saving, syncError, individual
         id: expense?.id || crypto.randomUUID(),
         description: f.get("description").trim(),
         amount,
+        installments: count,
         category: f.get("category"),
         payer: f.get("payer"),
         date: f.get("date"),
@@ -733,7 +742,7 @@ function Expense({ trip, expense, update, onClose, saving, syncError, individual
       <form className="compact-form" onSubmit={submit}>
         <div className="form-pair">
           <label>
-            Valor (R$)
+            Valor total (R$)
             <input
               name="amount"
               onChange={event => setAmountInput(event.target.value)}
@@ -756,6 +765,19 @@ function Expense({ trip, expense, update, onClose, saving, syncError, individual
               defaultValue={expense?.date || today()}
             />
           </label>
+        </div>
+        <div className="expense-payment">
+          <label className="check-row">
+            <input type="checkbox" checked={parcelled} onChange={e => setParcelled(e.target.checked)} />
+            Gasto parcelado
+          </label>
+          {parcelled && <>
+            <label>Quantidade de parcelas
+              <input type="number" inputMode="numeric" min="2" max="60" step="1" required value={installments} onChange={e => setInstallments(e.target.value)} />
+            </label>
+            {installmentPreview && <strong role="status">{installmentPreview}</strong>}
+            <p className="field-help">Use o total final, incluindo juros se houver. O total entra uma vez na viagem e na divisão; as parcelas são informativas, sem controle de faturas.</p>
+          </>}
         </div>
         <label>
           O que foi?

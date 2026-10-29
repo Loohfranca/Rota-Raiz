@@ -276,7 +276,7 @@ test("falha ao salvar mantém o formulário aberto e o gasto não é inventado l
   await ui.click(
     screen.getByRole("button", { name: "Adicionar gasto", exact: true }),
   );
-  await ui.type(screen.getByLabelText("Valor (R$)"), "120,50");
+  await ui.type(screen.getByLabelText("Valor total (R$)"), "120,50");
   await ui.type(screen.getByLabelText("O que foi?"), "Almoço");
   await ui.click(screen.getByRole("button", { name: "Salvar gasto" }));
   await waitFor(() =>
@@ -329,8 +329,41 @@ test("gasto compartilhado mostra a prévia exata da divisão", async () => {
   await screen.findByText("Total da viagem");
   const ui=userEvent.setup();
   await ui.click(screen.getByRole("button",{name:"Adicionar gasto",exact:true}));
-  await ui.type(screen.getByLabelText("Valor (R$)"),"100,01");
+  await ui.type(screen.getByLabelText("Valor total (R$)"),"100,01");
   const preview=screen.getByLabelText("Prévia da divisão");
   assert.ok(preview.textContent.includes("50,01"));
   assert.ok(preview.textContent.includes("50,00"));
+});
+
+for (const scope of ["shared", "individual"]) test(`parcelamento cria, edita e exclui gasto ${scope} sem multiplicar total`, async () => {
+  const record = {...structuredClone(baseTrip),scope};
+  if (scope === "individual") record.people = [record.people[0]];
+  trips = [record]; requests = [];
+  render(React.createElement(TripView, {user,api,scope}));
+  await screen.findByText("Total da viagem");
+  const ui=userEvent.setup();
+  await ui.click(screen.getByRole("button",{name:"Adicionar gasto",exact:true}));
+  await ui.type(screen.getByLabelText("Valor total (R$)"),"100,01");
+  await ui.type(screen.getByLabelText("O que foi?"),"Voo de teste");
+  await ui.selectOptions(screen.getByLabelText("Categoria"),"Passagem de avião");
+  await ui.click(screen.getByLabelText("Gasto parcelado"));
+  const quantity=screen.getByLabelText("Quantidade de parcelas");
+  await ui.clear(quantity); await ui.type(quantity,"3");
+  assert.ok(screen.getByRole("status").textContent.includes("33,34"));
+  await ui.click(screen.getByRole("button",{name:"Salvar gasto"}));
+  await waitFor(()=>assert.equal(screen.queryByRole("dialog"),null));
+  assert.equal(trips[0].expenses[0].installments,3);
+  assert.equal(trips[0].expenses[0].amount,10001);
+  assert.equal(Object.values(trips[0].expenses[0].shares).reduce((a,b)=>a+b,0),10001);
+  await ui.click(screen.getByRole("button",{name:/Voo de teste/}));
+  assert.equal(screen.getByLabelText("Quantidade de parcelas").value,"3");
+  await ui.click(screen.getByLabelText("Gasto parcelado"));
+  await ui.click(screen.getByRole("button",{name:"Salvar gasto"}));
+  await waitFor(()=>assert.equal(screen.queryByRole("dialog"),null));
+  assert.equal(trips[0].expenses[0].installments,1);
+  await ui.click(screen.getByRole("button",{name:/Voo de teste/}));
+  const original=window.confirm; window.confirm=()=>true;
+  try {await ui.click(screen.getByRole("button",{name:"Excluir gasto"}));}
+  finally {window.confirm=original;}
+  await waitFor(()=>assert.equal(trips[0].expenses.length,0));
 });

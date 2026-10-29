@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   parseMoney,
+  installmentLabel,
   splitAmount,
   summarize,
   validateTrips,
@@ -107,4 +108,18 @@ test("média considera o intervalo de registros, inclusive dias sem gasto", () =
   });
   assert.equal(result.days, 3);
   assert.equal(result.average, 200);
+});
+
+test("parcelas preservam centavos e total; backups antigos continuam válidos", () => {
+  assert.equal(installmentLabel(120000, 6), "6 × R$ 200,00");
+  assert.equal(installmentLabel(10001, 3), "2 × R$ 33,34 + 1 × R$ 33,33");
+  assert.equal(installmentLabel(100), "À vista");
+  const item={...expense("voo",10001,"a","Passagem de avião"),installments:3};
+  const trip={id:"t",name:"Teste",people,expenses:[item]};
+  validateTrips([trip]);
+  assert.equal(summarize(trip).total,10001);
+  assert.equal(summarize(trip).categories["Passagem de avião"],10001);
+  assert.equal(validateTrips(JSON.parse(JSON.stringify([trip])))[0].expenses[0].installments,3);
+  for (const installments of [null,"3",0,-1,1.5,61,10002])
+    assert.throws(()=>validateTrips([{...trip,expenses:[{...item,installments}]}]));
 });
