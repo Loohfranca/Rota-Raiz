@@ -26,8 +26,8 @@ export default function LoginScreen({ loading = false }) {
     <main className="rr-login-screen" style={{ minHeight: "100dvh", display: "grid", placeItems: "center", background: "var(--surface, #f7f5ee)", padding: "28px 18px" }}>
       <section className="rr-login-card" aria-label="Entrar no Rota Raiz" style={{ width: "100%", maxWidth: 420, padding: "40px 28px", background: "var(--surface-container-lowest, #fffefa)", border: "1px solid var(--border-color, #d9ded2)", borderRadius: 28, boxShadow: "0 20px 65px rgba(36,62,50,.08)", textAlign: "center" }}>
         <div className="rr-login-brand" aria-label="Rota Raiz — o caminho também é viagem">
-          <img src="/rota-mark.svg" alt="" width="66" height="97"/>
-          <div className="rr-login-wordmark">rota <span>raiz</span></div>
+          <img className="rr-login-logo rr-login-logo-light" src="/rota-logo.svg" alt="Rota Raiz" width="190" height="180"/>
+          <img className="rr-login-logo rr-login-logo-dark" src="/rota-logo-dark.svg" alt="" aria-hidden="true" width="190" height="180"/>
           <p>o caminho também é viagem</p>
         </div>
         <h1 style={{ fontSize: 26, lineHeight: 1.2, margin: "0 0 12px", color: "var(--on-surface, #243e32)" }}>Sua próxima viagem começa aqui.</h1>
