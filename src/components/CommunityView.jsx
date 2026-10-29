@@ -378,8 +378,8 @@ function RecommendationForm({ user, initial, editing, onSave }) {
         />
       </label>
       <label>
-        Adicione uma foto <small>opcional · JPG, PNG ou WebP, até 3 MB</small>
-        <input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>setPhoto(e.target.files?.[0]||null)} />
+        Adicione uma foto <small>opcional · escolha da galeria (original até 25 MB; compactação automática)</small>
+        <input type="file" accept="image/*,.heic,.heif" onChange={e=>setPhoto(e.target.files?.[0]||null)} />
       </label>
       <p className="field-help">
         Seu nome e esta indicação ficam visíveis para as pessoas do app. Use o
