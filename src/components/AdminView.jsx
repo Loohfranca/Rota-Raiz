@@ -45,6 +45,14 @@ export default function AdminView({onBack}){
  }
  const photos=Number(metrics?.stored_photos||0),bytes=Number(metrics?.stored_photo_bytes||0);
  const ratio=bytes/(limits.bucketTargetMB*1048576);
+ const MB=1048576;
+ const freeStorageBytes=1024*MB,freeDbBytes=500*MB;
+ const totalStorageBytes=Number(metrics?.storage_total_bytes||0);
+ const dbBytes=Number(metrics?.database_bytes||0);
+ const storageRemaining=Math.max(0,freeStorageBytes-totalStorageBytes);
+ const dbRemaining=Math.max(0,freeDbBytes-dbBytes);
+ const preventiveRemaining=Math.max(0,limits.bucketTargetMB*MB-bytes);
+ const percent=(used,total)=>Math.min(100,Math.max(0,Math.round((used/total)*1000)/10));
  return <div className="rr-admin-page">
    <header className="rr-admin-head">
      <div><span className="eyebrow"><ShieldAlert size={15}/> ÁREA RESTRITA</span><h1>Central Rota Raiz</h1><p>Visão administrativa, segurança e consumo do aplicativo.</p></div>
@@ -81,7 +89,26 @@ export default function AdminView({onBack}){
     {section==="moderation"&&<><h2>Central de moderação</h2><p className="rr-admin-caption">Conteúdos detectados como ofensivos não são exibidos publicamente. Casos ambíguos ficam retidos. Você pode liberar uma mensagem após análise ou encerrar a ocorrência. Denúncias de mensagens já publicadas também são registradas.</p><div className="rr-admin-events">{rows.length?rows.map(e=><article key={e.id} className="rr-admin-event"><div className="rr-admin-event-head"><strong>{e.reason==="ofensa_ou_ameaca"?"Ofensa ou ameaça":e.reason==="denuncia_usuario"?"Denúncia":"Revisão de contexto"}</strong><span>{e.state==="reviewed"?"Revisado":e.state==="blocked"?"Bloqueado":"Pendente"} · {date(e.created_at)}</span></div><p>{e.content_text}</p><small>Autor: {e.author_email||"Conta indisponível"} · {e.place||"Indicação removida"}</small>{e.state!=="reviewed"&&<div className="rr-admin-actions"><button className="small-action" type="button" disabled={busy} onClick={()=>decide(e.id,"approve")}><Check size={15}/> Aprovar</button><button className="small-action" type="button" disabled={busy} onClick={()=>decide(e.id,"dismiss")}><X size={15}/> Encerrar</button></div>}</article>):<p className="rr-admin-empty">Nenhuma ocorrência registrada.</p>}</div></>}
     {section==="storage"&&<><h2>Fotografias e custos</h2><div className="rr-admin-stats"><Stat icon={ImageIcon} label="Fotos exibidas nas indicações" value={amount(metrics?.linked_photos)}/><Stat icon={ImageIcon} label="Arquivos no bucket da comunidade" value={amount(photos)}/><Stat icon={HardDrive} label="Armazenamento monitorado" value={formatSize(bytes)}/>
       <Stat icon={HardDrive} label="Banco de dados" value={formatSize(metrics?.database_bytes)}/><Stat icon={Users} label="Limite preventivo por conta" value="20 fotos"/><Stat icon={HardDrive} label="Limite por upload" value="3 MB"/></div>
-      <div className="rr-admin-storage"><div className="rr-admin-storage-row"><b>Consumo do bucket comunitário</b><span>{formatSize(bytes)} / {limits.bucketTargetMB} MB</span></div><div className="rr-admin-progress" role="progressbar" aria-label="Uso do limite preventivo de fotos" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.min(100,Math.round(ratio*100))}><span style={{width:Math.min(100,ratio*100)+"%"}}/></div><p>{ratio>=.95?"Atenção: próximo do bloqueio preventivo.":ratio>=.8?"Alerta: mais de 80% do limite preventivo usado.":"Monitoramento preventivo ativo."} O limite de 700 MB se aplica ao bucket community-photos, não ao armazenamento total do projeto.</p></div>
+      <section className="rr-admin-quota-grid" aria-label="Espaço restante do plano gratuito">
+        <div className="rr-admin-storage">
+          <div className="rr-admin-storage-row"><b>Arquivos — plano Free</b><span>1 GB</span></div>
+          <strong className="rr-admin-remaining">{formatSize(storageRemaining)} restantes</strong>
+          <p>{formatSize(totalStorageBytes)} utilizados de 1 GB ({percent(totalStorageBytes,freeStorageBytes)}%) · {amount(metrics?.storage_total_files)} arquivos em todos os buckets.</p>
+          <div className="rr-admin-progress" role="progressbar" aria-label="Armazenamento de arquivos utilizado" aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent(totalStorageBytes,freeStorageBytes)}><span style={{width:percent(totalStorageBytes,freeStorageBytes)+"%"}}/></div>
+          <p>{percent(totalStorageBytes,freeStorageBytes)>=95?"Atenção: perto de 1 GB!":percent(totalStorageBytes,freeStorageBytes)>=80?"Alerta: mais de 80% ocupado.":"Espaço disponível para crescer."}</p>
+        </div>
+        <div className="rr-admin-storage">
+          <div className="rr-admin-storage-row"><b>Banco de dados — plano Free</b><span>500 MB</span></div>
+          <strong className="rr-admin-remaining">{formatSize(dbRemaining)} restantes</strong>
+          <p>{formatSize(dbBytes)} utilizados de 500 MB ({percent(dbBytes,freeDbBytes)}%). Inclui lugares, usuários e viagens.</p>
+          <div className="rr-admin-progress" role="progressbar" aria-label="Armazenamento do banco utilizado" aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent(dbBytes,freeDbBytes)}><span style={{width:percent(dbBytes,freeDbBytes)+"%"}}/></div>
+          <p>{percent(dbBytes,freeDbBytes)>=95?"Atenção: perto de 500 MB!":percent(dbBytes,freeDbBytes)>=80?"Alerta: mais de 80% ocupado.":"Banco dentro do limite de referência."}</p>
+        </div>
+      </section>
+      <div className="rr-admin-storage"><div className="rr-admin-storage-row"><b>Limite preventivo de fotos da Comunidade</b><span>{limits.bucketTargetMB} MB</span></div>
+      <strong className="rr-admin-remaining">{formatSize(preventiveRemaining)} restantes</strong>
+      <div className="rr-admin-progress" role="progressbar" aria-label="Uso do limite preventivo de fotos" aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent(bytes,limits.bucketTargetMB*MB)}><span style={{width:percent(bytes,limits.bucketTargetMB*MB)+"%"}}/></div>
+      <p>{formatSize(bytes)} utilizados. {ratio>=.95?"Atenção: próximo do bloqueio preventivo.":ratio>=.8?"Alerta: mais de 80% do limite preventivo usado.":"Monitoramento preventivo ativo."} Essa reserva de 700 MB é exclusiva do bucket community-photos e não altera a franquia do plano.</p></div>
       <section className="rr-admin-simulator">
         <h3>Simule o crescimento da comunidade</h3>
         <p>Estimativa de armazenamento, não uma previsão de cobrança ou de tráfego.</p>
@@ -93,7 +120,7 @@ export default function AdminView({onBack}){
         <div className="rr-admin-simulator-result"><strong>{amount(simUsers*simPhotos)} fotos</strong><strong>{formatSize(simUsers*simPhotos*simPhotoKB*1024)}</strong></div>
         <p>{simUsers*simPhotos*simPhotoKB*1024>limits.bucketTargetMB*1048576?"Esta hipótese ultrapassaria o limite preventivo de 700 MB da Comunidade.":"Esta hipótese ficaria dentro do limite preventivo de 700 MB da Comunidade."} Não inclui imagens externas, tráfego de visualização ou demais bancos de dados.</p>
       </section>
-      <div className="rr-admin-info"><Wallet size={20}/><div><b>Custos reais e franquias</b><p>Os valores de faturamento e uso de transferência não podem ser lidos diretamente por este painel sem as APIs de cobrança dos serviços. Consulte as fontes oficiais abaixo. Usuários ativos e fotos não equivalem, isoladamente, ao custo da operação.</p><p>Os limites gratuitos e os preços dos planos podem mudar. As franquias de Supabase, Vercel e outros serviços devem ser verificadas no painel de cobrança de cada provedor.</p><div className="rr-admin-links"><a href="https://supabase.com/dashboard/project/cbaommdaoaqmxurkkeho" target="_blank" rel="noopener noreferrer">Supabase · abrir projeto <ExternalLink size={14}/></a><a href="https://vercel.com/dashboard" target="_blank" rel="noopener noreferrer">Vercel · Analytics e Billing <ExternalLink size={14}/></a></div></div></div>
+      <div className="rr-admin-info"><Wallet size={20}/><div><b>Custos reais e franquias</b><p>Os valores de faturamento e uso de transferência não podem ser lidos diretamente por este painel sem as APIs de cobrança dos serviços. Consulte as fontes oficiais abaixo. Usuários ativos e fotos não equivalem, isoladamente, ao custo da operação.</p><p>Os limites gratuitos apresentados (1 GB para arquivos e 500 MB para banco) são referências do plano Free e não leituras diretas do contrato de cobrança. Os preços e as franquias podem mudar. As franquias de Supabase, Vercel e outros serviços devem ser verificadas no painel de cobrança de cada provedor.</p><div className="rr-admin-links"><a href="https://supabase.com/dashboard/project/cbaommdaoaqmxurkkeho" target="_blank" rel="noopener noreferrer">Supabase · abrir projeto <ExternalLink size={14}/></a><a href="https://vercel.com/dashboard" target="_blank" rel="noopener noreferrer">Vercel · Analytics e Billing <ExternalLink size={14}/></a></div></div></div>
       <p className="rr-admin-caption">Imagens externas exibidas por URL não contam como arquivos do bucket comunitário, mas seu tráfego pode ter custos próprios. O bloqueio preventivo não garante custo zero porque outros serviços e buckets também têm limites.</p>
     </>}
    </>}

@@ -5185,3 +5185,10 @@
 .rr-community-guidelines {padding:10px 14px;margin:0 0 16px;border:1px solid var(--border-color);border-radius:13px;background:var(--surface-container-lowest);}
 .rr-community-guidelines summary{color:var(--on-surface);font-size:13px;font-weight:700;min-height:29px;display:flex;align-items:center;gap:7px;list-style:revert;}
 .rr-community-guidelines p{margin:9px 0 0;font-size:12px;line-height:1.65;color:var(--on-surface-variant);}
+
+/* Remaining free-plan capacity — both Rota themes */
+.rr-admin-quota-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.rr-admin-quota-grid .rr-admin-storage{min-width:0}
+.rr-admin-remaining{font-family:var(--font-headline);font-size:clamp(20px,2.5vw,28px);line-height:1.3;color:var(--on-surface);display:block;margin:13px 0 7px}
+.rr-admin-quota-grid .rr-admin-progress,.rr-admin-storage .rr-admin-progress{height:13px}
+@media(max-width:650px){.rr-admin-quota-grid{grid-template-columns:1fr}}
