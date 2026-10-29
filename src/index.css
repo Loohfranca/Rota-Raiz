@@ -5240,3 +5240,7 @@
 .rr-author-profile-link{cursor:pointer;text-align:left;color:var(--on-surface)}
 .rr-author-profile-link:hover{text-decoration:underline}
 @media(max-width:740px){.rr-profile-nav-button span{display:none}.rr-profile-nav-button{width:44px;padding:8px;justify-content:center}.rr-profile-hero-inner{padding:18px;gap:13px}.rr-profile-avatar{width:75px;height:75px}.rr-profile-photo-upload{display:grid}}
+
+.rr-social-author-icon .rr-profile-mini-avatar{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block}
+.rr-social-author.rr-author-profile-link{min-width:0;cursor:pointer}
+.rr-social-attribution .rr-author-profile-link{font-size:inherit;text-decoration:underline;text-underline-offset:3px}
