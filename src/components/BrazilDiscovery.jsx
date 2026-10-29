@@ -2,10 +2,10 @@ import React, { useId, useState } from "react";
 import { Compass, ArrowUpRight } from "lucide-react";
 import { DISCOVERY_CATEGORIES, discoveryMapsUrl } from "../lib/discoverBrazil";
 
-export default function BrazilDiscovery({ initialCity = "" }) {
+export default function BrazilDiscovery({ initialCity = "", fixedCity = false, initialCategory = "attractions" }) {
   const id = useId();
   const [city, setCity] = useState(initialCity);
-  const [category, setCategory] = useState("attractions");
+  const [category, setCategory] = useState(initialCategory);
   const url = discoveryMapsUrl(city, category);
   return (
     <section
@@ -15,12 +15,12 @@ export default function BrazilDiscovery({ initialCity = "" }) {
       <div className="brazil-discovery-heading">
         <Compass size={22} />
         <div>
-          <h2>Explore o Brasil</h2>
-          <p>Busque praias e atrações de outras cidades no Google Maps.</p>
+          <h2>{fixedCity ? `Mais opções em ${initialCity}` : "Explore o Brasil"}</h2>
+          <p>Abre uma busca externa no Google Maps.</p>
         </div>
       </div>
       <div className="brazil-discovery-fields">
-        <label htmlFor={`${id}-city`}>
+        {!fixedCity && <label htmlFor={`${id}-city`}>
           Cidade ou região
           <input
             id={`${id}-city`}
@@ -29,7 +29,7 @@ export default function BrazilDiscovery({ initialCity = "" }) {
             maxLength={160}
             placeholder="Ex.: Bonito, MS ou Trancoso, BA"
           />
-        </label>
+        </label>}
         <label htmlFor={`${id}-kind`}>
           O que descobrir
           <select

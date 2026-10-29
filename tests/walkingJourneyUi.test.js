@@ -405,9 +405,7 @@ test("Explorar mostra Trancoso e abre seis lugares cadastrados nessa região", a
       }),
     );
     const ui = userEvent.setup();
-    await ui.click(
-      await screen.findByRole("button", { name: "Trancoso", exact: true }),
-    );
+    await ui.selectOptions(screen.getByLabelText("Cidade para explorar"), "trancoso");
     await screen.findByRole("heading", { name: "Explore Trancoso" });
     await screen.findByRole("heading", { name: "Quadrado de Trancoso" });
     assert.ok(screen.getByRole("heading", { name: "Praia dos Coqueiros" }));
@@ -697,7 +695,7 @@ test("registro do lugar permite marcar visita e adicionar comentário",async()=>
   let saved;
   const store={plans:[itinerarySample],activeId:itinerarySample.id,loading:false,busy:false,refresh(){},select(){},save:async plan=>{saved=plan;}};
   render(React.createElement(ItineraryView,{store,onOpenPlace(){},onRoute(){}}));
-  const ui=userEvent.setup();await ui.click(screen.getByRole("button",{name:"Experiências",exact:true}));await ui.click(screen.getByRole("button",{name:"Comentar ou editar Praia do Espelho"}));await ui.selectOptions(screen.getByLabelText("Situação"),"visited");await ui.type(screen.getByLabelText("Seu comentário (opcional)"),"Fui pela manhã.");await ui.click(screen.getByRole("button",{name:"Salvar registro"}));
+  const ui=userEvent.setup();await ui.click(screen.getByRole("button",{name:"Experiências",exact:true}));await ui.click(screen.getByRole("button",{name:"Editar experiência e anotação de Praia do Espelho"}));await ui.selectOptions(screen.getByLabelText("Situação"),"visited");await ui.type(screen.getByLabelText(/Minha anotação/),"Fui pela manhã.");await ui.click(screen.getByRole("button",{name:"Salvar registro"}));
   assert.equal(saved.visits[0].visited,true);assert.equal(saved.visits[0].comment,"Fui pela manhã.");
 });
 
@@ -734,10 +732,52 @@ test("abas separam voos e experiências e restaurante tem criar editar excluir",
   try{
     render(React.createElement(Harness));const ui=userEvent.setup();assert.ok(screen.getByRole('heading',{name:'Seus trechos'}));assert.equal(screen.queryByRole('heading',{name:'Suas experiências'}),null);
     await ui.click(screen.getByRole('button',{name:'Experiências',exact:true}));assert.equal(screen.queryByRole('heading',{name:'Seus trechos'}),null);
-    await ui.click(screen.getByRole('button',{name:'Adicionar',exact:true}));await ui.type(screen.getByLabelText('Nome do lugar'),'Restaurante da praça');await ui.selectOptions(screen.getByLabelText('Tipo de experiência'),'Restaurante');await ui.type(screen.getByLabelText('Seu comentário (opcional)'),'Gostei do almoço.');await ui.click(screen.getByRole('button',{name:'Salvar registro'}));
+    await ui.click(screen.getByRole('button',{name:'Adicionar',exact:true}));await ui.type(screen.getByLabelText('Nome do lugar'),'Restaurante da praça');await ui.selectOptions(screen.getByLabelText('Tipo de experiência'),'Restaurante');await ui.type(screen.getByLabelText(/Minha anotação/),'Gostei do almoço.');await ui.click(screen.getByRole('button',{name:'Salvar registro'}));
     assert.equal(latest.visits[0].category,'Restaurante');assert.equal(latest.visits[0].visited,true);assert.equal(latest.legs.length,1);
-    await ui.click(screen.getByRole('button',{name:'Comentar ou editar Restaurante da praça'}));await ui.clear(screen.getByLabelText('Nome do lugar'));await ui.type(screen.getByLabelText('Nome do lugar'),'Restaurante do centro');await ui.click(screen.getByRole('button',{name:'Salvar registro'}));assert.ok(screen.getByRole('heading',{name:'Restaurante do centro'}));
-    await ui.click(screen.getByRole('button',{name:'Comentar ou editar Restaurante do centro'}));await ui.click(screen.getByRole('button',{name:'Excluir experiência'}));assert.equal(latest.visits.length,0);assert.equal(latest.legs.length,1);
+    await ui.click(screen.getByRole('button',{name:'Editar experiência e anotação de Restaurante da praça'}));await ui.clear(screen.getByLabelText('Nome do lugar'));await ui.type(screen.getByLabelText('Nome do lugar'),'Restaurante do centro');await ui.click(screen.getByRole('button',{name:'Salvar registro'}));assert.ok(screen.getByRole('heading',{name:'Restaurante do centro'}));
+    await ui.click(screen.getByRole('button',{name:'Editar experiência e anotação de Restaurante do centro'}));await ui.click(screen.getByRole('button',{name:'Excluir experiência'}));assert.equal(latest.visits.length,0);assert.equal(latest.legs.length,1);
     await ui.click(screen.getByRole('button',{name:'Voos e trechos',exact:true}));assert.ok(screen.getByRole('heading',{name:'Seus trechos'}));
   }finally{window.confirm=originalConfirm;}
+});
+
+test("Explorar separa cidade e origem, recolhe formulários e mantém Maps no fim", async () => {
+  const oldScroll=window.scrollTo; window.scrollTo=()=>{};
+  globalThis.requestAnimationFrame=cb=>setTimeout(cb,0); globalThis.cancelAnimationFrame=clearTimeout;
+  let changes=0;
+  try {
+    const props={home:{name:"Hospedagem no Rio",lat:-22.9068,lng:-43.1729},onChangeHome:()=>{changes++;},onSelectTour:()=>{},onRoute:()=>{}};
+    const mounted=render(React.createElement(ToursView,props));
+    const ui=userEvent.setup();
+    assert.equal(screen.getByLabelText("Cidade para explorar").value,"rio-de-janeiro");
+    assert.equal(screen.queryByLabelText("Hospedagem, endereço ou cidade"),null);
+    await ui.selectOptions(screen.getByLabelText("Cidade para explorar"),"joao-pessoa");
+    await screen.findByRole("heading",{name:"Explore João Pessoa"});
+    const tampa=await screen.findByRole("button",{name:"Ver detalhes de Praia de Tambaú"});
+    assert.equal(changes,0);
+    assert.ok(screen.getByText("Hospedagem no Rio"));
+    assert.equal(screen.queryByRole("heading",{name:"Praia de Copacabana"}),null);
+    const details=document.querySelector(".explore-more");
+    assert.equal(details.open,false);
+    assert.ok(tampa.compareDocumentPosition(details) & Node.DOCUMENT_POSITION_FOLLOWING);
+    await ui.click(details.querySelector("summary"));
+    assert.equal(screen.queryByLabelText("Cidade ou região"),null);
+    const link=screen.getByRole("link",{name:"Buscar no Google Maps"});
+    assert.ok(new URL(link.href).searchParams.get("query").includes("João Pessoa"));
+    await ui.click(screen.getByRole("button",{name:"Alimentação",exact:true}));
+    assert.ok(screen.getByRole("heading",{name:"Nenhum lugar nesta seleção"}));
+    await ui.click(screen.getByRole("button",{name:"Praias",exact:true}));
+    assert.ok(screen.getByRole("button",{name:"Ver detalhes de Praia de Tambaú"}));
+    await ui.type(screen.getByLabelText("Buscar lugares"),"zzzz");
+    assert.ok(screen.getByRole("heading",{name:"Nenhum lugar nesta seleção"}));
+    await ui.selectOptions(screen.getByLabelText("Cidade para explorar"),"salvador");
+    assert.equal(screen.getByLabelText("Buscar lugares").value,"");
+    assert.equal(document.querySelector(".explore-more").open,false);
+    await ui.click(document.querySelector(".explore-more summary"));
+    assert.ok(new URL(screen.getByRole("link",{name:"Buscar no Google Maps"}).href).searchParams.get("query").includes("Salvador"));
+    await ui.click(document.querySelector(".explore-origin summary"));
+    assert.ok(screen.getByLabelText("Hospedagem, endereço ou cidade"));
+    mounted.rerender(React.createElement(ToursView,{...props,home:{name:"Origem alterada",lat:-7.1195,lng:-34.845}}));
+    assert.equal(screen.getByLabelText("Cidade para explorar").value,"salvador");
+    assert.equal(changes,0);
+  } finally {window.scrollTo=oldScroll;}
 });

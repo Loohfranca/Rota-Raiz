@@ -8,6 +8,7 @@ import {
   Search,
   Navigation,
   ArrowRight,
+  ChevronDown,
 } from "lucide-react";
 import {
   getPlaces,
@@ -39,10 +40,12 @@ export default function ToursView({
     [stops, setStops] = useState([]),
     [cities, setCities] = useState(REGIONS);
   const [query, setQuery] = useState(""),
-    [region, setRegion] = useState("auto"),
+    [region, setRegion] = useState(() => nearestRegion(home)?.id || "all"),
     [onlySaved, setOnlySaved] = useState(false),
     [saved, setSaved] = useState(getSavedTours),
     [error, setError] = useState("");
+  const [category, setCategory] = useState("all");
+  const [originOpen, setOriginOpen] = useState(false);
   const [savingPlace,setSavingPlace] = useState(null);
   const returnPosition = useRef(null);
   useEffect(() => {
@@ -80,7 +83,7 @@ export default function ToursView({
   const near = nearestRegion(home),
     outOfRange =
       region === "auto" && hasCoordinates(home) && !near && !onlySaved;
-  const filtered = selectBeaches(
+  const matches = selectBeaches(
     onlySaved
       ? Object.values(saved).map((i) => ({
           ...i,
@@ -89,6 +92,8 @@ export default function ToursView({
       : places,
     { home, region, query, savedIds: onlySaved ? Object.keys(saved) : null },
   );
+  const categoryOf = place => /praia/i.test(place.category || "") ? "beaches" : /alimenta|comida|restaurante/i.test(place.category || "") ? "food" : "outings";
+  const filtered = matches.filter(place => category === "all" || categoryOf(place) === category);
   const regionName =
     REGIONS.find((i) => i.id === region)?.name ||
     (region === "auto" ? near?.name : null);
@@ -105,34 +110,20 @@ export default function ToursView({
   };
   const open = (place) => {
     returnPosition.current = window.scrollY;
-    if (onlySaved && place.savedOrigin) onChangeHome(place.savedOrigin);
     onSelectTour(place);
   };
   return (
     <div className="explore-page">
-      <ExploreHero destinations={FEATURED_DESTINATIONS} visible={visible} onSelect={open} />
-      <OriginPicker
-        home={home}
-        onChange={onChangeHome}
-        stops={stops}
-        cities={cities}
-        places={[
-          ...places,
-          ...AIRPORTS,
-          ...LODGINGS.map((i) => ({ ...i, title: i.name })),
-        ]}
-      />
-      {!onlySaved && <BrazilDiscovery key={regionName || "brasil"} initialCity={regionName || ""} />}
       <section className="discovery-section">
         <div className="discovery-top">
           <div>
-            <p className="eyebrow">Descubra seu destino</p>
+            <p className="eyebrow">Seu próximo lugar</p>
             <h2>
               {onlySaved
                 ? "Seus lugares salvos"
                 : regionName
                   ? `Explore ${regionName}`
-                  : "Onde a viagem acontece"}
+                  : "Explore os destinos"}
             </h2>
           </div>
           <button
@@ -146,52 +137,45 @@ export default function ToursView({
           </button>
         </div>
         <div className="discovery-controls">
-          <div
-            className="region-filters"
-            role="group"
-            aria-label="Região dos lugares"
-          >
-            {[
-              { id: "auto", name: "Perto de mim" },
-              ...REGIONS,
-              { id: "all", name: "Todos" },
-            ].map((i) => (
-              <button
-                key={i.id}
-                onClick={() => {
-                  setRegion(i.id);
-                  setOnlySaved(false);
-                }}
-                aria-pressed={!onlySaved && region === i.id}
-              >
-                {i.id === "auto" && <Navigation size={14} />}
-                <span>{i.name}</span>
-              </button>
-            ))}
-          </div>
+          <label className="explore-city-select">
+            <MapPin size={18} />
+            <span className="sr-only">Cidade para explorar</span>
+            <select aria-label="Cidade para explorar" value={region} onChange={e => { setRegion(e.target.value); setOnlySaved(false); setQuery(""); setCategory("all"); }}>
+              <option value="all">Todos os destinos</option>
+              <option value="auto">Perto do ponto de partida</option>
+              {REGIONS.map(city => <option key={city.id} value={city.id}>{city.name}</option>)}
+            </select>
+          </label>
           <label className="search-field beach-search">
             <Search size={18} />
             <input
-              aria-label="Buscar praia"
+              aria-label="Buscar lugares"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Praia ou lugar…"
+              placeholder={regionName && !onlySaved ? `Buscar lugares em ${regionName}` : "Buscar praia, passeio ou lugar"}
             />
             {query && (
               <button
                 onClick={() => setQuery("")}
-                aria-label="Limpar busca de praia"
+                aria-label="Limpar busca de lugares"
               >
                 ×
               </button>
             )}
           </label>
         </div>
+        <div className="explore-category-filters" role="group" aria-label="Tipos de lugar">
+          {[['all','Todos'],['beaches','Praias'],['food','Alimentação'],['outings','Passeios']].map(([id,label]) => <button key={id} aria-pressed={category === id} onClick={() => setCategory(id)}>{label}</button>)}
+        </div>
+        <details className="explore-origin" open={originOpen} onToggle={e => setOriginOpen(e.currentTarget.open)}>
+          <summary><Navigation size={16} /><span>{hasCoordinates(home) ? <>Saindo de: <b>{home.name}</b></> : "Definir ponto de partida"}</span><span className="explore-origin-action">{originOpen ? "Fechar" : "Alterar"}<ChevronDown size={15} /></span></summary>
+          {originOpen && <div className="explore-origin-content"><p>Usado nas distâncias e trajetos. Você pode explorar outra cidade sem mudar esta origem.</p><OriginPicker editorOnly home={home} onChange={onChangeHome} stops={stops} cities={cities} places={[...places,...AIRPORTS,...LODGINGS.map(i => ({...i,title:i.name}))]} /></div>}
+        </details>
         {region === "auto" && !onlySaved && !outOfRange && (
           <p className="catalog-context">
             {near
               ? "Ordenadas pela proximidade da sua origem. Distâncias em linha reta; veja o percurso nos detalhes."
-              : "Escolha seu ponto de partida para descobrir as praias próximas."}
+              : "Defina uma origem acima para encontrar lugares próximos."}
           </p>
         )}
         {onlySaved && (
@@ -211,7 +195,7 @@ export default function ToursView({
             <h3>Vamos planejar sua chegada?</h3>
             <p>
               Ainda não há lugares cadastrados perto desta origem. Explore as
-              regiões disponíveis nos filtros.
+              cidades disponíveis na seleção acima.
             </p>
             <button
               className="button button-primary"
@@ -302,12 +286,12 @@ export default function ToursView({
                 <h3>
                   {onlySaved
                     ? "Sua próxima descoberta fica aqui"
-                    : "Nenhum lugar com esse nome"}
+                    : "Nenhum lugar nesta seleção"}
                 </h3>
                 <p>
                   {onlySaved
                     ? "Toque no marcador de uma praia para salvar o passeio."
-                    : "Tente outro nome ou escolha outra região."}
+                    : "Tente outro nome ou filtro. Você também pode buscar mais opções no Maps abaixo."}
                 </p>
                 {onlySaved && (
                   <button
@@ -322,7 +306,12 @@ export default function ToursView({
           </>
         )}
       </section>
-      <CommunitySuggestions home={home} onRoute={onRoute} />
+      <CommunitySuggestions home={home} city={onlySaved ? "" : regionName || ""} onRoute={onRoute} />
+      {!onlySaved && <details className="explore-more" key={`${regionName || "brasil"}-${category}`}>
+        <summary><Search size={18} /><span>{regionName ? `Buscar mais lugares em ${regionName}` : "Buscar em outra cidade do Brasil"}</span><ArrowUpRight size={16} /></summary>
+        <BrazilDiscovery initialCity={regionName || ""} fixedCity={!!regionName} initialCategory={category === "food" ? "food" : category === "beaches" ? "beaches" : "attractions"} />
+      </details>}
+      {!onlySaved && <section className="explore-inspiration" aria-label="Inspiração para outras viagens"><h2>Inspire sua próxima viagem</h2><ExploreHero destinations={FEATURED_DESTINATIONS} visible={visible} onSelect={open} /></section>}
     </div>
   );
 }

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { getRecommendations } from "../lib/community";
 import { nearestRegion } from "../lib/nearby";
 import { normalizeText } from "../lib/router";
-export default function CommunitySuggestions({ home, onRoute }) {
+export default function CommunitySuggestions({ home, onRoute, city: selectedCity }) {
   const [items, setItems] = useState([]);
   useEffect(() => {
     let live = true;
@@ -15,7 +15,7 @@ export default function CommunitySuggestions({ home, onRoute }) {
       live = false;
     };
   }, []);
-  const city = nearestRegion(home)?.name;
+  const city = selectedCity ?? nearestRegion(home)?.name;
   const filtered = items
     .filter((i) => !city || normalizeText(i.city).includes(normalizeText(city)))
     .slice(0, 6);
