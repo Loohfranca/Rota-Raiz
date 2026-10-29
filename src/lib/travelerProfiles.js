@@ -32,7 +32,7 @@ export async function togglePhotoLike(photoId,liked,userId){
  if(liked){const {error}=await supabase.from("rr_profile_photo_likes").delete().eq("photo_id",photoId).eq("user_id",userId);errorOf(error,"Erro ao remover curtida.");}
  else{const {error}=await supabase.from("rr_profile_photo_likes").insert({photo_id:photoId,user_id:userId});errorOf(error,"Erro ao curtir.");}
 }
-async function optimize(file){
+export async function optimizeGalleryImage(file){
  // A foto original pode ser grande: a cota de 1 MB é aplicada ao WebP compactado, não à foto da galeria.
  const mime=String(file.type||"").toLowerCase();
  const isImage=mime.startsWith("image/")||/\\.(jpe?g|png|webp|heic|heif|avif)$/i.test(file.name||"");
@@ -73,7 +73,7 @@ async function optimize(file){
  }finally{image?.close?.();if(imageUrl)URL.revokeObjectURL(imageUrl);}
 }
 export async function uploadProfilePhoto(userId,cityId,file,caption=""){
- const blob=await optimize(file);const path=userId+"/"+crypto.randomUUID()+".webp";
+ const blob=await optimizeGalleryImage(file);const path=userId+"/"+crypto.randomUUID()+".webp";
  const up=await supabase.storage.from(bucket).upload(path,blob,{contentType:"image/webp"});
  errorOf(up.error,"Não foi possível enviar a foto.");
  const {data,error}=await supabase.from("rr_profile_photos").insert({user_id:userId,city_id:cityId,storage_path:path,caption:caption.slice(0,180)}).select().single();
@@ -82,7 +82,7 @@ export async function uploadProfilePhoto(userId,cityId,file,caption=""){
 }
 export async function deleteProfilePhoto(photo){const {error}=await supabase.from("rr_profile_photos").delete().eq("id",photo.id);errorOf(error,"Erro ao excluir foto.");await supabase.storage.from(bucket).remove([photo.storage_path]);}
 export async function uploadAvatar(userId,file,oldUrl){
- const blob=await optimize(file);const path=userId+"/"+crypto.randomUUID()+".webp";
+ const blob=await optimizeGalleryImage(file);const path=userId+"/"+crypto.randomUUID()+".webp";
  const upload=await supabase.storage.from(bucket).upload(path,blob,{contentType:"image/webp"});errorOf(upload.error,"Erro ao enviar avatar.");
  const url=supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
  const {error}=await supabase.from("rr_profiles").update({avatar_url:url}).eq("user_id",userId);if(error){await supabase.storage.from(bucket).remove([path]);errorOf(error,"Erro ao atualizar avatar.");}

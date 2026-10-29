@@ -177,8 +177,8 @@ export default function CommunityCard({ groupItems, openRequest, onOpenHandled, 
         {owner&&<div className="rr-social-own-actions"><button type="button" onClick={()=>{setOpen(false);onEdit?.(item);}}><Pencil size={15}/>Editar indicação</button><button type="button" onClick={()=>{setOpen(false);onDelete?.(item);}}><Trash2 size={15}/>Excluir indicação</button></div>}
         {owner&&<div className="rr-social-upload">
           <b>Adicione uma foto</b>
-          <label className="rr-social-upload-label">Escolher arquivo (JPG, PNG ou WebP, até 3 MB)
-            <input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>setImageFile(e.target.files?.[0]||null)}/>
+          <label className="rr-social-upload-label">Escolher da galeria · imagem original até 25 MB
+            <input type="file" accept="image/*,.heic,.heif" onChange={e=>setImageFile(e.target.files?.[0]||null)}/>
           </label>
           {imageFile&&<button type="button" disabled={imageBusy} onClick={uploadPhoto}>{imageBusy?"Enviando…":"Salvar foto"}</button>}
           {photo&&<button type="button" disabled={imageBusy} onClick={deletePhoto}><Trash2 size={15}/>Remover foto</button>}
