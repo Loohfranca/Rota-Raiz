@@ -50,7 +50,7 @@ export async function uploadProfilePhoto(userId,cityId,file,caption=""){
  const up=await supabase.storage.from(bucket).upload(path,blob,{contentType:"image/webp"});
  errorOf(up.error,"Não foi possível enviar a foto.");
  const {data,error}=await supabase.from("rr_profile_photos").insert({user_id:userId,city_id:cityId,storage_path:path,caption:caption.slice(0,180)}).select().single();
- if(error){await supabase.storage.from(bucket).remove([path]);errorOf(error,"Limite de 6 fotos por cidade ou 15 fotos totais atingido.");}
+ if(error){await supabase.storage.from(bucket).remove([path]);errorOf(error,"Limite de 2 fotos por destino ou 25 fotos totais atingido.");}
  return data;
 }
 export async function deleteProfilePhoto(photo){const {error}=await supabase.from("rr_profile_photos").delete().eq("id",photo.id);errorOf(error,"Erro ao excluir foto.");await supabase.storage.from(bucket).remove([photo.storage_path]);}
