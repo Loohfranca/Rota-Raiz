@@ -112,6 +112,7 @@ export default function CommunityCard({ item, user, stats, onRoute, onSavePlace,
       <div className="rr-social-detail">
         {photo?<img className="rr-social-detail-photo" src={photo} alt={"Fotografia de "+item.name}/>:
           <div className="rr-social-detail-empty"><ImageIcon size={32}/><span>Sem foto ainda</span></div>}
+        {item.photo_credit && item.photo_source_url && <a className="rr-social-source" href={item.photo_source_url} target="_blank" rel="noopener noreferrer" style={{fontSize:11}}>Foto: {item.photo_credit} <ArrowUpRight size={12}/></a>}
         <p className="rr-social-category">{item.category} · {item.city}</p>
         <p className="rr-social-location"><MapPin size={15}/>{item.address}</p>
         <p className="rr-social-note">{item.note}</p>
