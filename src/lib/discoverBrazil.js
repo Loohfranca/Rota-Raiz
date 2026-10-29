@@ -1,5 +1,6 @@
 export const DISCOVERY_CATEGORIES = [
   { id: "attractions", label: "Pontos turísticos", query: "pontos turísticos" },
+  { id: "food", label: "Alimentação", query: "restaurantes" },
   { id: "beaches", label: "Praias", query: "praias" },
   { id: "parks", label: "Parques", query: "parques" },
   { id: "waterfalls", label: "Cachoeiras", query: "cachoeiras" },

@@ -48,10 +48,11 @@ export default function OriginPicker({
   stops = [],
   cities = [],
   places = [],
+  editorOnly = false,
 }) {
   const valid = hasCoordinates(home),
     inputId = useId();
-  const [editing, setEditing] = useState(!valid),
+  const [editing, setEditing] = useState(editorOnly || !valid),
     [query, setQuery] = useState(home?.address || home?.name || "");
   const [results, setResults] = useState(null),
     [busy, setBusy] = useState(""),
@@ -176,7 +177,7 @@ export default function OriginPicker({
       className={`origin-picker ${editing ? "is-editing" : ""}`}
       aria-label="Seu ponto de partida"
     >
-      <div className="origin-summary">
+      {!editorOnly && <div className="origin-summary">
         <span className="origin-icon">
           <MapPin size={21} />
         </span>
@@ -204,8 +205,8 @@ export default function OriginPicker({
         >
           {editing ? <X size={18} /> : <ChevronDown size={19} />}
         </button>
-      </div>
-      {editing && (
+      </div>}
+      {(editing || editorOnly) && (
         <div className="origin-editor">
           <form onSubmit={search}>
             <label htmlFor={inputId} className="field-label">

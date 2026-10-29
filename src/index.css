@@ -5045,3 +5045,42 @@
 .rr-social-save-notice {display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:11px;padding:10px 12px;border-radius:12px;background:var(--secondary-container);color:var(--on-surface);font-size:12px;font-weight:700;}
 .rr-social-save-notice button {display:inline-flex;gap:4px;align-items:center;min-height:36px;margin-left:auto;text-decoration:underline;font-weight:700;}
 @media(max-width:450px){.experience-card {padding:13px;}.experience-status {font-size:10px;}.experience-card h3 {font-size:17px;}.experience-quick-actions button {flex:1;}}
+
+/* Explorar: destination first, route origin on demand. Both themes use shared tokens. */
+.explore-page .discovery-section { margin-top: 16px; }
+.explore-page .discovery-top { align-items: center; gap: 12px; }
+.explore-page .discovery-top h2 { font-size: clamp(24px, 4vw, 34px); line-height: 1.15; }
+.explore-page .discovery-controls { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 12px; }
+.explore-city-select { display: flex; align-items: center; gap: 8px; padding: 0 12px; min-width: 0; border: 1px solid var(--border-color); border-radius: 16px; background: var(--surface-container-lowest); }
+.explore-city-select > svg { flex-shrink: 0; color: var(--on-surface-variant); }
+.explore-city-select select { width: 100%; min-width: 0; min-height: 48px; padding: 10px 0; background: transparent; color: var(--on-surface); border: 0; font-size: 15px; }
+.explore-page .beach-search { margin: 0; min-height: 48px; width:100%; max-width:none; }
+.explore-category-filters { display: flex; gap: 8px; flex-wrap: wrap; margin: 14px 0 10px; }
+.explore-category-filters button { min-height: 44px; padding: 8px 15px; border: 1px solid var(--border-color); border-radius: 999px; background: var(--surface-container-lowest); color: var(--on-surface); font-size: 14px; font-weight: 600; }
+.explore-category-filters button[aria-pressed="true"] { background: var(--secondary); color: var(--on-secondary); border-color: var(--secondary); }
+.explore-origin { margin: 0 0 12px; border-bottom: 1px solid var(--border-color); }
+.explore-origin > summary, .explore-more > summary { display: flex; align-items: center; gap: 9px; min-height: 48px; padding: 8px 0; cursor: pointer; list-style: none; color: var(--on-surface-variant); font-size: 13px; }
+.explore-origin > summary::-webkit-details-marker, .explore-more > summary::-webkit-details-marker { display:none; }
+.explore-origin > summary > svg, .explore-more > summary > svg { flex-shrink: 0; }
+.explore-origin > summary > span:first-of-type { min-width:0; flex:1; overflow-wrap:anywhere; }
+.explore-origin-action { display:flex; align-items:center; gap:5px; flex-shrink:0; font-weight:700; color:var(--on-surface); }
+.explore-origin-content > p { font-size:13px; line-height:1.5; color:var(--on-surface-variant); margin: 4px 0 12px; }
+.explore-origin .origin-picker { padding: 0 0 14px; margin:0; border:0; border-radius:0; box-shadow:none; background:transparent; }
+.explore-origin .origin-editor { border:0; padding:0; margin:0; }
+.explore-origin .origin-actions { flex-wrap:wrap; gap:8px 16px; }
+.explore-more { margin-top:24px; border-top:1px solid var(--border-color); border-bottom:1px solid var(--border-color); }
+.explore-more > summary { color:var(--on-surface); font-size:14px; font-weight:650; }
+.explore-more > summary span { flex:1; }
+.explore-more .brazil-discovery { margin:8px 0 16px; box-shadow:none; padding:16px; }
+.explore-inspiration { margin-top:28px; }
+.explore-inspiration > h2 { font-size:22px; margin:0 0 14px; color:var(--on-surface); }
+@media(max-width:600px) {
+ .explore-page .discovery-controls { grid-template-columns: minmax(0, 1fr); gap:8px; }
+ .explore-category-filters { gap:6px; }
+ .explore-category-filters button { padding:8px 12px; font-size:13px; }
+ .explore-page .discovery-top { flex-wrap:wrap; }
+ .explore-page .discovery-top > div { flex:1; min-width:160px; }
+ .explore-page .saved-filter { min-height:44px; }
+}
+
+.explore-origin > summary:focus-visible, .explore-more > summary:focus-visible { outline:3px solid var(--primary); outline-offset:3px; border-radius:8px; }
