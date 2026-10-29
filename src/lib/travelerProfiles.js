@@ -33,17 +33,44 @@ export async function togglePhotoLike(photoId,liked,userId){
  else{const {error}=await supabase.from("rr_profile_photo_likes").insert({photo_id:photoId,user_id:userId});errorOf(error,"Erro ao curtir.");}
 }
 async function optimize(file){
- if(!["image/jpeg","image/png","image/webp"].includes(file.type)||file.size>3*1048576)throw new Error("Envie JPG, PNG ou WebP de até 3 MB.");
- const image=await createImageBitmap(file);
+ // A foto original pode ser grande: a cota de 1 MB é aplicada ao WebP compactado, não à foto da galeria.
+ const mime=String(file.type||"").toLowerCase();
+ const isImage=mime.startsWith("image/")||/\\.(jpe?g|png|webp|heic|heif|avif)$/i.test(file.name||"");
+ if(!isImage)throw new Error("Escolha uma foto da galeria (JPG, PNG, WebP ou HEIC).");
+ if(file.size>25*1048576)throw new Error("Esta foto tem mais de 25 MB. Selecione uma imagem menor.");
+ let image=null;
+ let imageUrl=null;
  try{
+  if(typeof createImageBitmap==="function"){
+   try{image=await createImageBitmap(file);}catch{/* alguns celulares só decodificam via elemento img */}
+  }
+  if(!image){
+   imageUrl=URL.createObjectURL(file);
+   image=await new Promise((resolve,reject)=>{
+    const img=new Image();
+    img.onload=()=>resolve(img);
+    img.onerror=()=>reject(new Error("Não foi possível ler esta foto. Se for HEIC, tente compartilhá-la como JPG pela galeria."));
+    img.src=imageUrl;
+   });
+  }
   const scale=Math.min(1,1200/Math.max(image.width,image.height));
-  const canvas=document.createElement("canvas");canvas.width=Math.max(1,Math.round(image.width*scale));canvas.height=Math.max(1,Math.round(image.height*scale));
-  canvas.getContext("2d").drawImage(image,0,0,canvas.width,canvas.height);
-  let quality=.77;let blob;
-  do{blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/webp",quality));quality-=.13;}while(blob?.size>950000&&quality>.20);
-  if(!blob||blob.size>1048576)throw new Error("Imagem grande demais após compactação. Escolha outra.");
+  const canvas=document.createElement("canvas");
+  canvas.width=Math.max(1,Math.round(image.width*scale));
+  canvas.height=Math.max(1,Math.round(image.height*scale));
+  const ctx=canvas.getContext("2d");
+  if(!ctx)throw new Error("Não foi possível preparar a foto neste dispositivo.");
+  ctx.drawImage(image,0,0,canvas.width,canvas.height);
+  let quality=.78,blob;
+  do{
+   blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/webp",quality));
+   quality-=.12;
+  }while(blob?.size>950000&&quality>.20);
+  if(!blob||blob.type!=="image/webp"||blob.size>1048576)throw new Error("Não foi possível compactar esta foto. Escolha outra imagem.");
   return blob;
- }finally{image.close?.();}
+ }catch(e){
+  if(e instanceof Error&&e.message.startsWith("Não foi possível"))throw e;
+  throw new Error("Esta foto não pôde ser aberta pelo navegador. Tente uma foto JPG ou PNG da galeria.");
+ }finally{image?.close?.();if(imageUrl)URL.revokeObjectURL(imageUrl);}
 }
 export async function uploadProfilePhoto(userId,cityId,file,caption=""){
  const blob=await optimize(file);const path=userId+"/"+crypto.randomUUID()+".webp";

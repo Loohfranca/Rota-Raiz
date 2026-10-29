@@ -30,7 +30,7 @@ export default function TravelerProfile({viewer,profileId,onBack,onOpenRecommend
     <div className="rr-profile-hero-inner">
      <div className="rr-profile-avatar-wrap">
       {profile.avatar_url?<img className="rr-profile-avatar" src={profile.avatar_url} alt={"Foto de "+profile.display_name}/>:<span className="rr-profile-avatar rr-profile-avatar-empty"><UserRound size={42}/></span>}
-      {own&&<label className="rr-profile-avatar-edit" title="Trocar foto de perfil"><Camera size={17}/><input type="file" accept="image/png,image/jpeg,image/webp" disabled={busy} onChange={e=>{const file=e.target.files?.[0];if(file)execute(async()=>{await api.uploadAvatar(viewer.id,file,profile.avatar_url);},"Foto de perfil atualizada.");e.target.value="";}}/></label>}
+      {own&&<label className="rr-profile-avatar-edit" title="Escolher foto da galeria"><Camera size={17}/><input type="file" accept="image/*,.heic,.heif" disabled={busy} onChange={e=>{const file=e.target.files?.[0];if(file)execute(async()=>{await api.uploadAvatar(viewer.id,file,profile.avatar_url);},"Foto de perfil atualizada.");e.target.value="";}}/></label>}
      </div>
      <div className="rr-profile-title"><h1>{profile.display_name}</h1><p>{profile.bio||"Explorando caminhos e colecionando memórias."}</p>
       {profile.instagram&&<a href={"https://instagram.com/"+profile.instagram} target="_blank" rel="noopener noreferrer">Instagram: @{profile.instagram} <ExternalLink size={13}/></a>}
@@ -67,7 +67,7 @@ export default function TravelerProfile({viewer,profileId,onBack,onOpenRecommend
          {photo.caption&&<p>{photo.caption}</p>}
         </div>)}
        </div>
-       {own&&gallery.length<2&&count<25&&<div className="rr-profile-photo-upload"><label className="rr-profile-add-photo"><ImagePlus size={17}/> Adicionar foto<input type="file" disabled={busy} accept="image/png,image/jpeg,image/webp" onChange={e=>{const file=e.target.files?.[0];if(file)execute(()=>api.uploadProfilePhoto(viewer.id,city.id,file,caption),"Foto adicionada.");e.target.value="";}}/></label><input aria-label={"Legenda da próxima foto de "+city.city} maxLength={180} placeholder="Legenda opcional" value={selectedCity===city.id?caption:""} onFocus={()=>{if(selectedCity!==city.id){setSelectedCity(city.id);setCaption("");}}} onChange={e=>{setSelectedCity(city.id);setCaption(e.target.value);}}/></div>}
+       {own&&gallery.length<2&&count<25&&<div className="rr-profile-photo-upload"><label className="rr-profile-add-photo"><ImagePlus size={17}/> Escolher da galeria<input type="file" disabled={busy} accept="image/*,.heic,.heif" onChange={e=>{const file=e.target.files?.[0];if(file)execute(()=>api.uploadProfilePhoto(viewer.id,city.id,file,caption),"Foto adicionada.");e.target.value="";}}/></label><input aria-label={"Legenda da próxima foto de "+city.city} maxLength={180} placeholder="Legenda opcional" value={selectedCity===city.id?caption:""} onFocus={()=>{if(selectedCity!==city.id){setSelectedCity(city.id);setCaption("");}}} onChange={e=>{setSelectedCity(city.id);setCaption(e.target.value);}}/></div>}
      </article>;
    })}
    </div>
