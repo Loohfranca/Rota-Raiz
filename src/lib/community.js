@@ -1,6 +1,6 @@
 import { supabase } from "./supabase";
 export const COMMUNITY_CATEGORIES = [
-  "Comida",
+  "Alimentação",
   "Praia",
   "Passeio",
   "Hospedagem",
@@ -25,7 +25,7 @@ export function validRecommendation(item) {
       (k) => typeof item[k] === "string" && item[k].trim(),
     ) &&
     typeof item.id === "string" &&
-    COMMUNITY_CATEGORIES.includes(item.category) &&
+    (COMMUNITY_CATEGORIES.includes(item.category)||item.category==="Comida") &&
     (item.instagram == null || typeof item.instagram === "string")
   );
 }
@@ -65,7 +65,7 @@ export async function submitRecommendation(item) {
   const { data, error } = await supabase.rpc("rr_publish_recommendation", {
     p: {
       name: item.name,
-      category: item.category,
+      category: item.category==="Alimentação"?"Comida":item.category,
       city: item.city,
       address: item.address,
       instagram: item.instagram,
