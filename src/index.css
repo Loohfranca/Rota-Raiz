@@ -5345,3 +5345,21 @@
 .rr-profile-lightbox-trash{margin-left:auto;color:var(--on-surface-variant)!important;}
 @media(min-width:1000px){.rr-profile-cities{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));}}
 @media(max-width:620px){.rr-profile-cities{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}.rr-profile-city-header h3{font-size:13px;}.rr-profile-city-header{padding:8px;}.rr-profile-thumbnail-grid{gap:3px;padding:0 5px 5px;}.rr-profile-thumbnail-name{font-size:10px;top:5px;left:4px;}.rr-profile-thumbnail-name svg{width:10px;}.rr-profile-thumbnail-likes{font-size:10px;}.rr-profile-city .rr-profile-gallery-select{font-size:10px;}}
+
+/* Grade única de fotos: sem cards, sem blocos por cidade. */
+.rr-profile-flat-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px;width:100%;align-items:stretch;}
+.rr-profile-flat-tile{position:relative;aspect-ratio:1/1;min-width:0;overflow:hidden;padding:0;border:0;border-radius:0;background:var(--surface-container-high);display:block;}
+.rr-profile-flat-tile>img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .15s;}
+.rr-profile-flat-tile:hover>img{transform:scale(1.03);}
+.rr-profile-flat-tile:after{content:"";position:absolute;left:0;right:0;top:0;height:37%;background:linear-gradient(rgba(0,0,0,.53),transparent);pointer-events:none;}
+.rr-profile-flat-location{position:absolute;z-index:1;top:8px;left:8px;right:7px;display:flex;gap:4px;align-items:flex-start;font-size:clamp(10px,1.6vw,13px);font-weight:700;color:#fff;text-shadow:0 1px 5px rgba(0,0,0,.65);line-height:1.25;text-align:left;overflow-wrap:anywhere;}
+.rr-profile-flat-location svg{flex-shrink:0;margin-top:1px;}
+.rr-profile-upload-area{display:grid;gap:12px;}
+.rr-profile-upload-trigger{width:max-content;display:inline-flex;align-items:center;gap:8px;}
+.rr-profile-upload-panel{display:grid;gap:10px;padding:15px;border:1px solid var(--border-color);border-radius:14px;background:var(--surface-container-lowest);max-width:520px;}
+.rr-profile-upload-destination{display:grid;gap:7px;font-size:13px;font-weight:700;}
+.rr-profile-upload-destination select{min-height:44px;padding:9px 12px;border:1px solid var(--border-color);border-radius:10px;color:var(--on-surface);background:var(--surface-container-lowest);width:100%;}
+.rr-profile-upload-hint{font-size:12px;color:var(--on-surface-variant);line-height:1.5;margin:0;}
+.rr-profile-upload-panel .rr-profile-batch-picker{padding:0;border:0;}
+@media(min-width:900px){.rr-profile-flat-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;}}
+@media(max-width:600px){.rr-profile-flat-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:2px;}.rr-profile-flat-location{font-size:10px;top:5px;left:4px;right:3px;gap:2px;}.rr-profile-flat-location svg{width:10px;height:10px;}}
