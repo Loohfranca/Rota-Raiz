@@ -86,7 +86,7 @@ export default function CommunityView({ onRoute, onSavePlace, user, api = liveCo
   },[items,user?.id,api]);
   const list = items.filter(
     (i) =>
-      (category === "Todos" || i.category === category) &&
+      (category === "Todos" || i.category === category || (category==="Alimentação" && i.category==="Comida")) &&
       `${i.name} ${i.city} ${i.address} ${i.author_name || ""}`
         .toLocaleLowerCase()
         .includes(query.toLocaleLowerCase()),
