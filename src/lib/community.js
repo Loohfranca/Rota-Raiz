@@ -42,7 +42,7 @@ export async function getRecommendations() {
   const { data, error } = await supabase
     .from("community_recommendations")
     .select(
-      "id,name,category,city,address,instagram,note,author_name,user_id,created_at,reviewed_at,image_url,source_url,editorial",
+      "id,name,category,city,address,instagram,note,author_name,user_id,created_at,reviewed_at,image_url,source_url,editorial,photo_credit,photo_source_url",
     )
     .eq("status", "approved")
     .order("created_at", { ascending: false });
