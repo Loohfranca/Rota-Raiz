@@ -37,6 +37,13 @@ export function safeInstagram(value) {
   }
 }
 
+export async function getPublicAuthors(ids) {
+ if(!supabase||!ids?.length)return {};
+ const {data,error}=await supabase.from("rr_profiles").select("user_id,display_name,avatar_url").in("user_id",ids);
+ if(error)return {};
+ return Object.fromEntries((data||[]).map(x=>[x.user_id,x]));
+}
+
 export async function getRecommendations() {
   if (!supabase) return { items: [], available: false };
   const { data, error } = await supabase
