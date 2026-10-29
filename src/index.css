@@ -5181,3 +5181,7 @@
 .rr-admin-simulator-inputs input{width:100%;accent-color:var(--secondary);cursor:pointer;}
 .rr-admin-simulator-result{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:18px;font-family:var(--font-headline);}
 .rr-admin-simulator-result strong{background:var(--secondary-container);border-radius:10px;padding:10px 14px;color:var(--on-surface);}
+
+.rr-community-guidelines {padding:10px 14px;margin:0 0 16px;border:1px solid var(--border-color);border-radius:13px;background:var(--surface-container-lowest);}
+.rr-community-guidelines summary{color:var(--on-surface);font-size:13px;font-weight:700;min-height:29px;display:flex;align-items:center;gap:7px;list-style:revert;}
+.rr-community-guidelines p{margin:9px 0 0;font-size:12px;line-height:1.65;color:var(--on-surface-variant);}
