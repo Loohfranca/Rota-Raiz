@@ -7,6 +7,14 @@ export async function saveProfile(id,details){
  const {data,error}=await supabase.from("rr_profiles").update({display_name:details.display_name.trim().slice(0,60),bio:details.bio.trim().slice(0,240),instagram:details.instagram.trim().replace(/^@/,"").slice(0,30)}).eq("user_id",id).select().single();
  errorOf(error,"Erro ao salvar perfil.");return data;
 }
+export async function getTravelerRecommendations(userId) {
+ const {data,error}=await supabase.from("community_recommendations")
+   .select("id,name,city,category,note,image_url,created_at")
+   .eq("user_id",userId).eq("status","approved")
+   .order("created_at",{ascending:false}).limit(100);
+ errorOf(error,"Não foi possível carregar as indicações.");
+ return data||[];
+}
 export async function getProfileCities(id){const {data,error}=await supabase.from("rr_profile_cities").select("id,user_id,city,state,created_at").eq("user_id",id).order("created_at",{ascending:false});errorOf(error,"Erro ao carregar cidades.");return data||[];}
 export async function addProfileCity(userId,city,state){const {data,error}=await supabase.from("rr_profile_cities").insert({user_id:userId,city:city.trim(),state:state.trim()}).select().single();errorOf(error,"Não foi possível cadastrar cidade. Verifique se já foi cadastrada.");return data;}
 export async function deleteProfileCity(id){const {error}=await supabase.from("rr_profile_cities").delete().eq("id",id);errorOf(error,"Não foi possível remover a cidade.");}
@@ -42,7 +50,7 @@ export async function uploadProfilePhoto(userId,cityId,file,caption=""){
  const up=await supabase.storage.from(bucket).upload(path,blob,{contentType:"image/webp"});
  errorOf(up.error,"Não foi possível enviar a foto.");
  const {data,error}=await supabase.from("rr_profile_photos").insert({user_id:userId,city_id:cityId,storage_path:path,caption:caption.slice(0,180)}).select().single();
- if(error){await supabase.storage.from(bucket).remove([path]);errorOf(error,"Limite de 6 fotos por cidade ou 15 fotos totais atingido.");}
+ if(error){await supabase.storage.from(bucket).remove([path]);errorOf(error,"Limite de 2 fotos por destino ou 25 fotos totais atingido.");}
  return data;
 }
 export async function deleteProfilePhoto(photo){const {error}=await supabase.from("rr_profile_photos").delete().eq("id",photo.id);errorOf(error,"Erro ao excluir foto.");await supabase.storage.from(bucket).remove([photo.storage_path]);}
