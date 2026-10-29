@@ -1,5 +1,5 @@
 import React,{useCallback,useEffect,useState} from "react";
-import {ArrowLeft,Camera,Heart,MapPin,Plus,Trash2,Pencil,Check,ExternalLink,UserRound,ImagePlus,Compass,ChevronRight,ChevronLeft} from "lucide-react";
+import {ArrowLeft,Camera,Heart,MapPin,Plus,Trash2,Pencil,Check,ExternalLink,UserRound,ImagePlus,Compass,ChevronRight,ChevronLeft,X} from "lucide-react";
 import * as api from "../lib/travelerProfiles";
 import DestinationPhotoPicker from "./DestinationPhotoPicker";
 export default function TravelerProfile({viewer,profileId,onBack,onOpenRecommendation,onOpenCommunity}){
@@ -8,7 +8,7 @@ export default function TravelerProfile({viewer,profileId,onBack,onOpenRecommend
  const [loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState("");
  const [editing,setEditing]=useState(false),[draft,setDraft]=useState({display_name:"",bio:"",instagram:""});
  const [addingCity,setAddingCity]=useState(false),[cityName,setCityName]=useState(""),[stateName,setStateName]=useState("");
- const [galleryIndexes,setGalleryIndexes]=useState({});
+ const [selectedPhoto,setSelectedPhoto]=useState(null);
  const refresh=useCallback(async()=>{
    if(!profileId)return;setError("");setLoading(true);
    try{
@@ -41,7 +41,19 @@ export default function TravelerProfile({viewer,profileId,onBack,onOpenRecommend
    return false;
   }finally{setBusy(false);}
  }
- function changeGallery(cityId,next,total){setGalleryIndexes(old=>({...old,[cityId]:(next+total)%total}));}
+ function navigatePhoto(offset){
+  if(!selectedPhoto)return;
+  const gallery=photos.filter(photo=>photo.city_id===selectedPhoto.cityId);
+  const i=gallery.findIndex(photo=>photo.id===selectedPhoto.photoId);
+  if(i<0||!gallery.length)return;
+  setSelectedPhoto({...selectedPhoto,photoId:gallery[(i+offset+gallery.length)%gallery.length].id});
+ }
+ useEffect(()=>{
+  if(!selectedPhoto)return;
+  function keydown(e){if(e.key==="Escape")setSelectedPhoto(null);else if(e.key==="ArrowLeft")navigatePhoto(-1);else if(e.key==="ArrowRight")navigatePhoto(1);}
+  document.addEventListener("keydown",keydown);
+  return()=>document.removeEventListener("keydown",keydown);
+ },[selectedPhoto,photos]);
  const count=photos.length;
  return <section className="rr-profile-page">
   <div className="rr-profile-back"><button className="small-action" onClick={onBack}><ArrowLeft size={17}/> Voltar</button><span className="eyebrow">PERFIL DO VIAJANTE</span></div>
@@ -83,32 +95,44 @@ export default function TravelerProfile({viewer,profileId,onBack,onOpenRecommend
          <div><h3>{city.city}</h3><p>{city.state||"Brasil"} · {gallery.length} de 2 fotos</p></div>
          {own&&<button className="rr-profile-trash" type="button" disabled={busy} aria-label={"Excluir "+city.city} title="Excluir destino e suas fotos" onClick={()=>{if(window.confirm("Excluir este destino e suas fotos do seu perfil?"))execute(async()=>{for(const p of gallery)await api.deleteProfilePhoto(p);await api.deleteProfileCity(city.id);},"Destino removido.");}}><Trash2 size={16}/></button>}
        </div>
-       {gallery.length>0?(()=>{
-         const idx=Math.min(galleryIndexes[city.id]||0,gallery.length-1);
-         const photo=gallery[idx];
-         return <div className="rr-profile-instagram-gallery">
-           <div className="rr-profile-instagram-image">
+       {gallery.length>0?
+         <div className="rr-profile-thumbnail-grid" aria-label={"Fotos de "+city.city}>
+           {gallery.map(photo=><button key={photo.id} type="button" className="rr-profile-thumbnail" onClick={()=>setSelectedPhoto({cityId:city.id,photoId:photo.id})} aria-label={"Abrir foto de "+city.city}>
              <img src={photo.url} alt={photo.caption||"Foto de "+city.city} loading="lazy"/>
-             <div className="rr-profile-instagram-gradient"/>
-             <span className="rr-profile-photo-location"><MapPin size={15}/>{city.city}{city.state?", "+city.state:""}</span>
-             {gallery.length>1&&<>
-               <button type="button" className="rr-profile-gallery-arrow prev" aria-label={"Foto anterior de "+city.city} onClick={()=>changeGallery(city.id,idx-1,gallery.length)}><ChevronLeft size={21}/></button>
-               <button type="button" className="rr-profile-gallery-arrow next" aria-label={"Próxima foto de "+city.city} onClick={()=>changeGallery(city.id,idx+1,gallery.length)}><ChevronRight size={21}/></button>
-               <span className="rr-profile-gallery-count">{idx+1}/{gallery.length}</span>
-             </>}
-           </div>
-           <div className="rr-profile-gallery-actions">
-             <button type="button" aria-label={photo.liked?"Descurtir foto":"Curtir foto"} aria-pressed={photo.liked} disabled={busy} onClick={()=>like(photo)}><Heart size={22} fill={photo.liked?"currentColor":"none"}/> <strong>{photo.likes}</strong></button>
-             {gallery.length>1&&<div className="rr-profile-gallery-dots" aria-label="Fotos do destino">{gallery.map((item,i)=><button key={item.id} type="button" aria-label={"Ver foto "+(i+1)} aria-current={idx===i?"true":undefined} onClick={()=>changeGallery(city.id,i,gallery.length)}/>)}</div>}
-             {own&&<button className="rr-profile-gallery-delete" type="button" disabled={busy} onClick={()=>{if(window.confirm("Excluir esta foto?"))execute(()=>api.deleteProfilePhoto(photo),"Foto excluída.");}} aria-label="Excluir foto"><Trash2 size={17}/></button>}
-           </div>
-           {photo.caption&&<p className="rr-profile-gallery-caption">{photo.caption}</p>}
-         </div>;
-       })():<div className="rr-profile-city-placeholder rr-profile-empty-gallery"><MapPin size={26}/><span>Nenhuma foto publicada neste destino</span></div>}
+             <span className="rr-profile-thumbnail-name"><MapPin size={12}/>{city.city}</span>
+             <span className="rr-profile-thumbnail-likes"><Heart size={13} fill={photo.liked?"currentColor":"none"}/>{photo.likes}</span>
+           </button>)}
+         </div>
+       :<div className="rr-profile-city-placeholder rr-profile-empty-gallery"><MapPin size={26}/><span>Nenhuma foto publicada neste destino</span></div>}
        {own&&gallery.length<2&&count<25&&<DestinationPhotoPicker key={city.id} city={city.city} remaining={Math.min(2-gallery.length,25-count)} busy={busy} onPublish={(files,caption)=>publishCityPhotos(city,files,caption)}/>}
      </article>;
    })}
    </div>
+   {selectedPhoto&&(()=>{
+     const city=cities.find(c=>c.id===selectedPhoto.cityId);
+     const gallery=photos.filter(p=>p.city_id===selectedPhoto.cityId);
+     const idx=gallery.findIndex(p=>p.id===selectedPhoto.photoId);
+     const photo=gallery[idx];
+     if(!photo)return null;
+     return <div className="rr-profile-lightbox-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setSelectedPhoto(null);}}>
+       <section role="dialog" aria-modal="true" aria-label={"Galeria de "+(city?.city||"destino")} className="rr-profile-lightbox">
+         <div className="rr-profile-lightbox-head"><strong><MapPin size={16}/>{city?.city}{city?.state?", "+city.state:""}</strong><button type="button" className="rr-profile-lightbox-close" onClick={()=>setSelectedPhoto(null)} aria-label="Fechar foto"><X size={20}/></button></div>
+         <div className="rr-profile-lightbox-photo">
+           <img src={photo.url} alt={photo.caption||"Foto de "+city?.city}/>
+           {gallery.length>1&&<>
+             <button type="button" className="rr-profile-gallery-arrow prev" aria-label="Foto anterior" onClick={()=>navigatePhoto(-1)}><ChevronLeft size={22}/></button>
+             <button type="button" className="rr-profile-gallery-arrow next" aria-label="Próxima foto" onClick={()=>navigatePhoto(1)}><ChevronRight size={22}/></button>
+             <span className="rr-profile-gallery-count">{idx+1}/{gallery.length}</span>
+           </>}
+         </div>
+         <div className="rr-profile-lightbox-actions">
+           <button type="button" aria-label={photo.liked?"Descurtir foto":"Curtir foto"} aria-pressed={photo.liked} disabled={busy} onClick={()=>like(photo)}><Heart size={21} fill={photo.liked?"currentColor":"none"}/>{photo.likes} curtidas</button>
+           {photo.caption&&<p>{photo.caption}</p>}
+           {own&&<button type="button" disabled={busy} className="rr-profile-lightbox-trash" onClick={()=>{if(window.confirm("Excluir esta foto?"))execute(()=>api.deleteProfilePhoto(photo),"Foto excluída.");setSelectedPhoto(null);}} aria-label="Excluir foto"><Trash2 size={19}/></button>}
+         </div>
+       </section>
+     </div>;
+   })()}
    <div className="rr-profile-section-title rr-profile-recommendation-heading">
       <div><span className="eyebrow">DICAS PARA OUTROS VIAJANTES</span><h2>Indicações</h2><p>Os lugares que {own?"você compartilhou":"este viajante compartilhou"} na Comunidade.</p></div>
       {own&&<button type="button" className="small-action" onClick={onOpenCommunity}><Plus size={16}/> Indicar lugar</button>}
