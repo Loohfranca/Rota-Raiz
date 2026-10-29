@@ -1,13 +1,14 @@
-import React,{useState} from 'react';
-import { Plus,Plane,MapPin,ArrowRight,Check,MessageSquare,Pencil,Trash2,Download } from 'lucide-react';
+import React,{useState,useEffect} from 'react';
+import { Plus,Plane,MapPin,ArrowRight,Check,MessageSquare,Pencil,Trash2,Download,Bookmark,CalendarDays } from 'lucide-react';
 import Sheet from './Sheet';
 import { AIRPORTS } from '../data/travelNetwork';
 import { BEACHES } from '../data/beachCatalog';
 import { TRANSPORTS,ZONES,legTiming,durationLabel,orderedLegs,displayLocal,placeVisit,validateItinerary } from '../lib/itinerary';
 const EXPERIENCE_TYPES=['Praia','Restaurante','Passeio','Hospedagem','Outro'];
 const emptySegment=()=>({from:'',to:'',departure:'',arrival:'',fromZone:'America/Sao_Paulo',toZone:'America/Sao_Paulo'});
-export default function ItineraryView({store,onOpenPlace,onRoute}) {
+export default function ItineraryView({store,onOpenPlace,onRoute,experienceOpenRequest=0}) {
   const [sheet,setSheet]=useState(null),[error,setError]=useState(''),[exporting,setExporting]=useState(false),[deleted,setDeleted]=useState(null),[view,setView]=useState('transport');
+  useEffect(()=>{if(experienceOpenRequest>0)setView('experiences');},[experienceOpenRequest]);
   const plan=store.plans.find(p=>p.id===store.activeId);
   async function save(next) { try{await store.save(next);setError('');return true;}catch(e){setError(e.message);return false;} }
   async function pdf() {setExporting(true);try{const {downloadItineraryPdf}=await import('../lib/itineraryPdf');downloadItineraryPdf(plan);setError('');}catch(e){setError(e.message||'Não foi possível gerar o PDF.');}finally{setExporting(false);} }
@@ -32,7 +33,21 @@ export default function ItineraryView({store,onOpenPlace,onRoute}) {
       </article>;})}</div></section>}
       {view==='experiences'&&<section id="itinerary-experiences" className="itinerary-section"><div className="section-heading"><div><p className="eyebrow">O QUE VOCÊ VIVEU</p><h2>Suas experiências</h2></div><button className="small-action" onClick={()=>{setError('');setSheet({type:'experience',plan});}}><Plus size={17}/><span>Adicionar</span></button></div><p className="catalog-context">Praias, restaurantes, passeios e suas lembranças. Adicione aqui ou salve um lugar no Explorar.</p>
       {!plan.visits.length&&<p className="quiet-empty">Registre o primeiro lugar que conheceu ou quer conhecer nesta viagem.</p>}
-      <div className="itinerary-places">{plan.visits.map(visit=><article key={visit.id} className="itinerary-place"><div className="itinerary-place-heading"><MapPin size={20}/><div><h3>{visit.title}</h3><p>{visit.category ? `${visit.category}${visit.location ? ' · ' : ''}` : ''}{visit.location}</p></div><span className={`ticket-status ${visit.visited?'is-done':''}`}>{visit.visited?'Já fui':'Quero ir'}</span></div>{visit.date&&<p className="visit-date">{visit.visited?'Visita':'Planejado para'}: {visit.date.split('-').reverse().join('/')}</p>}{visit.comment&&<p className="itinerary-comment">{visit.comment}</p>}<div className="itinerary-place-actions"><button disabled={store.busy} onClick={()=>save({...plan,visits:plan.visits.map(v=>v.id===visit.id?{...v,visited:!v.visited}:v)})}><Check size={16}/>{visit.visited?'Voltar a quero ir':'Marcar como já fui'}</button><button aria-label={`Comentar ou editar ${visit.title}`} onClick={()=>{setError('');setSheet({type:'visit',plan,visit});}}><MessageSquare size={16}/>Comentar / editar</button><button onClick={()=>onOpenPlace(BEACHES.find(p=>p.id===visit.placeId)||{...visit,id:visit.placeId,category:'Passeios'})}>Ver detalhes<ArrowRight size={15}/></button><button onClick={()=>onRoute(visit.address||`${visit.title}, ${visit.location}`)}>Como chegar</button></div></article>)}</div></section>}
+      <div className="itinerary-places">{plan.visits.map(visit=><article key={visit.id} className={`itinerary-place experience-card ${visit.visited?'experience-visited':''}`}>
+        <div className="itinerary-place-heading"><span className="experience-pin"><MapPin size={19}/></span><div><h3>{visit.title}</h3><p>{visit.category ? `${visit.category}${visit.location ? ' · ' : ''}` : ''}{visit.location}</p></div><span className={`experience-status ${visit.visited?'is-visited':'is-planned'}`}>{visit.visited?<Check size={13}/>:<Bookmark size={13}/>} {visit.visited?'Visitado':'Na lista'}</span></div>
+        {visit.date&&<p className="visit-date"><CalendarDays size={14}/>{visit.visited?'Visita':'Planejado'} · {visit.date.split('-').reverse().join('/')}</p>}
+        {visit.comment&&<div className="experience-memory"><MessageSquare size={17}/><p>{visit.comment}</p></div>}
+        <div className="experience-card-footer">
+          <div className="experience-status-switch" role="group" aria-label={`Situação de ${visit.title}`}>
+            <button type="button" aria-pressed={!visit.visited} disabled={store.busy} onClick={()=>visit.visited&&save({...plan,visits:plan.visits.map(v=>v.id===visit.id?{...v,visited:false}:v)})}><Bookmark size={15}/> Quero ir</button>
+            <button type="button" aria-pressed={!!visit.visited} disabled={store.busy} onClick={()=>!visit.visited&&save({...plan,visits:plan.visits.map(v=>v.id===visit.id?{...v,visited:true}:v)})}><Check size={16}/> Já fui</button>
+          </div>
+          <div className="experience-quick-actions">
+            <button type="button" className="experience-note-button" aria-label={`Editar experiência e anotação de ${visit.title}`} onClick={()=>{setError('');setSheet({type:'visit',plan,visit});}}><Pencil size={16}/>{visit.comment?'Editar lembrança':'Adicionar anotação'}</button>
+            <button type="button" onClick={()=>onRoute(visit.address||`${visit.title}, ${visit.location}`)}><ArrowRight size={16}/> Como chegar</button>
+          </div>
+        </div>
+      </article>)}</div></section>}
       <div className="itinerary-export"><button className="primary-action" disabled={exporting||store.busy} onClick={pdf}><Download size={18}/>{exporting?'Gerando PDF…':'Baixar minha viagem em PDF'}</button><p>Trechos, conexões, lugares visitados e planos, com seus comentários.</p></div>
     </>}
     {sheet?.type==='delete'&&<Sheet title="Excluir viagem?" onClose={()=>setSheet(null)}><p>Excluir <b>{sheet.plan.title}</b> e seus trechos, visitas e comentários?</p><p className="field-help">Os gastos em Na conta e os lugares salvos no Explorar serão mantidos. Você pode desfazer a exclusão nesta tela.</p>{error&&<p role="alert" className="form-error">{error}</p>}<div className="itinerary-delete-confirm"><button className="small-action" disabled={store.busy} onClick={()=>setSheet(null)}>Cancelar</button><button className="danger-action" disabled={store.busy} onClick={async()=>{try{const removed=await store.remove(sheet.plan);setDeleted(removed);setSheet(null);setError('');}catch(e){setError(e.message);}}}><Trash2 size={17}/>{store.busy?'Excluindo…':'Excluir esta viagem'}</button></div></Sheet>}
@@ -65,7 +80,7 @@ export function LegEditor({plan,leg,busy,onSave,onClose}) {
 }
 function VisitEditor({plan,visit,busy,onSave,onClose}) {
   const [visited,setVisited]=useState(visit?.visited??true),[error,setError]=useState('');
-  return <Sheet title={visit?'Editar experiência':'Nova experiência'} onClose={onClose}><form className="compact-form" onSubmit={async e=>{
+  return <Sheet title={visit?'Editar lugar e anotação':'Nova experiência'} onClose={onClose}><form className="compact-form" onSubmit={async e=>{
     e.preventDefault();try{const form=new FormData(e.currentTarget),id=visit?.id||crypto.randomUUID();
       const next={...visit,id,placeId:visit?.placeId||`manual:${id}`,title:form.get('title').trim(),category:form.get('category'),location:form.get('location').trim(),address:form.get('address').trim(),visited,date:form.get('date'),comment:form.get('comment').trim()};
       await onSave(validateItinerary({...plan,visits:visit?plan.visits.map(v=>v.id===visit.id?next:v):[...plan.visits,next]}));onClose();
@@ -77,7 +92,7 @@ function VisitEditor({plan,visit,busy,onSave,onClose}) {
     <label>Endereço ou referência (opcional)<input name="address" maxLength={500} defaultValue={visit?.address||''} placeholder="Para encontrar o lugar depois"/></label>
     <label>Situação<select value={visited?'visited':'planned'} onChange={e=>setVisited(e.target.value==='visited')}><option value="planned">Quero ir</option><option value="visited">Já fui</option></select></label>
     <label>{visited?'Data da visita (opcional)':'Data planejada (opcional)'}<input type="date" name="date" defaultValue={visit?.date||''}/></label>
-    <label>Seu comentário (opcional)<textarea name="comment" maxLength={1000} rows={4} defaultValue={visit?.comment||''} placeholder="Como foi? O que vale lembrar?"/></label>
+    <label>Minha anotação <small>opcional</small><textarea name="comment" maxLength={1000} rows={4} defaultValue={visit?.comment||''} placeholder="O que vale lembrar desse lugar? Dicas, impressões ou detalhes da visita…"/></label>
     {error&&<p role="alert" className="form-error">{error}</p>}<button className="primary-action" disabled={busy}>{busy?'Salvando…':'Salvar registro'}</button>
     {visit&&<button type="button" className="danger-action" disabled={busy} onClick={async()=>{if(!window.confirm('Remover esta experiência do roteiro? Seus salvos no Explorar serão mantidos.'))return;try{await onSave({...plan,visits:plan.visits.filter(v=>v.id!==visit.id)});onClose();}catch(err){setError(err.message);}}}><Trash2 size={16}/>Excluir experiência</button>}
   </form></Sheet>;
