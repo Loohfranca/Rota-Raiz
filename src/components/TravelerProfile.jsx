@@ -57,7 +57,7 @@ export default function TravelerProfile({viewer,profileId,onBack,onOpenRecommend
      const gallery=photos.filter(photo=>photo.city_id===city.id);
      return <article className="rr-profile-city" key={city.id}>
        <div className="rr-profile-city-cover">{gallery[0]?.url?<img src={gallery[0].url} alt={city.city} loading="lazy"/>:<div className="rr-profile-city-placeholder"><MapPin size={30}/></div>}</div>
-       <div className="rr-profile-city-info"><div><h3>{city.city}</h3><p>{city.state||"Brasil"} · {gallery.length} de 6 fotos</p></div>
+       <div className="rr-profile-city-info"><div><h3>{city.city}</h3><p>{city.state||"Brasil"} · {gallery.length} de 2 fotos</p></div>
        {own&&<button className="rr-profile-trash" type="button" disabled={busy} aria-label={"Excluir "+city.city} title="Excluir cidade e suas fotos" onClick={()=>{if(window.confirm("Excluir esta cidade e suas fotos do seu perfil?"))execute(async()=>{for(const p of gallery)await api.deleteProfilePhoto(p);await api.deleteProfileCity(city.id);},"Cidade removida.");}}><Trash2 size={16}/></button>}</div>
        <div className="rr-profile-gallery">
         {gallery.map(photo=><div className="rr-profile-photo" key={photo.id}>
@@ -67,7 +67,7 @@ export default function TravelerProfile({viewer,profileId,onBack,onOpenRecommend
          {photo.caption&&<p>{photo.caption}</p>}
         </div>)}
        </div>
-       {own&&gallery.length<6&&count<15&&<div className="rr-profile-photo-upload"><label className="rr-profile-add-photo"><ImagePlus size={17}/> Adicionar foto<input type="file" disabled={busy} accept="image/png,image/jpeg,image/webp" onChange={e=>{const file=e.target.files?.[0];if(file)execute(()=>api.uploadProfilePhoto(viewer.id,city.id,file,caption),"Foto adicionada.");e.target.value="";}}/></label><input aria-label={"Legenda da próxima foto de "+city.city} maxLength={180} placeholder="Legenda opcional" value={selectedCity===city.id?caption:""} onFocus={()=>{if(selectedCity!==city.id){setSelectedCity(city.id);setCaption("");}}} onChange={e=>{setSelectedCity(city.id);setCaption(e.target.value);}}/></div>}
+       {own&&gallery.length<2&&count<25&&<div className="rr-profile-photo-upload"><label className="rr-profile-add-photo"><ImagePlus size={17}/> Adicionar foto<input type="file" disabled={busy} accept="image/png,image/jpeg,image/webp" onChange={e=>{const file=e.target.files?.[0];if(file)execute(()=>api.uploadProfilePhoto(viewer.id,city.id,file,caption),"Foto adicionada.");e.target.value="";}}/></label><input aria-label={"Legenda da próxima foto de "+city.city} maxLength={180} placeholder="Legenda opcional" value={selectedCity===city.id?caption:""} onFocus={()=>{if(selectedCity!==city.id){setSelectedCity(city.id);setCaption("");}}} onChange={e=>{setSelectedCity(city.id);setCaption(e.target.value);}}/></div>}
      </article>;
    })}
    </div>
@@ -87,7 +87,7 @@ export default function TravelerProfile({viewer,profileId,onBack,onOpenRecommend
          <ChevronRight size={18} aria-hidden="true"/>
        </button>)}</div>
      :<div className="rr-profile-empty"><Compass size={26}/><p>{own?"Você ainda não indicou nenhum lugar. Compartilhe sua primeira dica na Comunidade.":"Este viajante ainda não publicou indicações."}</p>{own&&<button type="button" className="small-action" onClick={onOpenCommunity}>Ir à Comunidade</button>}</div>}
-   {own&&<p className="rr-profile-limits">Você pode compartilhar até 6 fotos por cidade e 15 fotos de viagem no total, além da foto de perfil. Fotos públicas recebem apenas curtidas; comentários ficam nas indicações da Comunidade.</p>}
+   {own&&<p className="rr-profile-limits">Você pode compartilhar até 2 fotos por destino e 25 fotos de viagem no total, além da foto de perfil. Fotos públicas recebem apenas curtidas; comentários ficam nas indicações da Comunidade.</p>}
   </>}
  </section>;
 }
