@@ -1,8 +1,8 @@
 import React from "react";
-import { Compass, WifiOff, Leaf, LogOut, Sun, Moon, ShieldCheck } from "lucide-react";
+import { Compass, WifiOff, Leaf, LogOut, Sun, Moon, ShieldCheck, UserRound } from "lucide-react";
 import PhotoCredits from "./PhotoCredits";
 import { TABS } from "./BottomNav";
-export default function Navbar({ activeTab, onChangeTab, isOnline, user, onSignOut, theme, onThemeChange, isAdmin, onOpenAdmin, adminAlerts=0 }) {
+export default function Navbar({ activeTab, onChangeTab, isOnline, user, onSignOut, theme, onThemeChange, isAdmin, onOpenAdmin, adminAlerts=0, onOpenProfile }) {
   return (
     <header className="app-header">
       <div className="nav-shell">
@@ -34,6 +34,7 @@ export default function Navbar({ activeTab, onChangeTab, isOnline, user, onSignO
         <div className="nav-status-actions"><PhotoCredits/>
         {isAdmin&&<button className="rr-admin-entry" type="button" onClick={onOpenAdmin} title="Painel administrativo" aria-label="Abrir Central Administrativa" aria-current={activeTab==="admin"?"page":undefined}><ShieldCheck size={18}/><span>Admin</span>{adminAlerts>0&&<b aria-label={`${adminAlerts} ocorrência(s) para acompanhar`}>{adminAlerts>99?"99+":adminAlerts}</b>}</button>}
         <button className="theme-toggle" type="button" onClick={onThemeChange} aria-label={theme==="dark"?"Ativar tema claro":"Ativar tema escuro"} title={theme==="dark"?"Tema claro":"Tema escuro"} aria-pressed={theme==="dark"}>{theme==="dark"?<Sun size={19}/>:<Moon size={19}/>}<span>{theme==="dark"?"Claro":"Escuro"}</span></button>
+        {user && <button className="rr-profile-nav-button" type="button" onClick={onOpenProfile}><UserRound size={18}/><span>Meu perfil</span></button>}
         {user && (
           <button
             type="button"
