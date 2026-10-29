@@ -5489,3 +5489,375 @@ button.primary-action,
 :root[data-theme="dark"] .rr-login-brand .rr-login-logo-dark{display:block;}
 .rr-login-brand p{margin:0 0 4px;}
 @media(max-width:460px){.rr-login-card{padding:25px 20px!important;}.rr-login-brand .rr-login-logo{height:172px;width:190px;margin:-9px auto -7px;}.rr-login-brand p{font-size:10px;}.rr-login-card h1{font-size:23px!important;}}
+
+
+/* Rota Design • revisão de UI mobile (29/10/2026).
+   Escopo: entrada de rota, cards do Explorar e bilhetes da viagem.
+   Sem alterar dados, comportamento de busca ou navegação. */
+
+/* O textarea da busca precisa herdar o fundo do campo, não virar uma caixa
+   branca pelo seletor global :where(...):not(...):not(...) aplicado no tema. */
+.route-search-card .place-field,
+.route-fields .place-field {
+  background: var(--surface-container-low);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+}
+.route-search-card .place-field .place-value textarea,
+.route-search-card .place-field .place-value textarea:focus,
+.route-fields .place-field .place-value textarea {
+  display: block;
+  width: 100%;
+  padding: 0;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  appearance: none;
+  -webkit-appearance: none;
+  color: var(--on-surface);
+  -webkit-text-fill-color: var(--on-surface);
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 650;
+  line-height: 1.4;
+  outline: none;
+}
+.route-search-card .place-field .place-value textarea::placeholder,
+.route-fields .place-field .place-value textarea::placeholder {
+  color: var(--on-surface-variant);
+  -webkit-text-fill-color: var(--on-surface-variant);
+  opacity: 1;
+  font-weight: 450;
+}
+.route-search-card .place-field:focus-within,
+.route-fields .place-field:focus-within {
+  border-color: var(--secondary);
+  outline: 2px solid var(--secondary);
+  outline-offset: 2px;
+}
+.route-search-card .place-field .place-value textarea:-webkit-autofill,
+.route-search-card .place-field .place-value textarea:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px var(--surface-container-low) inset !important;
+  -webkit-text-fill-color: var(--on-surface) !important;
+}
+:root[data-theme="dark"] .route-search-card .place-field .place-value textarea,
+:root[data-theme="dark"] .route-fields .place-field .place-value textarea {
+  background: transparent !important;
+  color: var(--on-surface);
+  -webkit-text-fill-color: var(--on-surface);
+}
+.route-search-card .place-value label {
+  font-weight: 700;
+  letter-spacing: .08em;
+  color: var(--on-surface-variant);
+}
+
+/* Hierarquia tipográfica mais definida, sem aumentar o texto corrido. */
+.route-page .page-heading h1,
+.route-page .page-heading h1 span,
+.page-heading h1,
+.itinerary-page .travel-heading h1,
+.itinerary-page .section-heading h2 {
+  font-family: var(--font-headline);
+  font-weight: 800;
+  letter-spacing: -.045em;
+  line-height: 1.09;
+  color: var(--on-surface);
+}
+.page-heading h1 { font-size: clamp(31px, 4vw, 44px); }
+.itinerary-page .travel-heading h1 { font-size: clamp(30px, 4.5vw, 39px); }
+.itinerary-page .section-heading h2 { font-size: clamp(26px, 3vw, 32px); }
+.page-description,.itinerary-page .catalog-context {
+  font-family: var(--font-body);
+  color: var(--on-surface-variant);
+  line-height: 1.52;
+}
+.itinerary-page .journey-ticket {
+  background: var(--surface-container-lowest);
+  border-color: var(--border-color);
+  box-shadow: var(--shadow);
+}
+.itinerary-page .ticket-top {
+  background: var(--secondary-container);
+  color: var(--on-surface);
+  font-weight: 700;
+  letter-spacing: -.01em;
+}
+/* Planejado: terracota fechado + branco, em vez de bege pálido. */
+.itinerary-page .ticket-status:not(.is-done) {
+  background: #994322;
+  color: #fff;
+  border: 1px solid #994322;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: .015em;
+}
+:root[data-theme="dark"] .itinerary-page .ticket-status:not(.is-done) {
+  background: #AD4C25;
+  border-color: #AD4C25;
+  color: #fff;
+}
+.itinerary-page .ticket-status.is-done {
+  background: var(--secondary);
+  color: var(--on-secondary);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+.itinerary-page .ticket-points h3 {
+  font-family: var(--font-headline);
+  font-weight: 750;
+  font-size: clamp(18px, 2.5vw, 22px);
+  letter-spacing: -.035em;
+  line-height: 1.2;
+  color: var(--on-surface);
+}
+.itinerary-page .ticket-points small {
+  color: var(--on-surface-variant);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .065em;
+}
+.itinerary-page .ticket-points b {
+  color: var(--on-surface);
+  font-weight: 750;
+  font-size: 13px;
+}
+.itinerary-page .ticket-bottom { color: var(--on-surface); }
+.itinerary-page .ticket-bottom .small-action { font-weight: 750; }
+
+/* Explorar: card de indicação e card de catálogo com a mesma densidade.
+   Ambos mantêm os seus botões de abrir e de salvar. */
+.explore-community-copy strong,
+.beach-card h3 {
+  font-family: var(--font-headline);
+  font-weight: 800;
+  letter-spacing: -.025em;
+  color: var(--on-surface);
+}
+.explore-community-place,
+.beach-grid .beach-card {
+  background: var(--surface-container-lowest);
+  border-color: var(--border-color);
+  box-shadow: 0 4px 15px rgba(40, 48, 32, .04);
+}
+:root[data-theme="dark"] .explore-community-place,
+:root[data-theme="dark"] .beach-grid .beach-card {
+  background: var(--surface-container-lowest);
+  border-color: var(--border-color);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, .15);
+}
+.explore-community-copy > span,
+.beach-card-body > p { color: var(--on-surface-variant); }
+.explore-community-copy strong { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.beach-card-open { font-family: inherit; font-weight: inherit; text-align: left; color: inherit; }
+
+@media (max-width: 700px) {
+  .explore-community-grid { grid-template-columns: minmax(0,1fr); gap: 12px; }
+  .explore-community-place {
+    display: grid;
+    grid-template-columns: 92px minmax(0,1fr) 16px;
+    align-items: center;
+    column-gap: 12px;
+    height: 150px;
+    min-height: 150px;
+    padding: 11px;
+    border-radius: 19px;
+    overflow: hidden;
+  }
+  .explore-community-photo { width: 92px; height: 120px; border-radius: 12px; }
+  .explore-community-copy { min-width: 0; gap: 4px; overflow: hidden; }
+  .explore-community-copy strong { font-size: 17px; line-height: 1.16; }
+  .explore-community-copy > span {
+    font-size: 12px;
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .explore-community-copy small {
+    display: block;
+    font-size: 11px;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .explore-community-place > svg { width: 16px; color: var(--secondary); }
+
+  .beach-grid { grid-template-columns: minmax(0,1fr); gap: 12px; }
+  .beach-grid .beach-card {
+    display: grid;
+    grid-template-columns: 116px minmax(0,1fr);
+    height: 150px;
+    min-height: 150px;
+    border-radius: 19px;
+    overflow: hidden;
+  }
+  .beach-grid .beach-card:hover { transform: none; }
+  .beach-grid .beach-card-visual {
+    width: 116px;
+    height: 150px;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .beach-grid .beach-card-photo,
+  .beach-grid .beach-card-photo img,
+  .beach-grid .beach-card-photo .landscape-placeholder {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .beach-grid .beach-location,
+  .beach-grid .card-photo-count { display: none; }
+  .beach-grid .save-beach {
+    top: 7px;
+    right: 7px;
+    width: 37px;
+    height: 37px;
+    min-width: 37px;
+    min-height: 37px;
+    background: var(--surface-container-lowest);
+    color: var(--secondary);
+    box-shadow: 0 2px 9px rgba(0, 0, 0, .14);
+  }
+  .beach-grid .save-beach.is-saved {
+    background: var(--secondary);
+    color: var(--on-secondary);
+  }
+  .beach-grid .beach-card-body {
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    padding: 13px 12px;
+    justify-content: center;
+    gap: 5px;
+  }
+  .beach-grid .beach-card-region {
+    color: var(--on-surface-variant);
+    font-size: 11px;
+    font-weight: 650;
+    line-height: 1.3;
+  }
+  .beach-grid .beach-card h3 {
+    font-size: 17px;
+    line-height: 1.16;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .beach-grid .beach-card-body > p {
+    font-size: 12px;
+    line-height: 1.35;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .beach-grid .beach-card-facts {
+    margin: 2px 0 0;
+    gap: 0;
+    font-size: 11px;
+    color: var(--secondary);
+    line-height: 1.25;
+  }
+  .beach-grid .beach-card-facts > span { flex-wrap: nowrap; }
+  .beach-grid .beach-card-facts small { white-space: nowrap; color: var(--on-surface-variant); }
+  .beach-grid .beach-details { display: none; }
+}
+@media (max-width: 390px) {
+  .explore-community-place { grid-template-columns: 76px minmax(0,1fr) 16px; gap: 9px; }
+  .explore-community-photo { width: 76px; height: 120px; }
+  .beach-grid .beach-card { grid-template-columns: 100px minmax(0,1fr); }
+  .beach-grid .beach-card-visual { width: 100px; }
+}
+
+/* Rota Design: perfil leve sem cards em volta da identidade ou álbum */
+.rr-profile-page { gap: 22px; }
+.rr-profile-hero,.rr-profile-hero:hover,
+:root[data-theme="dark"] .rr-profile-hero {
+ border:0;box-shadow:none;background:transparent;border-radius:0;overflow:visible;
+}
+.rr-profile-hero-inner,
+:root[data-theme="dark"] .rr-profile-hero-inner {
+ padding:10px 0 15px;gap:15px;background:transparent;
+}
+.rr-profile-title h1{font-family:var(--font-headline);font-weight:800;font-size:clamp(26px,4vw,35px);}
+.rr-profile-title p{line-height:1.5;}
+.rr-profile-numbers {
+ padding:14px 0 0;justify-content:flex-start;gap:12px 24px;
+ border-top:1px solid var(--border-color);
+}
+.rr-profile-numbers span{font-size:12px;white-space:nowrap;}
+.rr-profile-numbers b{font-size:16px;}
+.rr-profile-section-title{margin:10px 0 0;}
+.rr-profile-section-title h2{font-family:var(--font-headline);font-weight:800;}
+.rr-profile-flat-grid,
+:root[data-theme="dark"] .rr-profile-flat-grid {
+ width:100%;background:transparent;gap:3px;align-items:start;
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+}
+.rr-profile-flat-tile {background:var(--surface-container-low);aspect-ratio:1/1;min-width:0;display:block;}
+.rr-profile-flat-tile>img{width:100%;height:100%;object-fit:cover;}
+.rr-profile-recommendation-heading { margin-top:46px;padding-top:27px;border-top:1px solid var(--border-color);gap:15px; }
+.rr-profile-recommendations{margin-top:8px;}
+.rr-profile-experiences-controls{margin-top:6px;display:grid;gap:10px;}
+.rr-profile-experience-toggle {
+ display:flex;align-items:center;justify-content:space-between;gap:14px;
+ width:100%;padding:12px 0;min-height:45px;text-align:left;
+ color:var(--secondary);font-size:14px;font-weight:750;
+ border-bottom:1px solid var(--border-color);
+}
+.rr-profile-experience-toggle span{display:flex;align-items:center;gap:8px;}
+.rr-profile-experience-toggle small{font-weight:550;color:var(--on-surface-variant);}
+.rr-profile-experience-toggle .rr-rotated,.rr-profile-experience-row-button .rr-rotated{transform:rotate(90deg);}
+.rr-profile-experiences-list{display:grid;gap:0;border-bottom:1px solid var(--border-color);}
+.rr-profile-experience-row{border-bottom:1px solid var(--border-color);}
+.rr-profile-experience-row:last-child{border-bottom:0;}
+.rr-profile-experience-row-button{
+ display:flex;align-items:center;justify-content:space-between;gap:16px;
+ text-align:left;width:100%;min-height:59px;padding:10px 2px;color:var(--on-surface);
+}
+.rr-profile-experience-row-button span{display:grid;gap:3px;min-width:0;}
+.rr-profile-experience-row-button strong{font-size:14px;font-weight:750;}
+.rr-profile-experience-row-button small{font-size:12px;color:var(--on-surface-variant);}
+.rr-profile-experience-details{padding:8px 0 16px;display:grid;gap:10px;}
+.rr-profile-experience-details p{font-size:12px;color:var(--on-surface-variant);margin:2px 0;}
+.rr-profile-experience-miniatures{display:flex;gap:6px;flex-wrap:wrap;}
+.rr-profile-experience-miniatures button{width:78px;height:78px;overflow:hidden;border-radius:9px;}
+.rr-profile-experience-miniatures img{width:100%;height:100%;object-fit:cover;}
+.rr-profile-experience-related-title{font-size:12px;color:var(--on-surface-variant);}
+.rr-profile-experience-related{display:flex;align-items:center;justify-content:space-between;text-align:left;padding:7px 0;color:var(--secondary);font-size:13px;font-weight:650;}
+.rr-profile-upload-panel{box-shadow:none;}
+/* Na conta: botões são ações separadas, nunca coladas ou sobrepostas */
+.accounts-page .travel-empty{display:flex;flex-direction:column;align-items:center;gap:0;padding:30px 18px 28px;}
+.accounts-page .travel-empty p{margin-bottom:20px;}
+.accounts-page .travel-empty > .primary-action,
+.accounts-page .travel-empty > .legacy-empty-action {
+ display:inline-flex;align-items:center;justify-content:center;
+ position:static;transform:none;margin:0;flex:none;
+ width:fit-content;max-width:100%;min-height:48px;padding:12px 17px;
+ line-height:1.3;text-align:center;white-space:normal;
+}
+.accounts-page .travel-empty > .legacy-empty-action{margin-top:15px;}
+@media(max-width:480px){
+ .rr-profile-page{gap:19px;}
+ .rr-profile-hero-inner{padding:6px 0 12px;}
+ .rr-profile-numbers{gap:10px 16px;}
+ .rr-profile-flat-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:3px;}
+ .rr-profile-recommendation-heading{margin-top:39px;padding-top:24px;}
+ .accounts-page .travel-empty > .primary-action,
+ .accounts-page .travel-empty > .legacy-empty-action {width:100%;max-width:290px;}
+ .accounts-page .travel-empty > .legacy-empty-action{margin-top:16px;}
+}
