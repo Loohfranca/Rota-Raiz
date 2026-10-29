@@ -1,8 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { Heart, MessageCircle, Instagram, MapPin, ArrowUpRight, Bookmark, ChevronRight, Image as ImageIcon, Trash2, Send, Pencil, Check, X } from "lucide-react";
+import { Heart, MessageCircle, MapPin, ArrowUpRight, Bookmark, ChevronRight, Image as ImageIcon, Trash2, Send, Pencil, Check, X } from "lucide-react";
 import Sheet from "./Sheet";
 import * as api from "../lib/community";
 
+function Instagram({size=18}) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <rect x="2" y="2" width="20" height="20" rx="5" />
+    <circle cx="12" cy="12" r="4" />
+    <circle cx="18" cy="6" r="1" fill="currentColor" stroke="none" />
+  </svg>;
+}
 export default function CommunityCard({ item, user, stats, onRoute, onSavePlace, onRefresh, onError }) {
   const [open,setOpen]=useState(false);
   const [liked,setLiked]=useState(false);
