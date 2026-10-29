@@ -10,7 +10,7 @@ function Instagram({size=18}) {
     <circle cx="18" cy="6" r="1" fill="currentColor" stroke="none" />
   </svg>;
 }
-export default function CommunityCard({ groupItems, user, allStats, onRoute, onSavePlace, onRefresh, onError, onEdit, onDelete }) {
+export default function CommunityCard({ groupItems, user, allStats, onRoute, onSavePlace, onViewExperiences, onRefresh, onError, onEdit, onDelete }) {
   const [activeIndex,setActiveIndex]=useState(0);
   const touchStart=React.useRef(null);
   const item=groupItems[activeIndex] || groupItems[0];
@@ -41,6 +41,8 @@ export default function CommunityCard({ groupItems, user, allStats, onRoute, onS
   const [editText,setEditText]=useState("");
   const [imageFile,setImageFile]=useState(null);
   const [imageBusy,setImageBusy]=useState(false);
+  const [saveBusy,setSaveBusy]=useState(false);
+  const [saveNotice,setSaveNotice]=useState("");
   const [imageUrl,setImageUrl]=useState(item.image_url || "");
   useEffect(()=>{setLikes(stats?.likes||0);setCount(stats?.comments||0);setLiked(!!stats?.liked);},[stats]);
   useEffect(()=>{setImageUrl(item.image_url||"");},[item.image_url]);
@@ -96,8 +98,13 @@ export default function CommunityCard({ groupItems, user, allStats, onRoute, onS
     e?.stopPropagation();
     if(!onSavePlace)return;
     setOpen(false);
-    try {await onSavePlace({id:"community-"+item.id,title:item.name,location:item.city,address:item.address});}
-    catch(err){onError(err.message);}
+    setSaveBusy(true);
+    setSaveNotice("");
+    try {
+      const saved=await onSavePlace({id:"community-"+item.id,title:item.name,location:item.city,address:item.address});
+      if(saved) setSaveNotice("Salvo nas suas Experiências!");
+    } catch(err){onError(err.message);}
+    finally{setSaveBusy(false);}
   }
   const mapsUrl="https://www.google.com/maps/dir/?api=1&destination="+encodeURIComponent([item.name,item.address,item.city].filter(Boolean).join(", "))+"&dir_action=navigate";
   const location=item.city?.split(",")[0]||"";
@@ -126,8 +133,9 @@ export default function CommunityCard({ groupItems, user, allStats, onRoute, onS
         <button type="button" onClick={openDetail} aria-label={"Ver "+count+" comentários"}><MessageCircle size={18}/><span>{count}</span></button>
         {insta && <a href={insta} target="_blank" rel="noopener noreferrer" title="Instagram do lugar" aria-label={"Instagram de "+item.name}><Instagram size={18}/></a>}
         <a href={mapsUrl} target="_blank" rel="noopener noreferrer" aria-label={"Abrir Google Maps para "+item.name}><span className="rr-social-action-label">Como ir</span><ArrowUpRight size={17}/></a>
-        <button type="button" className="rr-social-save" onClick={saveExperience} title="Salvar nas Experiências"><Bookmark size={16}/><span>Salvar</span></button>
+        <button type="button" className="rr-social-save" onClick={saveExperience} disabled={saveBusy} title="Salvar nas Experiências"><Bookmark size={16}/><span>{saveBusy?"Salvando…":saveNotice?"Salvo":"Salvar"}</span></button>
       </div>
+      {saveNotice&&<div className="rr-social-save-notice" role="status"><Check size={17}/><span>{saveNotice}</span><button type="button" onClick={onViewExperiences}>Ver em Experiências <ArrowUpRight size={15}/></button></div>}
     </article>
     {open&&<Sheet title={item.name} onClose={()=>setOpen(false)}>
       <div className="rr-social-detail" onTouchStart={startSwipe} onTouchEnd={endSwipe}>

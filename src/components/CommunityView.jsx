@@ -33,7 +33,7 @@ const icons = {
   Outros: MapPin,
 };
 const LEGACY = "rotaraiz_recommendations_v1";
-export default function CommunityView({ onRoute, onSavePlace, user, api = liveCommunity }) {
+export default function CommunityView({ onRoute, onSavePlace, onViewExperiences, user, api = liveCommunity }) {
   const [engagement,setEngagement] = useState({});
   const [items, setItems] = useState([]),
     [loading, setLoading] = useState(true),
@@ -238,6 +238,7 @@ export default function CommunityView({ onRoute, onSavePlace, user, api = liveCo
               allStats={engagement}
               onRoute={onRoute}
               onSavePlace={onSavePlace}
+              onViewExperiences={onViewExperiences}
               onRefresh={refresh}
               onError={setError}
               onEdit={item=>setForm({initial:item,editId:item.id})}
