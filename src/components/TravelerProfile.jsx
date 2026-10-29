@@ -7,9 +7,10 @@ export default function TravelerProfile({viewer,profileId,onBack,onOpenRecommend
  const [profile,setProfile]=useState(null),[cities,setCities]=useState([]),[photos,setPhotos]=useState([]),[recommendations,setRecommendations]=useState([]);
  const [loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState("");
  const [editing,setEditing]=useState(false),[draft,setDraft]=useState({display_name:"",bio:"",instagram:""});
- const [addingCity,setAddingCity]=useState(false),[cityName,setCityName]=useState(""),[stateName,setStateName]=useState("");
+ const [addingCity,setAddingCity]=useState(false),[cityName,setCityName]=useState(""),[stateName,setStateName]=useState(""),[placeName,setPlaceName]=useState("");
  const [selectedPhoto,setSelectedPhoto]=useState(null);
  const [uploadOpen,setUploadOpen]=useState(false),[uploadCityId,setUploadCityId]=useState("");
+ const [expandedExperience,setExpandedExperience]=useState(null),[showExperiences,setShowExperiences]=useState(false);
  const refresh=useCallback(async()=>{
    if(!profileId)return;setError("");setLoading(true);
    try{
@@ -25,7 +26,7 @@ export default function TravelerProfile({viewer,profileId,onBack,onOpenRecommend
   if(busy||files.length<1||files.length>2)return false;
   const existing=photos.filter(photo=>photo.city_id===city.id).length;
   if(existing+files.length>2||photos.length+files.length>25){
-   setError("Limite de 2 fotos por destino ou 25 fotos por perfil. Exclua uma foto antes de publicar outra.");
+   setError("Limite de 2 fotos por experiência ou 25 fotos por perfil. Exclua uma foto antes de publicar outra.");
    return false;
   }
   setBusy(true);setError("");setNotice("");
@@ -33,7 +34,7 @@ export default function TravelerProfile({viewer,profileId,onBack,onOpenRecommend
   try{
    for(const file of files){uploaded.push(await api.uploadProfilePhoto(viewer.id,city.id,file,caption));}
    await refresh();
-   setNotice(files.length===1?"Foto publicada em "+city.city+".":"As duas fotos foram publicadas em "+city.city+".");
+   setNotice(files.length===1?"Foto publicada em "+(city.place_name||city.city)+".":"As duas fotos foram publicadas em "+(city.place_name||city.city)+".");
    return true;
   }catch(e){
    for(const photo of uploaded){try{await api.deleteProfilePhoto(photo);}catch{/* may require manual cleanup on poor connection */}}
@@ -73,7 +74,7 @@ export default function TravelerProfile({viewer,profileId,onBack,onOpenRecommend
      </div>
      {own&&<button className="small-action rr-profile-edit" onClick={()=>setEditing(v=>!v)}><Pencil size={16}/> {editing?"Fechar":"Editar perfil"}</button>}
     </div>
-    <div className="rr-profile-numbers"><span><b>{cities.length}</b> cidades</span><span><b>{count}</b> fotos</span><span><b>{recommendations.length}</b> indicações</span><span><Heart size={14}/> {photos.reduce((a,p)=>a+p.likes,0)} curtidas</span></div>
+    <div className="rr-profile-numbers"><span><b>{cities.length}</b> experiências</span><span><b>{count}</b> fotos</span><span><b>{recommendations.length}</b> indicações</span><span><Heart size={14}/> {photos.reduce((a,p)=>a+p.likes,0)} curtidas</span></div>
    </header>
    {own&&editing&&<form className="rr-profile-editor" onSubmit={e=>{e.preventDefault();execute(async()=>{await api.saveProfile(viewer.id,draft);setEditing(false);},"Perfil atualizado.");}}>
     <label>Seu nome público<input required minLength={2} maxLength={60} value={draft.display_name} onChange={e=>setDraft({...draft,display_name:e.target.value})}/></label>
@@ -81,47 +82,72 @@ export default function TravelerProfile({viewer,profileId,onBack,onOpenRecommend
     <label>Instagram (opcional)<input maxLength={30} placeholder="@usuario" value={draft.instagram} onChange={e=>setDraft({...draft,instagram:e.target.value})}/></label>
     <button className="primary-action" disabled={busy}><Check size={17}/> Salvar perfil</button>
    </form>}
-   <div className="rr-profile-section-title"><div><span className="eyebrow">ÁLBUM DE VIAGENS</span><h2>Fotos de viagem</h2><p>Todas as fotos em um só lugar. Toque para ampliar.</p></div>{own&&<button type="button" className="rr-profile-plus" onClick={()=>setAddingCity(v=>!v)} title="Cadastrar destino para publicação" aria-label="Cadastrar destino para publicação" aria-expanded={addingCity}><Plus size={20}/></button>}</div>
-   {own&&addingCity&&<form className="rr-profile-city-form" onSubmit={e=>{e.preventDefault();execute(()=>api.addProfileCity(viewer.id,cityName,stateName),"Destino adicionado.");setCityName("");setStateName("");setAddingCity(false);}}>
-    <label>Cidade<input required maxLength={100} value={cityName} onChange={e=>setCityName(e.target.value)} placeholder="Salvador"/></label>
+   <div className="rr-profile-section-title"><div><span className="eyebrow">MEMÓRIAS DE VIAGEM</span><h2>Experiências</h2><p>Momentos e lugares que marcaram o caminho.</p></div>{own&&<button type="button" className="rr-profile-plus" onClick={()=>setAddingCity(v=>!v)} title="Cadastrar experiência" aria-label="Cadastrar experiência" aria-expanded={addingCity}><Plus size={20}/></button>}</div>
+   {own&&addingCity&&<form className="rr-profile-city-form" onSubmit={e=>{e.preventDefault();execute(()=>api.addProfileCity(viewer.id,cityName,stateName,placeName),"Experiência adicionada.");setCityName("");setStateName("");setPlaceName("");setAddingCity(false);}}>
+    <label>Lugar ou experiência<input required maxLength={100} value={placeName} onChange={e=>setPlaceName(e.target.value)} placeholder="Praia de Moreré, Passeio de barco…"/></label>
+    <label>Cidade<input required maxLength={100} value={cityName} onChange={e=>setCityName(e.target.value)} placeholder="Cairu"/></label>
     <label>Estado<input maxLength={60} value={stateName} onChange={e=>setStateName(e.target.value)} placeholder="Bahia"/></label>
-    <button className="primary-action" disabled={busy}>Adicionar destino</button>
+    <button className="primary-action" disabled={busy}>Adicionar experiência</button>
    </form>}
    {own&&<div className="rr-profile-upload-area">
      <button type="button" className="small-action rr-profile-upload-trigger" onClick={()=>setUploadOpen(v=>!v)} aria-expanded={uploadOpen}>
        <ImagePlus size={17}/> {uploadOpen?"Fechar publicação":"Adicionar fotos"}
      </button>
      {uploadOpen&&<div className="rr-profile-upload-panel">
-       <label className="rr-profile-upload-destination">Local das fotos
+       <label className="rr-profile-upload-destination">Experiência das fotos
          <select value={uploadCityId} onChange={e=>setUploadCityId(e.target.value)}>
-           <option value="">Selecione um destino</option>
+           <option value="">Selecione uma experiência</option>
            {cities.map(city=>{
              const used=photos.filter(photo=>photo.city_id===city.id).length;
-             return <option key={city.id} value={city.id} disabled={used>=2}>{city.city}{city.state?", "+city.state:""} · {used}/2 fotos</option>;
+             return <option key={city.id} value={city.id} disabled={used>=2}>{city.place_name||city.city}{city.place_name&&city.place_name!==city.city?" · "+city.city:""} · {used}/2 fotos</option>;
            })}
          </select>
        </label>
-       <p className="rr-profile-upload-hint">O destino identifica as fotos e controla o limite de 2 por lugar. Todas aparecem juntas no perfil.</p>
+       <p className="rr-profile-upload-hint">Cada experiência admite 2 fotos. Todas aparecem juntas na galeria, sem blocos separados.</p>
        {uploadCityId&&(()=>{
          const city=cities.find(c=>c.id===uploadCityId);
          if(!city)return null;
          const remaining=Math.min(2-photos.filter(photo=>photo.city_id===city.id).length,25-count);
-         return remaining>0?<DestinationPhotoPicker key={city.id} city={city.city} remaining={remaining} busy={busy} onPublish={(files,caption)=>publishCityPhotos(city,files,caption).then(ok=>{if(ok){setUploadOpen(false);setUploadCityId("");}return ok;})}/>:<p className="rr-profile-upload-hint">Este destino já atingiu o limite. Selecione outro ou exclua uma foto.</p>;
+         return remaining>0?<DestinationPhotoPicker key={city.id} city={city.city} remaining={remaining} busy={busy} onPublish={(files,caption)=>publishCityPhotos(city,files,caption).then(ok=>{if(ok){setUploadOpen(false);setUploadCityId("");}return ok;})}/>:<p className="rr-profile-upload-hint">Esta experiência já tem duas fotos. Selecione outra ou exclua uma foto.</p>;
        })()}
-       {!cities.length&&<p className="rr-profile-upload-hint">Cadastre o primeiro destino no botão + acima para publicar fotos.</p>}
+       {!cities.length&&<p className="rr-profile-upload-hint">Cadastre a primeira experiência no botão + acima para publicar fotos.</p>}
      </div>}
    </div>}
-   {photos.length===0?<div className="rr-profile-empty"><MapPin size={26}/><p>{own?"Seu álbum está vazio. Cadastre um destino e adicione até duas fotos dele.":"Este viajante ainda não publicou fotos."}</p></div>:
+   {photos.length===0?<div className="rr-profile-empty"><MapPin size={26}/><p>{own?"Seu álbum está vazio. Cadastre uma experiência e adicione até duas fotos.":"Este viajante ainda não publicou fotos."}</p></div>:
      <div className="rr-profile-flat-grid" aria-label="Galeria de fotos do viajante">
        {photos.map(photo=>{
          const city=cities.find(c=>c.id===photo.city_id);
-         const label=city?.city||"Destino";
+         const label=city?.place_name||city?.city||"Lugar";
          return <button key={photo.id} type="button" className="rr-profile-flat-tile" onClick={()=>setSelectedPhoto({cityId:photo.city_id,photoId:photo.id})} aria-label={"Abrir foto de "+label}>
            <img src={photo.url} alt={photo.caption||"Foto de "+label} loading="lazy"/>
            <span className="rr-profile-flat-location"><MapPin size={12}/>{label}</span>
          </button>;
        })}
      </div>}
+   <div className="rr-profile-experiences-controls">
+     <button type="button" className="rr-profile-experience-toggle" onClick={()=>setShowExperiences(v=>!v)} aria-expanded={showExperiences}>
+       <span><MapPin size={17}/> Ver lugares visitados <small>({cities.length})</small></span><ChevronRight size={18} className={showExperiences?"rr-rotated":""}/>
+     </button>
+     {showExperiences&&<div className="rr-profile-experiences-list">
+       {cities.length===0?<p>Nenhum lugar compartilhado ainda.</p>:cities.map(place=>{
+         const placePhotos=photos.filter(p=>p.city_id===place.id);
+         const related=recommendations.filter(r=>
+           [r.name,r.city].some(v=>v&&v.toLocaleLowerCase("pt-BR").includes((place.place_name||place.city).toLocaleLowerCase("pt-BR")))||
+           (r.city&&r.city.toLocaleLowerCase("pt-BR")===place.city.toLocaleLowerCase("pt-BR")));
+         const isOpen=expandedExperience===place.id;
+         return <div className="rr-profile-experience-row" key={place.id}>
+           <button type="button" className="rr-profile-experience-row-button" onClick={()=>setExpandedExperience(isOpen?null:place.id)} aria-expanded={isOpen}>
+             <span><strong>{place.place_name||place.city}</strong><small>{place.city}{place.state?", "+place.state:""} · {placePhotos.length} foto{placePhotos.length===1?"":"s"}</small></span>
+             <ChevronRight size={17} className={isOpen?"rr-rotated":""}/>
+           </button>
+           {isOpen&&<div className="rr-profile-experience-details">
+             {placePhotos.length>0?<div className="rr-profile-experience-miniatures">{placePhotos.map(photo=><button key={photo.id} type="button" onClick={()=>setSelectedPhoto({cityId:place.id,photoId:photo.id})}><img src={photo.url} alt={photo.caption||place.place_name||place.city} loading="lazy"/></button>)}</div>:<p>Nenhuma foto publicada neste lugar.</p>}
+             {related.length>0?<><strong className="rr-profile-experience-related-title">Indicações relacionadas</strong>{related.map(r=><button key={r.id} type="button" className="rr-profile-experience-related" onClick={()=>onOpenRecommendation?.(r.id)}>{r.name}<ChevronRight size={15}/></button>)}</>:<p>Sem indicações relacionadas a este lugar.</p>}
+           </div>}
+         </div>;
+       })}
+     </div>}
+   </div>
    {selectedPhoto&&(()=>{
      const city=cities.find(c=>c.id===selectedPhoto.cityId);
      const gallery=photos.filter(p=>p.city_id===selectedPhoto.cityId);
@@ -129,10 +155,10 @@ export default function TravelerProfile({viewer,profileId,onBack,onOpenRecommend
      const photo=gallery[idx];
      if(!photo)return null;
      return <div className="rr-profile-lightbox-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setSelectedPhoto(null);}}>
-       <section role="dialog" aria-modal="true" aria-label={"Galeria de "+(city?.city||"destino")} className="rr-profile-lightbox">
-         <div className="rr-profile-lightbox-head"><strong><MapPin size={16}/>{city?.city}{city?.state?", "+city.state:""}</strong><button type="button" className="rr-profile-lightbox-close" onClick={()=>setSelectedPhoto(null)} aria-label="Fechar foto"><X size={20}/></button></div>
+       <section role="dialog" aria-modal="true" aria-label={"Galeria de "+(city?.place_name||city?.city||"experiência")} className="rr-profile-lightbox">
+         <div className="rr-profile-lightbox-head"><strong><MapPin size={16}/>{city?.place_name||city?.city}{city?.city&&city.place_name!==city.city?", "+city.city:""}</strong><button type="button" className="rr-profile-lightbox-close" onClick={()=>setSelectedPhoto(null)} aria-label="Fechar foto"><X size={20}/></button></div>
          <div className="rr-profile-lightbox-photo">
-           <img src={photo.url} alt={photo.caption||"Foto de "+city?.city}/>
+           <img src={photo.url} alt={photo.caption||"Foto de "+(city?.place_name||city?.city)}/>
            {gallery.length>1&&<>
              <button type="button" className="rr-profile-gallery-arrow prev" aria-label="Foto anterior" onClick={()=>navigatePhoto(-1)}><ChevronLeft size={22}/></button>
              <button type="button" className="rr-profile-gallery-arrow next" aria-label="Próxima foto" onClick={()=>navigatePhoto(1)}><ChevronRight size={22}/></button>
@@ -163,7 +189,7 @@ export default function TravelerProfile({viewer,profileId,onBack,onOpenRecommend
          <ChevronRight size={18} aria-hidden="true"/>
        </button>)}</div>
      :<div className="rr-profile-empty"><Compass size={26}/><p>{own?"Você ainda não indicou nenhum lugar. Compartilhe sua primeira dica na Comunidade.":"Este viajante ainda não publicou indicações."}</p>{own&&<button type="button" className="small-action" onClick={onOpenCommunity}>Ir à Comunidade</button>}</div>}
-   {own&&<p className="rr-profile-limits">Você pode compartilhar até 2 fotos por destino e 25 fotos de viagem no total, além da foto de perfil. Fotos públicas recebem apenas curtidas; comentários ficam nas indicações da Comunidade.</p>}
+   {own&&<p className="rr-profile-limits">Você pode compartilhar até 2 fotos por experiência e 25 fotos de viagem no total, além da foto de perfil. Fotos públicas recebem apenas curtidas; comentários ficam nas indicações da Comunidade.</p>}
   </>}
  </section>;
 }
