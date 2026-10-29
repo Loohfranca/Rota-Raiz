@@ -91,10 +91,12 @@ export default function CommunityView({ onRoute, onSavePlace, user, api = liveCo
         .includes(query.toLocaleLowerCase()),
   );
   async function publish(item,photo) {
-    const published = await api.submitRecommendation(item);
+    const editing=!!form?.editId;
+    const published = editing ? await api.updateRecommendation(form.editId,item) : await api.submitRecommendation(item);
+    let photoFailed=false;
     if(photo){
-      try{published.image_url=await api.uploadRecommendationPhoto(user,published.id,photo);}
-      catch(e){setNotice("Indicação publicada, mas a foto não foi enviada. Abra seu card para tentar novamente.");}
+      try{published.image_url=await api.uploadRecommendationPhoto(user,published.id,photo,published.image_url);}
+      catch(e){photoFailed=true;}
     }
     setItems((current) => [
       published,
@@ -110,7 +112,15 @@ export default function CommunityView({ onRoute, onSavePlace, user, api = liveCo
       }
     }
     setForm(null);
-    if(!photo||published.image_url)setNotice("Indicação publicada para toda a comunidade.");
+    setNotice(photoFailed ? "Indicação salva, mas não foi possível enviar a foto. Abra o card e tente novamente." : (editing ? "Indicação atualizada." : "Indicação publicada para toda a comunidade."));
+  }
+  async function deleteOwn(item) {
+    if(!window.confirm("Excluir sua indicação e todos os comentários e curtidas associados?"))return;
+    try{
+      await api.deleteRecommendation(item.id,item.image_url);
+      setItems(current=>current.filter(i=>i.id!==item.id));
+      setNotice("Indicação excluída.");
+    } catch(e){setError(e.message);}
   }
   return (
     <div className="travel-page community-page">
@@ -227,14 +237,16 @@ export default function CommunityView({ onRoute, onSavePlace, user, api = liveCo
               onRoute={onRoute}
               onSavePlace={onSavePlace}
               onRefresh={refresh}
-              onError={setError} />)}
+              onError={setError}
+              onEdit={item=>setForm({initial:item,editId:item.id})}
+              onDelete={deleteOwn} />)}
         </div>
       )}
       <p className="community-footnote">
         Dicas de viajantes. Confirme o funcionamento diretamente com o lugar.
       </p>
       {form && (
-        <Sheet title="Compartilhe uma descoberta" onClose={() => setForm(null)}>
+        <Sheet title={form.editId?"Editar indicação":"Compartilhe uma descoberta"} onClose={() => setForm(null)}>
           <RecommendationForm
             user={user}
             initial={form.initial}
