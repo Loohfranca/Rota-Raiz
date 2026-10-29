@@ -15,8 +15,8 @@ export async function getTravelerRecommendations(userId) {
  errorOf(error,"Não foi possível carregar as indicações.");
  return data||[];
 }
-export async function getProfileCities(id){const {data,error}=await supabase.from("rr_profile_cities").select("id,user_id,city,state,created_at").eq("user_id",id).order("created_at",{ascending:false});errorOf(error,"Erro ao carregar cidades.");return data||[];}
-export async function addProfileCity(userId,city,state){const {data,error}=await supabase.from("rr_profile_cities").insert({user_id:userId,city:city.trim(),state:state.trim()}).select().single();errorOf(error,"Não foi possível cadastrar cidade. Verifique se já foi cadastrada.");return data;}
+export async function getProfileCities(id){const {data,error}=await supabase.from("rr_profile_cities").select("id,user_id,city,state,place_name,created_at").eq("user_id",id).order("created_at",{ascending:false});errorOf(error,"Erro ao carregar cidades.");return data||[];}
+export async function addProfileCity(userId,city,state,placeName){const {data,error}=await supabase.from("rr_profile_cities").insert({user_id:userId,city:city.trim(),state:state.trim(),place_name:(placeName||city).trim()}).select().single();errorOf(error,"Não foi possível cadastrar experiência. Verifique se este lugar já foi cadastrado.");return data;}
 export async function deleteProfileCity(id){const {error}=await supabase.from("rr_profile_cities").delete().eq("id",id);errorOf(error,"Não foi possível remover a cidade.");}
 export async function getCityPhotos(userId){
  const {data,error}=await supabase.from("rr_profile_photos").select("id,user_id,city_id,storage_path,caption,created_at").eq("user_id",userId).order("created_at",{ascending:false});
