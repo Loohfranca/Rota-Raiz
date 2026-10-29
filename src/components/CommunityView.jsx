@@ -33,7 +33,7 @@ const icons = {
   Outros: MapPin,
 };
 const LEGACY = "rotaraiz_recommendations_v1";
-export default function CommunityView({ onRoute, onSavePlace, onViewExperiences, user, api = liveCommunity }) {
+export default function CommunityView({ onRoute, onSavePlace, onViewExperiences, user, openRequest, onOpenHandled, api = liveCommunity }) {
   const [engagement,setEngagement] = useState({});
   const [items, setItems] = useState([]),
     [loading, setLoading] = useState(true),
@@ -84,6 +84,12 @@ export default function CommunityView({ onRoute, onSavePlace, onViewExperiences,
     if(!user?.id)return;
     api.getEngagement(user.id).then(setEngagement).catch(()=>{});
   },[items,user?.id,api]);
+  useEffect(()=>{
+    if(!openRequest || loading || error)return;
+    if(!items.some(item=>item.id===openRequest.id)){
+      setNotice("Essa indicação não está mais disponível. Veja outras dicas da comunidade.");onOpenHandled?.();
+    }
+  },[openRequest,loading,error,items,onOpenHandled]);
   const list = items.filter(
     (i) =>
       (category === "Todos" || i.category === category || (category==="Alimentação" && i.category==="Comida")) &&
@@ -234,7 +240,7 @@ export default function CommunityView({ onRoute, onSavePlace, onViewExperiences,
         </section>
       ) : (
         <div className="community-feed">
-          {groupedList.map(group=><CommunityCard key={group[0].id} groupItems={group} user={user}
+          {groupedList.map(group=><CommunityCard key={group[0].id} openRequest={openRequest && group.some(item=>item.id===openRequest.id)?openRequest:null} onOpenHandled={onOpenHandled} groupItems={group} user={user}
               allStats={engagement}
               onRoute={onRoute}
               onSavePlace={onSavePlace}

@@ -5101,3 +5101,19 @@
 .explore-page .discovery-controls { align-items:stretch; }
 .explore-page .beach-search { overflow:visible; }
 .brazil-discovery .local-autocomplete > input { border:1px solid var(--border-color); border-radius:14px; padding:11px 13px; background:var(--surface-container-lowest); }
+
+/* Community discoveries use the same city and category as the catalogue. */
+.explore-community-results { margin:14px 0 20px; }
+.explore-community-label { display:flex;align-items:center;gap:7px;color:var(--on-surface-variant);margin-bottom:10px; }
+.explore-community-label h3 {font-size:14px;font-weight:650;margin:0;}
+.explore-community-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+.explore-community-place {display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--border-color);border-radius:18px;background:var(--surface-container-lowest);color:var(--on-surface);text-align:left;min-width:0;}
+.explore-community-photo {position:relative;display:grid;place-items:center;width:76px;height:88px;flex-shrink:0;border-radius:12px;overflow:hidden;background:var(--secondary-container);color:var(--secondary);}
+.explore-community-photo img {position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.explore-community-copy {display:flex;flex-direction:column;gap:4px;min-width:0;flex:1;}
+.explore-community-copy strong {font-size:17px;line-height:1.25;overflow-wrap:anywhere;}
+.explore-community-copy > span {font-size:13px;color:var(--on-surface-variant);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.explore-community-copy small {font-size:12px;line-height:1.4;color:var(--on-surface-variant);}
+.explore-community-place > svg {flex-shrink:0;}
+.explore-community-place:hover {border-color:var(--secondary);}
+@media(max-width:700px){.explore-community-grid{grid-template-columns:minmax(0,1fr);}.explore-community-place{gap:10px;}.explore-community-photo{width:64px;height:80px;}}

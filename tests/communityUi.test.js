@@ -7,6 +7,7 @@ let server, render, screen, cleanup, React, CommunityView, userEvent, dom;
 const user = { id: "user-a", user_metadata: { full_name: "Luana França" } };
 let community, published;
 const communityApi = {
+  getEngagement: async () => ({}),
   getRecommendations: async () => ({ available: true, items: community }),
   submitRecommendation: async (item) => {
     published = item;

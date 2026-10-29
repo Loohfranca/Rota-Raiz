@@ -22,6 +22,8 @@ import {
 import { AIRPORTS } from "../data/travelNetwork";
 import { getTourPhotos } from "../lib/photos";
 import { Images } from "lucide-react";
+import { selectCommunityGroups } from "../lib/communityDiscovery";
+import * as liveCommunity from "../lib/community";
 import CommunitySuggestions from "./CommunitySuggestions";
 import BeachPhoto from "./BeachPhoto";
 import OriginPicker from "./OriginPicker";
@@ -35,8 +37,9 @@ export default function ToursView({
   onChangeHome,
   onSelectTour,
   visible = true,
-  onRoute,
   onSaveTour,
+  onOpenCommunity = () => {},
+  communityApi = liveCommunity,
 }) {
   const [places, setPlaces] = useState(BEACHES),
     [stops, setStops] = useState([]),
@@ -51,7 +54,24 @@ export default function ToursView({
   const [category, setCategory] = useState("all");
   const [originOpen, setOriginOpen] = useState(false);
   const [savingPlace,setSavingPlace] = useState(null);
+  const [communityItems,setCommunityItems] = useState([]);
+  const [communityLoading,setCommunityLoading] = useState(true);
+  const [communityError,setCommunityError] = useState("");
   const returnPosition = useRef(null);
+  useEffect(()=>{
+    if(!visible)return;
+    let live=true, pending=false;
+    async function refresh(){
+      if(pending)return;pending=true;
+      try{const result=await communityApi.getRecommendations();if(!result.available)throw Error("Não foi possível atualizar as dicas da comunidade.");if(live){setCommunityItems(result.items);setCommunityError("");}}
+      catch(error){if(live)setCommunityError(error.message);}
+      finally{pending=false;if(live)setCommunityLoading(false);}
+    }
+    const whenVisible=()=>{if(!document.hidden)refresh();};
+    refresh();const timer=setInterval(whenVisible,15000);
+    window.addEventListener("focus",whenVisible);window.addEventListener("online",whenVisible);
+    return()=>{live=false;clearInterval(timer);window.removeEventListener("focus",whenVisible);window.removeEventListener("online",whenVisible);};
+  },[visible,communityApi]);
   useEffect(() => {
     let active = true;
     Promise.all([getPlaces(), getStops(), getCities()])
@@ -101,6 +121,8 @@ export default function ToursView({
   const regionName =
     REGIONS.find((i) => i.id === region)?.name ||
     (region === "auto" ? near?.name : null);
+  const communityGroups = onlySaved || outOfRange ? [] : selectCommunityGroups(communityItems,{city:regionName || '',query,category});
+  const resultCount = filtered.length + communityGroups.length;
   const cityLabel = regionOptions.find(item => item.id === region)?.name || "Todos os destinos";
   const citySuggestions = regionOptions.filter(item => cityQuery === cityLabel || normalizeText(item.name).includes(normalizeText(cityQuery))).map(item => ({id:item.id,label:item.name,detail:item.id === "auto" ? "Usa a origem dos trajetos" : item.id === "all" ? "Catálogo do Rota Raiz" : "Explorar os lugares cadastrados"}));
   const chooseCity = item => {setRegion(item.id); setCityQuery(item.label); setOnlySaved(false); setQuery(""); setCategory("all");};
@@ -115,6 +137,7 @@ export default function ToursView({
       setError("Não foi possível salvar neste aparelho.");
     } finally {setSavingPlace(null);}
   };
+  const openCommunity = id => {returnPosition.current=window.scrollY;onOpenCommunity(id);};
   const open = (place) => {
     returnPosition.current = window.scrollY;
     onSelectTour(place);
@@ -153,8 +176,8 @@ export default function ToursView({
           <div className="search-field beach-search">
             <Search size={18} />
             <LocalAutocomplete label="Buscar lugares" value={query} onChange={setQuery} showOnFocus={false}
-              items={query.trim().length >= 2 ? filtered.slice(0,5).map(place => ({id:place.id,label:place.title,detail:place.location,place})) : []}
-              onSelect={item => {setQuery(item.label); open(item.place);}}
+              items={query.trim().length >= 2 ? [...communityGroups.map(group=>({id:`community:${group[0].id}`,communityId:group[0].id,label:group[0].name,detail:`Comunidade · ${group[0].city}`})),...filtered.map(place=>({id:place.id,label:place.title,detail:place.location,place}))].slice(0,5) : []}
+              onSelect={item => {setQuery(item.label); if(item.communityId)openCommunity(item.communityId);else open(item.place);}}
               placeholder={regionName && !onlySaved ? `Buscar lugares em ${regionName}` : "Buscar praia, passeio ou lugar"} />
             {query && <button onClick={() => setQuery("")} aria-label="Limpar busca de lugares">×</button>}
           </div>
@@ -202,11 +225,14 @@ export default function ToursView({
         ) : (
           <>
             <div className="catalog-count" aria-live="polite">
-              {filtered.length}{" "}
-              {filtered.length === 1
+              {resultCount}{" "}
+              {resultCount === 1
                 ? "lugar para conhecer"
                 : "lugares para conhecer"}
             </div>
+            {!onlySaved && communityLoading && <p className="catalog-context" role="status">Buscando dicas da comunidade…</p>}
+            {!onlySaved && communityError && <p className="catalog-context" role="status">{communityError} {communityItems.length ? "Mostrando a última consulta." : "Os lugares do catálogo continuam disponíveis."}</p>}
+            <CommunitySuggestions groups={communityGroups} onOpen={openCommunity} />
             <div className="beach-grid">
               {filtered.map((place) => (
                 <article
@@ -275,7 +301,7 @@ export default function ToursView({
                 </article>
               ))}
             </div>
-            {!filtered.length && (
+            {!filtered.length && !communityGroups.length && (
               <div className="empty-state">
                 <Bookmark size={28} />
                 <h3>
@@ -301,7 +327,6 @@ export default function ToursView({
           </>
         )}
       </section>
-      <CommunitySuggestions home={home} city={onlySaved ? "" : regionName || ""} onRoute={onRoute} />
       {!onlySaved && <details className="explore-more" key={`${regionName || "brasil"}-${category}`}>
         <summary><Search size={18} /><span>{regionName ? `Buscar mais lugares em ${regionName}` : "Buscar em outra cidade do Brasil"}</span><ArrowUpRight size={16} /></summary>
         <BrazilDiscovery initialCity={regionName || ""} fixedCity={!!regionName} initialCategory={category === "food" ? "food" : category === "beaches" ? "beaches" : "attractions"} />

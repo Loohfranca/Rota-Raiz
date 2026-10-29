@@ -15,6 +15,7 @@ let server,
   TourDetailView,
   BrazilDiscovery,
   ToursView,
+  CommunityView,
   ExploreHero,
   ItineraryView,
   useItineraries,
@@ -81,6 +82,7 @@ before(async () => {
   ({ default: useItineraries } = await server.ssrLoadModule("/src/hooks/useItineraries.js"));
   ({ default: ItineraryView, LegEditor, SavePlaceSheet } = await server.ssrLoadModule("/src/components/ItineraryView.jsx"));
   ({ default: ExploreHero } = await server.ssrLoadModule("/src/components/ExploreHero.jsx"));
+  ({ default: CommunityView } = await server.ssrLoadModule("/src/components/CommunityView.jsx"));
   ({ default: ToursView } = await server.ssrLoadModule(
     "/src/components/ToursView.jsx",
   ));
@@ -812,4 +814,44 @@ test("sugestões de cidades e praias funcionam por teclado sem consultar geocodi
     assert.equal(city.value,"João Pessoa");
     assert.ok(requests.every(url=>!url.includes("nominatim")&&!url.includes("places.googleapis")));
   } finally {window.scrollTo=oldScroll;}
+});
+
+test("Alimentação recebe indicações da cidade e abre a indicação na Comunidade", async()=>{
+  Object.defineProperty(document,"hidden",{configurable:true,value:false});
+  const oldScroll=window.scrollTo;window.scrollTo=()=>{};
+  globalThis.requestAnimationFrame=cb=>setTimeout(cb,0);globalThis.cancelAnimationFrame=clearTimeout;
+  const row={id:"food-jp",name:"Restaurante da praça",category:"Comida",city:"João Pessoa, PB",address:"Rua da Praça, 10",note:"Comida de teste",author_name:"Bia",user_id:"other"};
+  let items=[row,{...row,id:"food-jp-2",author_name:"Ana"},{...row,id:"food-rj",name:"Comida carioca",city:"Rio de Janeiro"},{...row,id:"beach-jp",name:"Praia de teste",category:"Praia"}];
+  const api={getRecommendations:async()=>({available:true,items}),getEngagement:async()=>({})};
+  let destination;
+  function Harness(){const [request,setRequest]=React.useState(null);return request?React.createElement(CommunityView,{user:{id:"me"},api,openRequest:request,onOpenHandled(){},onRoute(){}}):React.createElement(ToursView,{home:{name:"João Pessoa",lat:-7.1195,lng:-34.845},communityApi:api,onChangeHome(){},onSelectTour(){},onOpenCommunity:id=>{destination=id;setRequest({id,token:"open-test"});},onRoute(){}});}
+  try {
+    render(React.createElement(Harness));const ui=userEvent.setup();
+    await screen.findByRole("button",{name:"Ver Restaurante da praça na Comunidade"});
+    await ui.click(screen.getByRole("button",{name:"Alimentação",exact:true}));
+    assert.equal(screen.getAllByRole("button",{name:"Ver Restaurante da praça na Comunidade"}).length,1);
+    assert.ok(screen.getByText("2 indicações deste lugar"));
+    assert.equal(screen.queryByRole("button",{name:"Ver Comida carioca na Comunidade"}),null);
+    assert.equal(screen.queryByRole("button",{name:"Ver Praia de teste na Comunidade"}),null);
+    assert.equal(screen.queryByRole("heading",{name:"Nenhum lugar nesta seleção"}),null);
+    await ui.type(screen.getByLabelText("Buscar lugares"),"sem resultado");
+    assert.equal(screen.queryByRole("button",{name:"Ver Restaurante da praça na Comunidade"}),null);
+    await ui.click(screen.getByRole("button",{name:"Limpar busca de lugares"}));
+    items=[...items,{...row,id:"new-jp",name:"Novo restaurante"}];
+    const {act}=await import('@testing-library/react');await act(async()=>window.dispatchEvent(new Event("focus")));
+    await screen.findByRole("button",{name:"Ver Novo restaurante na Comunidade"});
+    await ui.type(screen.getByLabelText("Buscar lugares"),"restaurante da");
+    assert.ok(screen.getByRole("option",{name:/Restaurante da praça/}));
+    await ui.keyboard("{ArrowDown}{Enter}");
+    assert.equal(destination,"food-jp");
+    await screen.findByRole("dialog",{name:"Restaurante da praça"});
+  }finally {window.scrollTo=oldScroll;}
+});
+
+test("indicação removida entre Explorar e Comunidade tem aviso recuperável",async()=>{
+  const api={getRecommendations:async()=>({available:true,items:[]}),getEngagement:async()=>({})};
+  let handled=false;
+  render(React.createElement(CommunityView,{user:{id:"me"},api,openRequest:{id:"removed",token:"r"},onOpenHandled:()=>{handled=true;},onRoute(){}}));
+  await screen.findByText("Essa indicação não está mais disponível. Veja outras dicas da comunidade.");
+  assert.equal(handled,true);
 });
