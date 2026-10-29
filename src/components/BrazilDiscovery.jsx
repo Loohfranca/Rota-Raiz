@@ -1,3 +1,6 @@
+import LocalAutocomplete from "./LocalAutocomplete";
+import { REGIONS } from "../lib/nearby";
+import { normalizeText } from "../lib/router";
 import React, { useId, useState } from "react";
 import { Compass, ArrowUpRight } from "lucide-react";
 import { DISCOVERY_CATEGORIES, discoveryMapsUrl } from "../lib/discoverBrazil";
@@ -22,13 +25,9 @@ export default function BrazilDiscovery({ initialCity = "", fixedCity = false, i
       <div className="brazil-discovery-fields">
         {!fixedCity && <label htmlFor={`${id}-city`}>
           Cidade ou região
-          <input
-            id={`${id}-city`}
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-            maxLength={160}
-            placeholder="Ex.: Bonito, MS ou Trancoso, BA"
-          />
+          <LocalAutocomplete label="Cidade ou região" value={city} onChange={setCity}
+            items={REGIONS.filter(item => city.trim().length >= 2 && normalizeText(item.name).includes(normalizeText(city))).map(item => ({id:item.id,label:item.name}))}
+            onSelect={item => setCity(item.label)} placeholder="Digite uma cidade ou região" />
         </label>}
         <label htmlFor={`${id}-kind`}>
           O que descobrir

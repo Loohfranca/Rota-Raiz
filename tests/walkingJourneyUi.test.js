@@ -405,7 +405,7 @@ test("Explorar mostra Trancoso e abre seis lugares cadastrados nessa região", a
       }),
     );
     const ui = userEvent.setup();
-    await ui.selectOptions(screen.getByLabelText("Cidade para explorar"), "trancoso");
+    await pickExploreCity(ui,"Trancoso");
     await screen.findByRole("heading", { name: "Explore Trancoso" });
     await screen.findByRole("heading", { name: "Quadrado de Trancoso" });
     assert.ok(screen.getByRole("heading", { name: "Praia dos Coqueiros" }));
@@ -748,9 +748,9 @@ test("Explorar separa cidade e origem, recolhe formulários e mantém Maps no fi
     const props={home:{name:"Hospedagem no Rio",lat:-22.9068,lng:-43.1729},onChangeHome:()=>{changes++;},onSelectTour:()=>{},onRoute:()=>{}};
     const mounted=render(React.createElement(ToursView,props));
     const ui=userEvent.setup();
-    assert.equal(screen.getByLabelText("Cidade para explorar").value,"rio-de-janeiro");
+    assert.equal(screen.getByLabelText("Cidade para explorar").value,"Rio de Janeiro");
     assert.equal(screen.queryByLabelText("Hospedagem, endereço ou cidade"),null);
-    await ui.selectOptions(screen.getByLabelText("Cidade para explorar"),"joao-pessoa");
+    await pickExploreCity(ui,"João Pessoa");
     await screen.findByRole("heading",{name:"Explore João Pessoa"});
     const tampa=await screen.findByRole("button",{name:"Ver detalhes de Praia de Tambaú"});
     assert.equal(changes,0);
@@ -769,7 +769,7 @@ test("Explorar separa cidade e origem, recolhe formulários e mantém Maps no fi
     assert.ok(screen.getByRole("button",{name:"Ver detalhes de Praia de Tambaú"}));
     await ui.type(screen.getByLabelText("Buscar lugares"),"zzzz");
     assert.ok(screen.getByRole("heading",{name:"Nenhum lugar nesta seleção"}));
-    await ui.selectOptions(screen.getByLabelText("Cidade para explorar"),"salvador");
+    await pickExploreCity(ui,"Salvador");
     assert.equal(screen.getByLabelText("Buscar lugares").value,"");
     assert.equal(document.querySelector(".explore-more").open,false);
     await ui.click(document.querySelector(".explore-more summary"));
@@ -777,7 +777,39 @@ test("Explorar separa cidade e origem, recolhe formulários e mantém Maps no fi
     await ui.click(document.querySelector(".explore-origin summary"));
     assert.ok(screen.getByLabelText("Hospedagem, endereço ou cidade"));
     mounted.rerender(React.createElement(ToursView,{...props,home:{name:"Origem alterada",lat:-7.1195,lng:-34.845}}));
-    assert.equal(screen.getByLabelText("Cidade para explorar").value,"salvador");
+    assert.equal(screen.getByLabelText("Cidade para explorar").value,"Salvador");
     assert.equal(changes,0);
+  } finally {window.scrollTo=oldScroll;}
+});
+
+async function pickExploreCity(ui, name) {
+  const input=screen.getByRole("combobox",{name:"Cidade para explorar"});
+  await ui.clear(input);await ui.type(input,name);
+  await ui.click(screen.getByRole("option",{name:new RegExp(name)}));
+}
+test("sugestões de cidades e praias funcionam por teclado sem consultar geocodificador", async()=>{
+  const oldScroll=window.scrollTo;window.scrollTo=()=>{};
+  globalThis.requestAnimationFrame=cb=>setTimeout(cb,0);globalThis.cancelAnimationFrame=clearTimeout;
+  const requests=[];globalThis.fetch=async url=>{requests.push(String(url));throw Error("offline");};
+  let selected=null;
+  try {
+    render(React.createElement(ToursView,{home:null,onChangeHome:()=>{},onSelectTour:place=>{selected=place;},onRoute:()=>{}}));
+    const ui=userEvent.setup();
+    const city=screen.getByRole("combobox",{name:"Cidade para explorar"});
+    await ui.clear(city);await ui.type(city,"joao");
+    assert.ok(screen.getByRole("option",{name:/João Pessoa/}));
+    await ui.keyboard("{ArrowDown}{Enter}");
+    assert.equal(city.value,"João Pessoa");
+    await screen.findByRole("heading",{name:"Explore João Pessoa"});
+    const search=screen.getByRole("combobox",{name:"Buscar lugares"});
+    await ui.type(search,"tamba");
+    const suggestion=screen.getByRole("option",{name:/Praia de Tambaú/});
+    assert.ok(suggestion);
+    await ui.keyboard("{ArrowDown}{Enter}");
+    assert.equal(selected.id,"jpa-tambau");
+    assert.equal(screen.queryByRole("listbox"),null);
+    await ui.clear(city);await ui.type(city,"texto sem correspondência");await ui.keyboard("{Escape}");
+    assert.equal(city.value,"João Pessoa");
+    assert.ok(requests.every(url=>!url.includes("nominatim")&&!url.includes("places.googleapis")));
   } finally {window.scrollTo=oldScroll;}
 });

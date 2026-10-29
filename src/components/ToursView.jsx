@@ -1,3 +1,5 @@
+import LocalAutocomplete from "./LocalAutocomplete";
+import { normalizeText } from "../lib/router";
 import ExploreHero from "./ExploreHero";
 import BrazilDiscovery from "./BrazilDiscovery";
 import React, { useState, useEffect, useRef } from "react";
@@ -44,6 +46,8 @@ export default function ToursView({
     [onlySaved, setOnlySaved] = useState(false),
     [saved, setSaved] = useState(getSavedTours),
     [error, setError] = useState("");
+  const regionOptions = [{id:"all",name:"Todos os destinos"},{id:"auto",name:"Perto do ponto de partida"},...REGIONS];
+  const [cityQuery, setCityQuery] = useState(() => nearestRegion(home)?.name || "Todos os destinos");
   const [category, setCategory] = useState("all");
   const [originOpen, setOriginOpen] = useState(false);
   const [savingPlace,setSavingPlace] = useState(null);
@@ -97,6 +101,9 @@ export default function ToursView({
   const regionName =
     REGIONS.find((i) => i.id === region)?.name ||
     (region === "auto" ? near?.name : null);
+  const cityLabel = regionOptions.find(item => item.id === region)?.name || "Todos os destinos";
+  const citySuggestions = regionOptions.filter(item => cityQuery === cityLabel || normalizeText(item.name).includes(normalizeText(cityQuery))).map(item => ({id:item.id,label:item.name,detail:item.id === "auto" ? "Usa a origem dos trajetos" : item.id === "all" ? "Catálogo do Rota Raiz" : "Explorar os lugares cadastrados"}));
+  const chooseCity = item => {setRegion(item.id); setCityQuery(item.label); setOnlySaved(false); setQuery(""); setCategory("all");};
   const toggle = async (place) => {
     if(savingPlace)return;setSavingPlace(place.id);
     try {
@@ -137,32 +144,19 @@ export default function ToursView({
           </button>
         </div>
         <div className="discovery-controls">
-          <label className="explore-city-select">
+          <div className="explore-city-select">
             <MapPin size={18} />
-            <span className="sr-only">Cidade para explorar</span>
-            <select aria-label="Cidade para explorar" value={region} onChange={e => { setRegion(e.target.value); setOnlySaved(false); setQuery(""); setCategory("all"); }}>
-              <option value="all">Todos os destinos</option>
-              <option value="auto">Perto do ponto de partida</option>
-              {REGIONS.map(city => <option key={city.id} value={city.id}>{city.name}</option>)}
-            </select>
-          </label>
-          <label className="search-field beach-search">
+            <LocalAutocomplete label="Cidade para explorar" value={cityQuery} onChange={setCityQuery} items={citySuggestions} onSelect={chooseCity} onCancel={() => setCityQuery(cityLabel)} placeholder="Digite uma cidade do catálogo" />
+            <ChevronDown size={16} aria-hidden="true" />
+          </div>
+          <div className="search-field beach-search">
             <Search size={18} />
-            <input
-              aria-label="Buscar lugares"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={regionName && !onlySaved ? `Buscar lugares em ${regionName}` : "Buscar praia, passeio ou lugar"}
-            />
-            {query && (
-              <button
-                onClick={() => setQuery("")}
-                aria-label="Limpar busca de lugares"
-              >
-                ×
-              </button>
-            )}
-          </label>
+            <LocalAutocomplete label="Buscar lugares" value={query} onChange={setQuery} showOnFocus={false}
+              items={query.trim().length >= 2 ? filtered.slice(0,5).map(place => ({id:place.id,label:place.title,detail:place.location,place})) : []}
+              onSelect={item => {setQuery(item.label); open(item.place);}}
+              placeholder={regionName && !onlySaved ? `Buscar lugares em ${regionName}` : "Buscar praia, passeio ou lugar"} />
+            {query && <button onClick={() => setQuery("")} aria-label="Limpar busca de lugares">×</button>}
+          </div>
         </div>
         <div className="explore-category-filters" role="group" aria-label="Tipos de lugar">
           {[['all','Todos'],['beaches','Praias'],['food','Alimentação'],['outings','Passeios']].map(([id,label]) => <button key={id} aria-pressed={category === id} onClick={() => setCategory(id)}>{label}</button>)}
@@ -199,7 +193,7 @@ export default function ToursView({
             </p>
             <button
               className="button button-primary"
-              onClick={() => setRegion("all")}
+              onClick={() => chooseCity({id:"all",label:"Todos os destinos"})}
             >
               Explorar os destinos <ArrowRight size={17} />
             </button>
