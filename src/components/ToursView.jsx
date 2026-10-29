@@ -121,6 +121,7 @@ export default function ToursView({
   };
   return (
     <div className="explore-page">
+      {!onlySaved && <section className="explore-inspiration" aria-label="Inspiração para outras viagens"><h2>Inspire sua próxima viagem</h2><ExploreHero destinations={FEATURED_DESTINATIONS} visible={visible} onSelect={open} /></section>}
       <section className="discovery-section">
         <div className="discovery-top">
           <div>
@@ -305,7 +306,6 @@ export default function ToursView({
         <summary><Search size={18} /><span>{regionName ? `Buscar mais lugares em ${regionName}` : "Buscar em outra cidade do Brasil"}</span><ArrowUpRight size={16} /></summary>
         <BrazilDiscovery initialCity={regionName || ""} fixedCity={!!regionName} initialCategory={category === "food" ? "food" : category === "beaches" ? "beaches" : "attractions"} />
       </details>}
-      {!onlySaved && <section className="explore-inspiration" aria-label="Inspiração para outras viagens"><h2>Inspire sua próxima viagem</h2><ExploreHero destinations={FEATURED_DESTINATIONS} visible={visible} onSelect={open} /></section>}
     </div>
   );
 }
