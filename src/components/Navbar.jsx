@@ -33,7 +33,7 @@ export default function Navbar({ activeTab, onChangeTab, isOnline, user, onSignO
         </nav>
         <div className="nav-status-actions"><PhotoCredits/>
         {isAdmin&&<button className="rr-admin-entry" type="button" onClick={onOpenAdmin} title="Painel administrativo" aria-label="Abrir Central Administrativa" aria-current={activeTab==="admin"?"page":undefined}><ShieldCheck size={18}/><span>Admin</span>{adminAlerts>0&&<b aria-label={`${adminAlerts} ocorrência(s) para acompanhar`}>{adminAlerts>99?"99+":adminAlerts}</b>}</button>}
-        <button className="theme-toggle" type="button" onClick={onThemeChange} aria-label={theme==="dark"?"Ativar tema claro":"Ativar tema escuro"} title={theme==="dark"?"Tema claro":"Tema escuro"} aria-pressed={theme==="dark"}>{theme==="dark"?<Sun size={19}/>:<Moon size={19}/>}<span>{theme==="dark"?"Claro":"Escuro"}</span></button>
+        <button className="theme-toggle rr-theme-icon-only" type="button" onClick={onThemeChange} aria-label={theme==="dark"?"Ativar tema claro":"Ativar tema escuro"} title={theme==="dark"?"Tema claro":"Tema escuro"} aria-pressed={theme==="dark"}>{theme==="dark"?<Sun size={17} strokeWidth={1.7}/>:<Moon size={17} strokeWidth={1.7}/>}</button>
         {user && (
           <details className="rr-account-menu">
             <summary aria-label="Abrir opções da conta">
