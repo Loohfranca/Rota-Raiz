@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import Sheet from "./Sheet";
 import CommunityCard from "./CommunityCard";
+import { groupCommunityRecommendations } from "../lib/communityGroups";
 import * as liveCommunity from "../lib/community";
 import {
   profileName,
@@ -90,6 +91,7 @@ export default function CommunityView({ onRoute, onSavePlace, user, api = liveCo
         .toLocaleLowerCase()
         .includes(query.toLocaleLowerCase()),
   );
+  const groupedList=groupCommunityRecommendations(list);
   async function publish(item,photo) {
     const editing=!!form?.editId;
     const published = editing ? await api.updateRecommendation(form.editId,item) : await api.submitRecommendation(item);
@@ -208,7 +210,7 @@ export default function CommunityView({ onRoute, onSavePlace, user, api = liveCo
         <span>
           {loading
             ? "Carregando…"
-            : `${list.length} ${list.length === 1 ? "lugar" : "lugares"}`}
+            : `${groupedList.length} ${groupedList.length === 1 ? "lugar" : "lugares"} · ${list.length} ${list.length === 1 ? "indicação" : "indicações"}`}
         </span>
       </div>
       {loading ? (
@@ -232,8 +234,8 @@ export default function CommunityView({ onRoute, onSavePlace, user, api = liveCo
         </section>
       ) : (
         <div className="community-feed">
-          {list.map(i=><CommunityCard key={i.id} item={i} user={user}
-              stats={engagement[i.id]}
+          {groupedList.map(group=><CommunityCard key={group[0].id} groupItems={group} user={user}
+              allStats={engagement}
               onRoute={onRoute}
               onSavePlace={onSavePlace}
               onRefresh={refresh}
@@ -272,7 +274,7 @@ function RecommendationForm({ user, initial, editing, onSave }) {
           const f = new FormData(e.currentTarget);
           const item = {
             name: f.get("name").trim(),
-            category: f.get("category"),
+            category: f.get("category")==="Alimentação"?"Comida":f.get("category"),
             city: f.get("city").trim(),
             address: f.get("address").trim(),
             instagram: instagramUrl(f.get("instagram")),
@@ -306,7 +308,7 @@ function RecommendationForm({ user, initial, editing, onSave }) {
       <div className="form-pair">
         <label>
           Categoria
-          <select name="category" defaultValue={initial?.category}>
+          <select name="category" defaultValue={initial?.category==="Comida"?"Alimentação":initial?.category}>
             {COMMUNITY_CATEGORIES.map((c) => (
               <option key={c}>{c}</option>
             ))}
@@ -355,7 +357,7 @@ function RecommendationForm({ user, initial, editing, onSave }) {
         />
       </label>
       <label>
-        Foto do lugar <small>opcional · JPG, PNG ou WebP, até 3 MB</small>
+        Adicione uma foto <small>opcional · JPG, PNG ou WebP, até 3 MB</small>
         <input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>setPhoto(e.target.files?.[0]||null)} />
       </label>
       <p className="field-help">
