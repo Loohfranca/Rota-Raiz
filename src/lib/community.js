@@ -88,24 +88,11 @@ export const profileName = (user) => {
     : "Viajante";
 };
 
-export async function getEngagement(userId) {
-  if (!supabase) return {};
-  const [likes,comments] = await Promise.all([
-    supabase.from("community_likes").select("recommendation_id,user_id"),
-    supabase.from("community_comments").select("recommendation_id"),
-  ]);
-  if(likes.error || comments.error) throw new Error("Não foi possível carregar as interações.");
-  const result={};
-  for(const row of likes.data||[]) {
-    result[row.recommendation_id] ||= {likes:0,comments:0,liked:false};
-    result[row.recommendation_id].likes++;
-    if(row.user_id===userId) result[row.recommendation_id].liked=true;
-  }
-  for(const row of comments.data||[]){
-    result[row.recommendation_id] ||= {likes:0,comments:0,liked:false};
-    result[row.recommendation_id].comments++;
-  }
-  return result;
+export async function getEngagement() {
+  if(!supabase)return {};
+  const {data,error}=await supabase.rpc("rr_community_engagement");
+  if(error)throw new Error("Não foi possível carregar curtidas e comentários.");
+  return Object.fromEntries((data||[]).map(x=>[x.id,{likes:Number(x.likes)||0,comments:Number(x.comments)||0,liked:!!x.liked}]));
 }
 
 export async function toggleLike(recommendationId,currentlyLiked) {
