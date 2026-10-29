@@ -14,6 +14,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import Sheet from "./Sheet";
+import CommunityCard from "./CommunityCard";
 import * as liveCommunity from "../lib/community";
 import {
   profileName,
@@ -31,7 +32,8 @@ const icons = {
   Outros: MapPin,
 };
 const LEGACY = "rotaraiz_recommendations_v1";
-export default function CommunityView({ onRoute, user, api = liveCommunity }) {
+export default function CommunityView({ onRoute, onSavePlace, user, api = liveCommunity }) {
+  const [engagement,setEngagement] = useState({});
   const [items, setItems] = useState([]),
     [loading, setLoading] = useState(true),
     [error, setError] = useState(""),
@@ -77,6 +79,10 @@ export default function CommunityView({ onRoute, user, api = liveCommunity }) {
       window.removeEventListener("online", focus);
     };
   }, [refresh]);
+  useEffect(() => {
+    if(!user?.id)return;
+    api.getEngagement(user.id).then(setEngagement).catch(()=>{});
+  },[items,user?.id,api]);
   const list = items.filter(
     (i) =>
       (category === "Todos" || i.category === category) &&
@@ -84,8 +90,12 @@ export default function CommunityView({ onRoute, user, api = liveCommunity }) {
         .toLocaleLowerCase()
         .includes(query.toLocaleLowerCase()),
   );
-  async function publish(item) {
+  async function publish(item,photo) {
     const published = await api.submitRecommendation(item);
+    if(photo){
+      try{published.image_url=await api.uploadRecommendationPhoto(user,published.id,photo);}
+      catch(e){setNotice("Indicação publicada, mas a foto não foi enviada. Abra seu card para tentar novamente.");}
+    }
     setItems((current) => [
       published,
       ...current.filter((i) => i.id !== published.id),
@@ -100,7 +110,7 @@ export default function CommunityView({ onRoute, user, api = liveCommunity }) {
       }
     }
     setForm(null);
-    setNotice("Indicação publicada para toda a comunidade.");
+    if(!photo||published.image_url)setNotice("Indicação publicada para toda a comunidade.");
   }
   return (
     <div className="travel-page community-page">
@@ -212,63 +222,12 @@ export default function CommunityView({ onRoute, user, api = liveCommunity }) {
         </section>
       ) : (
         <div className="community-feed">
-          {list.map((i) => {
-            const Icon = icons[i.category] || MapPin;
-            const author = i.author_name || "Viajante";
-            return (
-              <article className="community-card" key={i.id}>
-                <div className="community-card-top">
-                  <span className="community-place-icon">
-                    <Icon size={21} />
-                  </span>
-                  <span>
-                    {i.category}
-                    <small>{i.city}</small>
-                  </span>
-                </div>
-                <h2>{i.name}</h2>
-                <p className="community-tip">{i.note}</p>
-                <p className="community-location">
-                  <MapPin size={14} />
-                  <span>{i.address}</span>
-                </p>
-                <div className="community-card-bottom">
-                  <div className="community-author">
-                    <span aria-hidden="true">{author[0].toUpperCase()}</span>
-                    <p>
-                      <b>{author}</b>
-                      <small>indicou este lugar</small>
-                    </p>
-                  </div>
-                  <div className="community-card-links">
-                    <button
-                      aria-label={`Como chegar a ${i.name}`}
-                      onClick={() =>
-                        onRoute({
-                          name: `${i.name}, ${i.address}, ${i.city}`,
-                          address: `${i.name}, ${i.address}, ${i.city}`,
-                          route_by_name: true,
-                        })
-                      }
-                    >
-                      <span>Como ir</span>
-                      <ArrowUpRight size={19} />
-                    </button>
-                    {safeInstagram(i.instagram) && (
-                      <a
-                        href={safeInstagram(i.instagram)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label={`Instagram de ${i.name}`}
-                      >
-                        <Camera size={19} />
-                      </a>
-                    )}
-                  </div>
-                </div>
-              </article>
-            );
-          })}
+          {list.map(i=><CommunityCard key={i.id} item={i} user={user}
+              stats={engagement[i.id]}
+              onRoute={onRoute}
+              onSavePlace={onSavePlace}
+              onRefresh={refresh}
+              onError={setError} />)}
         </div>
       )}
       <p className="community-footnote">
@@ -287,6 +246,7 @@ export default function CommunityView({ onRoute, user, api = liveCommunity }) {
   );
 }
 function RecommendationForm({ user, initial, onSave }) {
+  const [photo,setPhoto]=useState(null);
   const [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
   return (
@@ -309,7 +269,7 @@ function RecommendationForm({ user, initial, onSave }) {
             throw new Error("Preencha nome, cidade, endereço e sua dica.");
           setBusy(true);
           setError("");
-          await onSave(item);
+          await onSave(item,photo);
         } catch (err) {
           setError(err.message);
         } finally {
@@ -380,6 +340,10 @@ function RecommendationForm({ user, initial, onSave }) {
           rows={3}
           placeholder="O que vale conhecer por lá?"
         />
+      </label>
+      <label>
+        Foto do lugar <small>opcional · JPG, PNG ou WebP, até 3 MB</small>
+        <input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>setPhoto(e.target.files?.[0]||null)} />
       </label>
       <p className="field-help">
         Seu nome e esta indicação ficam visíveis para as pessoas do app. Use o
