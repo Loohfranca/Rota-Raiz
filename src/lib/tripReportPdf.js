@@ -1,5 +1,5 @@
 import { jsPDF } from "jspdf";
-import { money, summarize, validateTrips } from "./tripLedger.js";
+import { money, summarize, validateTrips, installmentLabel } from "./tripLedger.js";
 
 const green = "#243E32",
   muted = "#596458",
@@ -216,12 +216,12 @@ export function createTripPdf(trip, generatedAt = new Date()) {
   );
   if (!expenses.length)
     paragraph(
-      "Adicione gastos na aba Minha viagem para preencher seu relatório.",
+      "Adicione gastos na aba Na conta para preencher seu relatório.",
     );
   for (const e of expenses) {
     const heading = wrap(e.description, 123, 10);
     const detail = wrap(
-      `${e.date.split("-").reverse().join("/")} | ${e.category} | Pago por ${byId[e.payer]}`,
+      `${e.date.split("-").reverse().join("/")} | ${e.category} | Pago por ${byId[e.payer]}${e.installments > 1 ? ` | Parcelamento: ${installmentLabel(e.amount, e.installments)}` : ""}`,
       width,
       9,
     );

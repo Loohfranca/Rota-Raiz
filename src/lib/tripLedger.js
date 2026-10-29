@@ -1,6 +1,7 @@
 export const CATEGORIES = [
   "Alimentação",
   "Transporte",
+  "Passagem de avião",
   "Hospedagem",
   "Passeios",
   "Compras",
@@ -18,6 +19,16 @@ export function parseMoney(value) {
   if (!Number.isSafeInteger(cents) || cents <= 0 || cents > 100000000)
     throw new Error("Informe um valor entre R$ 0,01 e R$ 1.000.000.");
   return cents;
+}
+// The total is booked once; installments describe payment, not extra expenses.
+export function installmentLabel(amount, installments = 1) {
+  if (!Number.isSafeInteger(installments) || installments < 1 || installments > 60 || installments > amount)
+    throw new Error("Informe de 1 a 60 parcelas, de pelo menos R$ 0,01 cada.");
+  if (installments === 1) return "À vista";
+  const base = Math.floor(amount / installments), remainder = amount % installments;
+  return remainder
+    ? `${remainder} × ${money(base + 1)} + ${installments - remainder} × ${money(base)}`
+    : `${installments} × ${money(base)}`;
 }
 export function splitAmount(amount, ids) {
   if (!ids.length)
@@ -134,6 +145,7 @@ export function validateTrips(data) {
         Object.values(e.shares).reduce((a, b) => a + b, 0) !== e.amount
       )
         throw new Error("Despesa inválida no arquivo.");
+      installmentLabel(e.amount, e.installments);
       expenseIds.add(e.id);
     }
   }

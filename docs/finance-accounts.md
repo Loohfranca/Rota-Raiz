@@ -23,3 +23,7 @@ Os avisos dos advisors sobre funções SECURITY DEFINER autenticadas e RLS sem p
 Testes locais cobrem dinheiro, divisão com centavos, PDF, convites, aceite, privacidade individual, alteração entre contas, saída, link expirado e versão concorrente. Uma transação no banco de produção com dois usuários sintéticos verificou as permissões, aceite, sincronização, privacidade e saída; ROLLBACK removeu todos os dados de teste.
 
 Build e lint foram executados. A revisão visual em navegador autenticado permanece pendente por depender de login; a prévia local não está acessível ao navegador remoto. Não foi criada rota pública para contornar a autenticação.
+
+## Parcelamento
+
+Categoria Passagem de avião disponível em ambos os modos. Cada gasto aceita `installments` inteiro de 1 a 60 (ausência em registros antigos equivale a 1). A entrada é sempre o valor total final, incluindo juros se houver. O total e os acertos usam o gasto completo uma única vez; não se trata de controle de faturas ou de parcelas quitadas. A prévia distribui centavos restantes nas primeiras parcelas, e o PDF mantém o detalhamento. Editar permite alterar a quantidade ou voltar para à vista. O servidor valida a categoria e o campo opcional sem modificar registros existentes.

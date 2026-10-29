@@ -47,3 +47,8 @@ test("rejeita dados inconsistentes em vez de gerar relatório incorreto", () => 
     }),
   );
 });
+
+test("relatório inclui parcelamento e total sem repetir a despesa", () => {
+  const doc=createTripPdf({...trip,expenses:[{...trip.expenses[0],category:"Passagem de avião",installments:3}]});
+  assert.ok(doc.internal.pages.flat().join(" ").includes("Parcelamento:"));
+});

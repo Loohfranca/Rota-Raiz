@@ -38,6 +38,7 @@ before(async () => {
   );
   await db.exec(fs.readFileSync(new URL("../migrations/20261025_community_feed.sql", import.meta.url), "utf8"));
   await db.exec(migration);
+  await db.exec(fs.readFileSync(new URL("../supabase/migrations/20261029144219_expense_installments.sql", import.meta.url), "utf8"));
 });
 after(async () => {
   await db.close();
@@ -257,6 +258,7 @@ test("convite expirado e sessão anônima não acessam dados", async () => {
 test("migração pode ser reaplicada sem apagar viagens ou indicações", async () => {
   await db.exec("reset role");
   await db.exec(migration);
+  await db.exec(fs.readFileSync(new URL("../supabase/migrations/20261029144219_expense_installments.sql", import.meta.url), "utf8"));
   await login(C, "Caio");
   assert.equal((await rpc("rr_list_trips"))[0].expenses.length, 2);
   assert.equal(
@@ -280,4 +282,16 @@ test("conta individual fica privada e não pode receber convites nem virar grupo
   await login(B,"Bia");
   assert.equal((await rpc("rr_list_trips")).some(t=>t.id===id),false);
   await assert.rejects(db.query("select * from public.shared_trips"),/permission denied/);
+});
+
+test("banco aceita avião e parcelas opcionais, rejeita valores inválidos", async () => {
+  await db.exec("reset role");
+  const ledger={name:"Teste",people:[{id:"a",name:"Ana"}],expenses:[{id:"e",description:"Voo",category:"Passagem de avião",amount:10001,payer:"a",date:"2026-10-29",shares:{a:10001},installments:3}]};
+  await rpc("rr_validate_ledger",[JSON.stringify(ledger)],["::jsonb"]);
+  for (const installments of [null,"3",0,-1,1.5,61,10002]) {
+    const invalid=structuredClone(ledger); invalid.expenses[0].installments=installments;
+    await assert.rejects(rpc("rr_validate_ledger",[JSON.stringify(invalid)],["::jsonb"]),/Parcelamento/);
+  }
+  delete ledger.expenses[0].installments;
+  await rpc("rr_validate_ledger",[JSON.stringify(ledger)],["::jsonb"]);
 });
