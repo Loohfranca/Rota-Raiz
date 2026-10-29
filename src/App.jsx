@@ -16,7 +16,7 @@ import LoginScreen from "./components/LoginScreen";
 import ItineraryView, { SavePlaceSheet } from "./components/ItineraryView";
 import useItineraries from "./hooks/useItineraries";
 import { placeVisit } from "./lib/itinerary";
-import { checkAdmin, pingActivity } from "./lib/adminApi";
+import { checkAdmin, pingActivity, getDashboard } from "./lib/adminApi";
 
 const HOME_KEY = "rotaraiz_home";
 
@@ -38,6 +38,7 @@ export default function App() {
   const [session, setSession] = useState(null);
   const [signOutError, setSignOutError] = useState("");
   const [isAdmin,setIsAdmin]=useState(false);
+  const [adminAlerts,setAdminAlerts]=useState(0);
   useEffect(()=>{
     if(!session?.user?.id){setIsAdmin(false);return;}
     let current=true;
@@ -85,6 +86,15 @@ export default function App() {
     return () => { active = false; subscription.unsubscribe(); };
   }, []);
 
+  useEffect(()=>{
+    if(!isAdmin){setAdminAlerts(0);return;}
+    let active=true;
+    const poll=()=>{if(document.visibilityState!=="visible")return;getDashboard().then(data=>{if(active)setAdminAlerts(Number(data.moderation_pending||0)+Number(data.moderation_blocked||0));}).catch(()=>{});};
+    poll();
+    const interval=setInterval(poll,300000);
+    window.addEventListener("focus",poll);
+    return()=>{active=false;clearInterval(interval);window.removeEventListener("focus",poll);};
+  },[isAdmin]);
   async function signOut() {
     if (!supabase) return;
     const { error } = await supabase.auth.signOut();
@@ -175,6 +185,7 @@ export default function App() {
         user={session.user}
         onSignOut={signOut}
         isAdmin={isAdmin}
+        adminAlerts={adminAlerts}
         onOpenAdmin={()=>handleTabChange("admin")}
         theme={theme}
         onThemeChange={()=>setTheme(t=>t==="dark"?"light":"dark")}
