@@ -1,8 +1,8 @@
 import React from "react";
-import { Compass, WifiOff, Leaf, LogOut } from "lucide-react";
+import { Compass, WifiOff, Leaf, LogOut, Sun, Moon } from "lucide-react";
 import PhotoCredits from "./PhotoCredits";
 import { TABS } from "./BottomNav";
-export default function Navbar({ activeTab, onChangeTab, isOnline, user, onSignOut }) {
+export default function Navbar({ activeTab, onChangeTab, isOnline, user, onSignOut, theme, onThemeChange }) {
   return (
     <header className="app-header">
       <div className="nav-shell">
@@ -32,6 +32,7 @@ export default function Navbar({ activeTab, onChangeTab, isOnline, user, onSignO
           ))}
         </nav>
         <div className="nav-status-actions"><PhotoCredits/>
+        <button className="theme-toggle" type="button" onClick={onThemeChange} aria-label={theme==="dark"?"Ativar tema claro":"Ativar tema escuro"} title={theme==="dark"?"Tema claro":"Tema escuro"} aria-pressed={theme==="dark"}>{theme==="dark"?<Sun size={19}/>:<Moon size={19}/>}<span>{theme==="dark"?"Claro":"Escuro"}</span></button>
         {user && (
           <button
             type="button"
