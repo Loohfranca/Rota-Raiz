@@ -68,6 +68,7 @@ export default function CommunityCard({ item, user, stats, onRoute, onSavePlace,
   async function saveExperience(e) {
     e?.stopPropagation();
     if(!onSavePlace)return;
+    setOpen(false);
     try {await onSavePlace({id:"community-"+item.id,title:item.name,location:item.city,address:item.address});}
     catch(err){onError(err.message);}
   }
