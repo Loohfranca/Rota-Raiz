@@ -119,10 +119,13 @@ export async function addComment(recommendationId,body) {
   return data;
 }
 export async function editComment(commentId,body) {
-  const {data,error}=await supabase.from("community_comments").update({body:body.trim()})
-    .eq("id",commentId).select("id,user_id,author_name,body,created_at").single();
+  const {data,error}=await supabase.rpc("rr_edit_community_comment",{p_id:commentId,p_body:body.trim()});
   if(error)throw new Error("Não foi possível editar seu comentário.");
   return data;
+}
+export async function reportComment(commentId) {
+  const {error}=await supabase.rpc("rr_report_comment",{p_comment:commentId});
+  if(error)throw new Error("Não foi possível enviar a denúncia.");
 }
 export async function deleteComment(commentId) {
   const {error}=await supabase.from("community_comments").delete().eq("id",commentId);
@@ -152,9 +155,12 @@ function oldPhotoPath(url) {
 export async function uploadRecommendationPhoto(user,id,file,previousUrl="") {
   if(!supabase||!user?.id)throw new Error("Entre na conta para enviar uma foto.");
   const blob=await optimizeImage(file);
+  const {data:room,error:roomError}=await supabase.rpc("rr_storage_room",{p_uid:user.id});
+  if(roomError)throw new Error("Não foi possível verificar o limite de fotos.");
+  if(!room)throw new Error("Limite preventivo de fotos atingido (20 por conta ou 700 MB no total). Procure a administração.");
   const path=user.id+"/"+id+"/"+crypto.randomUUID()+".webp";
   const {error:uploadError}=await supabase.storage.from("community-photos").upload(path,blob,{contentType:"image/webp",upsert:false});
-  if(uploadError)throw new Error("Erro ao enviar foto. Confira a conexão e tente novamente.");
+  if(uploadError)throw new Error("Não foi possível enviar a foto. Verifique seu limite de 20 fotos ou tente novamente.");
   const {data}=supabase.storage.from("community-photos").getPublicUrl(path);
   const {error}=await supabase.rpc("rr_set_community_photo",{p_id:id,p_url:data.publicUrl});
   if(error){

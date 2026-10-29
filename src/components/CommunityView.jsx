@@ -147,6 +147,10 @@ export default function CommunityView({ onRoute, onSavePlace, onViewExperiences,
           <span>Indicar lugar</span>
         </button>
       </div>
+      <details className="rr-community-guidelines">
+        <summary>Regras de convivência da comunidade</summary>
+        <p>Compartilhe dicas reais com respeito. Não são permitidos xingamentos, ameaças, ataques pessoais, discriminação, spam ou exposição de dados privados. Comentários com ofensas claras são bloqueados; casos ambíguos ficam retidos para revisão. Você pode denunciar um comentário usando o botão Denunciar.</p>
+      </details>
       <div className="community-searchbar">
         <Search size={19} />
         <input

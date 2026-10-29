@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Heart, MessageCircle, MapPin, ArrowUpRight, Bookmark, ChevronRight, ChevronLeft, Image as ImageIcon, Trash2, Send, Pencil, Check, X } from "lucide-react";
+import { Heart, MessageCircle, MapPin, ArrowUpRight, Bookmark, ChevronRight, ChevronLeft, Image as ImageIcon, Trash2, Send, Pencil, Check, X, ShieldAlert } from "lucide-react";
 import Sheet from "./Sheet";
 import * as api from "../lib/community";
 
@@ -41,6 +41,8 @@ export default function CommunityCard({ groupItems, openRequest, onOpenHandled, 
   const [count,setCount]=useState(0);
   const [comments,setComments]=useState([]);
   const [busy,setBusy]=useState(false);
+  const [moderationNotice,setModerationNotice]=useState("");
+  const [reported,setReported]=useState([]);
   const [commentText,setCommentText]=useState("");
   const [editing,setEditing]=useState(null);
   const [editText,setEditText]=useState("");
@@ -72,7 +74,8 @@ export default function CommunityCard({ groupItems, openRequest, onOpenHandled, 
     setBusy(true);
     try {
       const added=await api.addComment(item.id,commentText);
-      setComments(cs=>[...cs,added]);setCount(n=>n+1);setCommentText("");
+      if(added?.moderated){setModerationNotice(added.reason==="ofensa_ou_ameaca"?"Este comentário não foi publicado por violar as regras da comunidade.":"Este comentário foi retido para revisão. O administrador poderá avaliar o contexto.");return;}
+      setComments(cs=>[...cs,added]);setCount(n=>n+1);setCommentText("");setModerationNotice("");
     } catch(err){onError(err.message);} finally{setBusy(false);}
   }
   async function removeComment(c) {
@@ -82,7 +85,12 @@ export default function CommunityCard({ groupItems, openRequest, onOpenHandled, 
   }
   async function saveComment(c) {
     if(!editText.trim())return;
-    try {const next=await api.editComment(c.id,editText);setComments(cs=>cs.map(x=>x.id===c.id?next:x));setEditing(null);setEditText("");}
+    try {const next=await api.editComment(c.id,editText);if(next?.moderated){setModerationNotice("Alteração não aplicada: o texto foi sinalizado e enviado à moderação.");setEditing(null);return;}setComments(cs=>cs.map(x=>x.id===c.id?next:x));setEditing(null);setEditText("");setModerationNotice("");}
+    catch(err){onError(err.message);}
+  }
+  async function report(c){
+    if(reported.includes(c.id))return;
+    try {await api.reportComment(c.id);setReported(ids=>[...ids,c.id]);setModerationNotice("Denúncia enviada à administração para análise.");}
     catch(err){onError(err.message);}
   }
   async function uploadPhoto() {
@@ -176,11 +184,14 @@ export default function CommunityCard({ groupItems, openRequest, onOpenHandled, 
         </div>}
         <div className="rr-social-comments">
           <h3>Comentários ({count})</h3>
+          <p className="rr-community-rules">Respeite os viajantes: ofensas, xingamentos, ameaças e ataques pessoais são proibidos. Conteúdos ofensivos são bloqueados antes de aparecer, e mensagens ambíguas passam por revisão.</p>
+          {moderationNotice&&<p className="rr-community-moderation-notice" role="status">{moderationNotice}</p>}
           {!comments.length&&<p className="rr-social-empty-comments">Ainda não há comentários. Faça a primeira pergunta sobre o lugar.</p>}
           {comments.map(c=><div className="rr-social-comment" key={c.id}>
             <span className="rr-social-author-icon">{c.author_name?.[0]?.toUpperCase()||"V"}</span>
             <div className="rr-social-comment-body"><b>{c.author_name}</b><small>{new Date(c.created_at).toLocaleDateString("pt-BR")}</small>
               {editing===c.id?<><textarea maxLength={700} value={editText} onChange={e=>setEditText(e.target.value)} rows={2}/><div className="rr-social-comment-tools"><button type="button" onClick={()=>saveComment(c)}><Check size={15}/>Salvar</button><button type="button" onClick={()=>setEditing(null)}><X size={15}/>Cancelar</button></div></>:<p>{c.body}</p>}
+              {c.user_id!==user?.id&&<div className="rr-social-comment-tools"><button type="button" disabled={reported.includes(c.id)} onClick={()=>report(c)}><ShieldAlert size={14}/>{reported.includes(c.id)?"Denunciado":"Denunciar"}</button></div>}
               {c.user_id===user?.id&&editing!==c.id&&<div className="rr-social-comment-tools"><button type="button" onClick={()=>{setEditing(c.id);setEditText(c.body);}}><Pencil size={14}/>Editar</button><button type="button" onClick={()=>removeComment(c)}><Trash2 size={14}/>Excluir</button></div>}
             </div>
           </div>)}

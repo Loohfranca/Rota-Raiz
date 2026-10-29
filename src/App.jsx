@@ -16,6 +16,7 @@ import LoginScreen from "./components/LoginScreen";
 import ItineraryView, { SavePlaceSheet } from "./components/ItineraryView";
 import useItineraries from "./hooks/useItineraries";
 import { placeVisit } from "./lib/itinerary";
+import { checkAdmin, pingActivity, getDashboard } from "./lib/adminApi";
 
 const HOME_KEY = "rotaraiz_home";
 
@@ -36,6 +37,18 @@ export default function App() {
   const [authReady, setAuthReady] = useState(false);
   const [session, setSession] = useState(null);
   const [signOutError, setSignOutError] = useState("");
+  const [isAdmin,setIsAdmin]=useState(false);
+  const [adminAlerts,setAdminAlerts]=useState(0);
+  useEffect(()=>{
+    if(!session?.user?.id){setIsAdmin(false);return;}
+    let current=true;
+    checkAdmin().then(ok=>{if(current)setIsAdmin(!!ok);}).catch(()=>{if(current)setIsAdmin(false);});
+    const ping=()=>{if(document.visibilityState==="visible"&&navigator.onLine)pingActivity().catch(()=>{});};
+    ping();
+    const timer=setInterval(ping,180000);
+    document.addEventListener("visibilitychange",ping);
+    return()=>{current=false;clearInterval(timer);document.removeEventListener("visibilitychange",ping);};
+  },[session?.user?.id]);
   const itineraries = useItineraries(session?.user?.id);
   const [pendingPlace,setPendingPlace] = useState(null);
   const [experienceOpenRequest,setExperienceOpenRequest] = useState(0);
@@ -73,6 +86,15 @@ export default function App() {
     return () => { active = false; subscription.unsubscribe(); };
   }, []);
 
+  useEffect(()=>{
+    if(!isAdmin){setAdminAlerts(0);return;}
+    let active=true;
+    const poll=()=>{if(document.visibilityState!=="visible")return;getDashboard().then(data=>{if(active)setAdminAlerts(Number(data.moderation_pending||0)+Number(data.moderation_blocked||0));}).catch(()=>{});};
+    poll();
+    const interval=setInterval(poll,300000);
+    window.addEventListener("focus",poll);
+    return()=>{active=false;clearInterval(interval);window.removeEventListener("focus",poll);};
+  },[isAdmin]);
   async function signOut() {
     if (!supabase) return;
     const { error } = await supabase.auth.signOut();
@@ -162,6 +184,9 @@ export default function App() {
         dataSource={dataSource}
         user={session.user}
         onSignOut={signOut}
+        isAdmin={isAdmin}
+        adminAlerts={adminAlerts}
+        onOpenAdmin={()=>handleTabChange("admin")}
         theme={theme}
         onThemeChange={()=>setTheme(t=>t==="dark"?"light":"dark")}
       />
@@ -209,7 +234,7 @@ export default function App() {
                 setSelectedTour(null);
                 setSelectedRoute(r);
               }}
-              onNavigateToAdmin={() => setActiveTab("admin")}
+              onNavigateToAdmin={isAdmin?()=>setActiveTab("admin"):undefined}
             />
           </>
         ) : activeTab === "map" ? (
@@ -235,7 +260,7 @@ export default function App() {
         ) : activeTab === "community" ? (
           <CommunityView openRequest={communityOpenRequest} onOpenHandled={()=>setCommunityOpenRequest(null)} key={session.user.id} user={session.user} onRoute={goToRoutesWith} onSavePlace={addPlaceToTrip} onViewExperiences={openExperiences} />
         ) : activeTab === "tours" ? null : activeTab === "admin" ? (
-          <AdminView onBack={() => setActiveTab("routes")} />
+          isAdmin ? <AdminView onBack={() => setActiveTab("tours")} /> : <div className="travel-empty"><h2>Acesso restrito</h2><p>Você precisa de permissão administrativa.</p></div>
         ) : null}
         {activeTab === "tours" && (
           <div hidden={!!selectedTour || !!selectedRoute}>
