@@ -1,5 +1,5 @@
 import React from "react";
-import { Compass, WifiOff, Leaf, LogOut, Sun, Moon, ShieldCheck, UserRound, ChevronDown } from "lucide-react";
+import { WifiOff, Leaf, LogOut, Sun, Moon, ShieldCheck, UserRound, ChevronDown } from "lucide-react";
 import PhotoCredits from "./PhotoCredits";
 import { TABS } from "./BottomNav";
 export default function Navbar({ activeTab, onChangeTab, isOnline, user, onSignOut, theme, onThemeChange, isAdmin, onOpenAdmin, adminAlerts=0, onOpenProfile }) {
@@ -11,13 +11,8 @@ export default function Navbar({ activeTab, onChangeTab, isOnline, user, onSignO
           onClick={() => onChangeTab("tours")}
           aria-label="Rota Raiz — explorar passeios"
         >
-          <span className="brand-mark">
-            <Compass size={24} />
-          </span>
-          <span>
-            rota<span className="brand-light">raiz</span>
-            <small>o caminho também é viagem</small>
-          </span>
+          <span className="rr-brand-mark-wrap" aria-hidden="true"><img src="/rota-mark.svg" alt="" width="34" height="46"/></span>
+          <span className="rr-brand-wordmark">rota <span>raiz</span><small>o caminho também é viagem</small></span>
         </button>
         <nav className="desktop-nav" aria-label="Navegação principal">
           {TABS.map(({ id, label, icon: Icon }) => (
