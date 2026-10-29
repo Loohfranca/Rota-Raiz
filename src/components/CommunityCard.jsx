@@ -10,7 +10,7 @@ function Instagram({size=18}) {
     <circle cx="18" cy="6" r="1" fill="currentColor" stroke="none" />
   </svg>;
 }
-export default function CommunityCard({ groupItems, openRequest, onOpenHandled, user, allStats, onRoute, onSavePlace, onViewExperiences, onOpenProfile, onRefresh, onError, onEdit, onDelete }) {
+export default function CommunityCard({ groupItems, openRequest, onOpenHandled, user, allStats, onRoute, onSavePlace, onViewExperiences, onOpenProfile, authorProfiles={}, onRefresh, onError, onEdit, onDelete }) {
   const [activeIndex,setActiveIndex]=useState(0);
   const touchStart=React.useRef(null);
   const item=groupItems[activeIndex] || groupItems[0];
@@ -123,7 +123,8 @@ export default function CommunityCard({ groupItems, openRequest, onOpenHandled, 
   }
   const mapsUrl="https://www.google.com/maps/dir/?api=1&destination="+encodeURIComponent([item.name,item.address,item.city].filter(Boolean).join(", "))+"&dir_action=navigate";
   const location=item.city?.split(",")[0]||"";
-  const author=item.author_name||"Viajante";
+  const publicAuthor=authorProfiles[item.user_id];
+  const author=publicAuthor?.display_name||item.author_name||"Viajante";
   const insta=api.safeInstagram(item.instagram);
   const owner=!!user && item.user_id===user.id;
   const photo=imageUrl||"";
