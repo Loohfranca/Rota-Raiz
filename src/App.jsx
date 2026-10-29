@@ -234,7 +234,7 @@ export default function App() {
                 setSelectedTour(null);
                 setSelectedRoute(r);
               }}
-              onNavigateToAdmin={() => {if(isAdmin)setActiveTab("admin");}}
+              onNavigateToAdmin={isAdmin?()=>setActiveTab("admin"):undefined}
             />
           </>
         ) : activeTab === "map" ? (
