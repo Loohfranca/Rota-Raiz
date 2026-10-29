@@ -10,7 +10,7 @@ function Instagram({size=18}) {
     <circle cx="18" cy="6" r="1" fill="currentColor" stroke="none" />
   </svg>;
 }
-export default function CommunityCard({ groupItems, user, allStats, onRoute, onSavePlace, onViewExperiences, onRefresh, onError, onEdit, onDelete }) {
+export default function CommunityCard({ groupItems, openRequest, onOpenHandled, user, allStats, onRoute, onSavePlace, onViewExperiences, onRefresh, onError, onEdit, onDelete }) {
   const [activeIndex,setActiveIndex]=useState(0);
   const touchStart=React.useRef(null);
   const item=groupItems[activeIndex] || groupItems[0];
@@ -31,6 +31,11 @@ export default function CommunityCard({ groupItems, user, allStats, onRoute, onS
     touchStart.current=null;
   }
   const [open,setOpen]=useState(false);
+  useEffect(()=>{
+    if(!openRequest)return;
+    const index=groupItems.findIndex(entry=>entry.id===openRequest.id);
+    if(index>=0){setActiveIndex(index);setOpen(true);onOpenHandled?.();}
+  },[openRequest,groupItems,onOpenHandled]);
   const [liked,setLiked]=useState(false);
   const [likes,setLikes]=useState(0);
   const [count,setCount]=useState(0);
@@ -46,11 +51,13 @@ export default function CommunityCard({ groupItems, user, allStats, onRoute, onS
   const [imageUrl,setImageUrl]=useState(item.image_url || "");
   useEffect(()=>{setLikes(stats?.likes||0);setCount(stats?.comments||0);setLiked(!!stats?.liked);},[stats]);
   useEffect(()=>{setImageUrl(item.image_url||"");},[item.image_url]);
-  useEffect(()=>{if(open)api.getComments(item.id).then(setComments).catch(err=>onError(err.message));},[activeIndex,item.id,open]);
-  async function openDetail() {
-    setOpen(true);
-    try { setComments(await api.getComments(item.id)); } catch(e) { onError(e.message); }
-  }
+  useEffect(()=>{
+    if(!open)return;
+    let current=true;setComments([]);
+    api.getComments(item.id).then(result=>{if(current)setComments(result);}).catch(err=>{if(current)onError(err.message);});
+    return()=>{current=false;};
+  },[item.id,open,onError]);
+  function openDetail() {setOpen(true);}
   async function toggleLike(e) {
     e?.stopPropagation();
     if(busy) return;

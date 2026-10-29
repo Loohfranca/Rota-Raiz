@@ -82,6 +82,8 @@ export default function App() {
 
 
   const [activeTab, setActiveTab] = useState(inviteToken ? "trip" : "tours");
+  const [communityOpenRequest,setCommunityOpenRequest] = useState(null);
+  const openCommunityPlace = id => {setCommunityOpenRequest({id,token:crypto.randomUUID()});setSelectedTour(null);setSelectedRoute(null);setActiveTab("community");window.scrollTo({top:0,behavior:"instant"});};
   const [selectedRoute, setSelectedRoute] = useState(null);
   const [selectedTour, setSelectedTour] = useState(null);
   const [mapReturnTab, setMapReturnTab] = useState("tours");
@@ -231,7 +233,7 @@ export default function App() {
         ) : activeTab === "trip" ? (
           <AccountsView key={session.user.id} user={session.user} inviteToken={inviteToken} onInviteHandled={() => { clearInvite(); setInviteToken(null); }} />
         ) : activeTab === "community" ? (
-          <CommunityView key={session.user.id} user={session.user} onRoute={goToRoutesWith} onSavePlace={addPlaceToTrip} onViewExperiences={openExperiences} />
+          <CommunityView openRequest={communityOpenRequest} onOpenHandled={()=>setCommunityOpenRequest(null)} key={session.user.id} user={session.user} onRoute={goToRoutesWith} onSavePlace={addPlaceToTrip} onViewExperiences={openExperiences} />
         ) : activeTab === "tours" ? null : activeTab === "admin" ? (
           <AdminView onBack={() => setActiveTab("routes")} />
         ) : null}
@@ -249,6 +251,7 @@ export default function App() {
               <MapPin size={17} /> Lugares e embarques no mapa
             </button>
             <ToursView
+              onOpenCommunity={openCommunityPlace}
               onRoute={goToRoutesWith}
               visible={!selectedTour && !selectedRoute}
               home={home}
