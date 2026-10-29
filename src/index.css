@@ -5481,3 +5481,11 @@ button.primary-action,
 :root[data-theme="dark"] .rr-login-card p[role="alert"] {color:var(--primary)!important;}
 @media(max-width:900px){.nav-shell{height:70px;gap:10px;}.rr-brand-wordmark{font-size:24px;}.rr-brand-wordmark small{font-size:8px;}}
 @media(max-width:600px){.rr-brand-mark-wrap{height:37px;width:27px;}.rr-brand-mark-wrap img{width:26px;height:37px;}.rr-brand-wordmark{font-size:21px;letter-spacing:-1.3px;}.rr-brand-wordmark small{font-size:7px;letter-spacing:0;}.nav-shell{padding-inline:12px;gap:7px;}}
+
+/* Original supplied wordmark traced to SVG, optimized for each theme. */
+.rr-login-brand .rr-login-logo{display:block;width:min(215px,65vw);height:212px;object-fit:contain;margin:-8px auto -11px;}
+.rr-login-brand .rr-login-logo-dark{display:none;}
+:root[data-theme="dark"] .rr-login-brand .rr-login-logo-light{display:none;}
+:root[data-theme="dark"] .rr-login-brand .rr-login-logo-dark{display:block;}
+.rr-login-brand p{margin:0 0 4px;}
+@media(max-width:460px){.rr-login-card{padding:25px 20px!important;}.rr-login-brand .rr-login-logo{height:172px;width:190px;margin:-9px auto -7px;}.rr-login-brand p{font-size:10px;}.rr-login-card h1{font-size:23px!important;}}
