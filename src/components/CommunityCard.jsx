@@ -79,6 +79,7 @@ export default function CommunityCard({ item, user, stats, onRoute, onSavePlace,
     try {await onSavePlace({id:"community-"+item.id,title:item.name,location:item.city,address:item.address});}
     catch(err){onError(err.message);}
   }
+  const mapsUrl="https://www.google.com/maps/dir/?api=1&destination="+encodeURIComponent([item.name,item.address,item.city].filter(Boolean).join(", "))+"&dir_action=navigate";
   const location=item.city?.split(",")[0]||"";
   const author=item.author_name||"Viajante";
   const insta=api.safeInstagram(item.instagram);
@@ -103,7 +104,7 @@ export default function CommunityCard({ item, user, stats, onRoute, onSavePlace,
         <button type="button" disabled={busy} onClick={toggleLike} aria-label={liked?"Descurtir":"Curtir"} aria-pressed={liked}><Heart size={18} fill={liked?"currentColor":"none"}/><span>{likes}</span></button>
         <button type="button" onClick={openDetail} aria-label={"Ver "+count+" comentários"}><MessageCircle size={18}/><span>{count}</span></button>
         {insta && <a href={insta} target="_blank" rel="noopener noreferrer" title="Instagram do lugar" aria-label={"Instagram de "+item.name}><Instagram size={18}/></a>}
-        <button type="button" onClick={()=>onRoute({name:item.name+", "+item.address,address:item.address,route_by_name:true})} aria-label={"Como ir para "+item.name}><span className="rr-social-action-label">Como ir</span><ArrowUpRight size={17}/></button>
+        <a href={mapsUrl} target="_blank" rel="noopener noreferrer" aria-label={"Abrir Google Maps para "+item.name}><span className="rr-social-action-label">Como ir</span><ArrowUpRight size={17}/></a>
         <button type="button" className="rr-social-save" onClick={saveExperience} title="Salvar nas Experiências"><Bookmark size={16}/><span>Salvar</span></button>
       </div>
     </article>
@@ -119,7 +120,7 @@ export default function CommunityCard({ item, user, stats, onRoute, onSavePlace,
         <div className="rr-social-detail-actions">
           <button type="button" onClick={toggleLike} aria-pressed={liked} disabled={busy}><Heart size={17} fill={liked?"currentColor":"none"}/>{likes} curtidas</button>
           {insta&&<a href={insta} target="_blank" rel="noopener noreferrer"><Instagram size={17}/>Instagram</a>}
-          <button type="button" onClick={()=>onRoute({name:item.name+", "+item.address,address:item.address,route_by_name:true})}>Como ir <ArrowUpRight size={16}/></button>
+          <a href={mapsUrl} target="_blank" rel="noopener noreferrer">Como ir <ArrowUpRight size={16}/></a>
           <button type="button" onClick={saveExperience}><Bookmark size={16}/>Salvar nas Experiências</button>
         </div>
         {owner&&<div className="rr-social-own-actions"><button type="button" onClick={()=>{setOpen(false);onEdit?.(item);}}><Pencil size={15}/>Editar indicação</button><button type="button" onClick={()=>{setOpen(false);onDelete?.(item);}}><Trash2 size={15}/>Excluir indicação</button></div>}
