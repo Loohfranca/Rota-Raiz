@@ -266,7 +266,7 @@ export default function App() {
         ) : activeTab === "trip" ? (
           <AccountsView key={session.user.id} user={session.user} inviteToken={inviteToken} onInviteHandled={() => { clearInvite(); setInviteToken(null); }} />
         ) : activeTab === "profile" ? (
-          <TravelerProfile key={profileId} profileId={profileId||session.user.id} viewer={session.user} onBack={()=>handleTabChange(profileReturnTab)}/>
+          <TravelerProfile key={profileId} profileId={profileId||session.user.id} viewer={session.user} onBack={()=>handleTabChange(profileReturnTab)} onOpenRecommendation={openCommunityPlace} onOpenCommunity={()=>handleTabChange("community")}/>
         ) : activeTab === "community" ? (
           <CommunityView openRequest={communityOpenRequest} onOpenHandled={()=>setCommunityOpenRequest(null)} key={session.user.id} user={session.user} onRoute={goToRoutesWith} onSavePlace={addPlaceToTrip} onViewExperiences={openExperiences} onOpenProfile={showProfile} />
         ) : activeTab === "tours" ? null : activeTab === "admin" ? (
