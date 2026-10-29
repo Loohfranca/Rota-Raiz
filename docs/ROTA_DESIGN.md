@@ -18,12 +18,13 @@ Preferir os tokens acima em componentes novos. Evitar hexadesimais fixos, `#fff`
 
 ## Marca
 
-- `public/rota-mark.svg`: símbolo vetorizado do pé/caminho a partir da imagem enviada (versão de interface)
+- `public/rota-mark.svg`: símbolo vetorizado do pé/caminho a partir da imagem enviada
+- `public/rota-logo.svg` e `public/rota-logo-dark.svg`: símbolo + lettering original traçados em vetor a partir da imagem enviada, em contrastes distintos para os dois temas
 - `public/icon-192.svg`, `public/icon-512.svg`: ícones do app
 - `Navbar.jsx`: símbolo + logotipo em texto para tamanho reduzido
 - `LoginScreen.jsx`: símbolo + logotipo em texto para maior legibilidade
 
-O logotipo de interface reconstrói o lettering em CSS e **não é o arquivo de arte final vetorial original**. Substituir pelo SVG oficial quando disponível.
+O cabeçalho usa a versão compacta do símbolo e lettering adaptado por CSS para legibilidade; o login usa o lettering vetorizado a partir da imagem de referência. **São traçados vetoriais derivados da arte enviada, não o arquivo-fonte oficial.**
 
 ## Interface
 
