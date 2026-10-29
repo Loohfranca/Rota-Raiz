@@ -7,6 +7,14 @@ export async function saveProfile(id,details){
  const {data,error}=await supabase.from("rr_profiles").update({display_name:details.display_name.trim().slice(0,60),bio:details.bio.trim().slice(0,240),instagram:details.instagram.trim().replace(/^@/,"").slice(0,30)}).eq("user_id",id).select().single();
  errorOf(error,"Erro ao salvar perfil.");return data;
 }
+export async function getTravelerRecommendations(userId) {
+ const {data,error}=await supabase.from("community_recommendations")
+   .select("id,name,city,category,note,image_url,created_at")
+   .eq("user_id",userId).eq("status","approved")
+   .order("created_at",{ascending:false}).limit(100);
+ errorOf(error,"Não foi possível carregar as indicações.");
+ return data||[];
+}
 export async function getProfileCities(id){const {data,error}=await supabase.from("rr_profile_cities").select("id,user_id,city,state,created_at").eq("user_id",id).order("created_at",{ascending:false});errorOf(error,"Erro ao carregar cidades.");return data||[];}
 export async function addProfileCity(userId,city,state){const {data,error}=await supabase.from("rr_profile_cities").insert({user_id:userId,city:city.trim(),state:state.trim()}).select().single();errorOf(error,"Não foi possível cadastrar cidade. Verifique se já foi cadastrada.");return data;}
 export async function deleteProfileCity(id){const {error}=await supabase.from("rr_profile_cities").delete().eq("id",id);errorOf(error,"Não foi possível remover a cidade.");}
