@@ -38,6 +38,10 @@ export default function App() {
   const [signOutError, setSignOutError] = useState("");
   const itineraries = useItineraries(session?.user?.id);
   const [pendingPlace,setPendingPlace] = useState(null);
+  const [experienceOpenRequest,setExperienceOpenRequest] = useState(0);
+  const [theme,setTheme] = useState(()=>{try{return localStorage.getItem("rotaraiz_theme")==="dark"?"dark":"light";}catch{return "light";}});
+  useEffect(()=>{document.documentElement.dataset.theme=theme;document.documentElement.style.colorScheme=theme;try{localStorage.setItem("rotaraiz_theme",theme);}catch{}},[theme]);
+  function openExperiences(){setExperienceOpenRequest(n=>n+1);handleTabChange("itinerary");}
   const [itineraryNotice,setItineraryNotice] = useState("");
   const [savePlaceError,setSavePlaceError] = useState("");
   useEffect(()=>{ setItineraryNotice("");setSavePlaceError("");setPendingPlace(previous=>{previous?.resolve(false);return null;}); },[session?.user?.id]);
@@ -156,6 +160,8 @@ export default function App() {
         dataSource={dataSource}
         user={session.user}
         onSignOut={signOut}
+        theme={theme}
+        onThemeChange={()=>setTheme(t=>t==="dark"?"light":"dark")}
       />
 
       {itineraryNotice && !itineraries.loading && <p className="itinerary-app-notice" role="status">{itineraryNotice}<button onClick={()=>{setItineraryNotice("");handleTabChange("itinerary");}}>Ver viagem</button></p>}
@@ -221,11 +227,11 @@ export default function App() {
             />
           </>
         ) : activeTab === "itinerary" ? (
-          <ItineraryView store={itineraries} onOpenPlace={setSelectedTour} onRoute={goToRoutesWith} />
+          <ItineraryView store={itineraries} onOpenPlace={setSelectedTour} onRoute={goToRoutesWith} experienceOpenRequest={experienceOpenRequest} />
         ) : activeTab === "trip" ? (
           <AccountsView key={session.user.id} user={session.user} inviteToken={inviteToken} onInviteHandled={() => { clearInvite(); setInviteToken(null); }} />
         ) : activeTab === "community" ? (
-          <CommunityView key={session.user.id} user={session.user} onRoute={goToRoutesWith} onSavePlace={addPlaceToTrip} />
+          <CommunityView key={session.user.id} user={session.user} onRoute={goToRoutesWith} onSavePlace={addPlaceToTrip} onViewExperiences={openExperiences} />
         ) : activeTab === "tours" ? null : activeTab === "admin" ? (
           <AdminView onBack={() => setActiveTab("routes")} />
         ) : null}
