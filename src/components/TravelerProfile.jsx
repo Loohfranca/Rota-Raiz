@@ -1,9 +1,9 @@
 import React,{useCallback,useEffect,useState} from "react";
-import {ArrowLeft,Camera,Heart,MapPin,Plus,Trash2,Pencil,Check,ExternalLink,UserRound,ImagePlus} from "lucide-react";
+import {ArrowLeft,Camera,Heart,MapPin,Plus,Trash2,Pencil,Check,ExternalLink,UserRound,ImagePlus,Compass,ChevronRight} from "lucide-react";
 import * as api from "../lib/travelerProfiles";
-export default function TravelerProfile({viewer,profileId,onBack}){
+export default function TravelerProfile({viewer,profileId,onBack,onOpenRecommendation,onOpenCommunity}){
  const own=viewer?.id===profileId;
- const [profile,setProfile]=useState(null),[cities,setCities]=useState([]),[photos,setPhotos]=useState([]);
+ const [profile,setProfile]=useState(null),[cities,setCities]=useState([]),[photos,setPhotos]=useState([]),[recommendations,setRecommendations]=useState([]);
  const [loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState("");
  const [editing,setEditing]=useState(false),[draft,setDraft]=useState({display_name:"",bio:"",instagram:""});
  const [addingCity,setAddingCity]=useState(false),[cityName,setCityName]=useState(""),[stateName,setStateName]=useState("");
@@ -12,8 +12,8 @@ export default function TravelerProfile({viewer,profileId,onBack}){
    if(!profileId)return;setError("");setLoading(true);
    try{
     if(own)await api.ensureProfile();
-    const [p,c,images]=await Promise.all([api.getProfile(profileId),api.getProfileCities(profileId),api.getCityPhotos(profileId)]);
-    setProfile(p);setDraft({display_name:p?.display_name||"",bio:p?.bio||"",instagram:p?.instagram||""});setCities(c);setPhotos(images);
+    const [p,c,images,places]=await Promise.all([api.getProfile(profileId),api.getProfileCities(profileId),api.getCityPhotos(profileId),api.getTravelerRecommendations(profileId)]);
+    setProfile(p);setDraft({display_name:p?.display_name||"",bio:p?.bio||"",instagram:p?.instagram||""});setCities(c);setPhotos(images);setRecommendations(places);
    }catch(e){setError(e.message);}finally{setLoading(false);}
  },[profileId,own]);
  useEffect(()=>{refresh();},[refresh]);
@@ -37,7 +37,7 @@ export default function TravelerProfile({viewer,profileId,onBack}){
      </div>
      {own&&<button className="small-action rr-profile-edit" onClick={()=>setEditing(v=>!v)}><Pencil size={16}/> {editing?"Fechar":"Editar perfil"}</button>}
     </div>
-    <div className="rr-profile-numbers"><span><b>{cities.length}</b> cidades</span><span><b>{count}</b> fotos</span><span><Heart size={14}/> {photos.reduce((a,p)=>a+p.likes,0)} curtidas</span></div>
+    <div className="rr-profile-numbers"><span><b>{cities.length}</b> cidades</span><span><b>{count}</b> fotos</span><span><b>{recommendations.length}</b> indicações</span><span><Heart size={14}/> {photos.reduce((a,p)=>a+p.likes,0)} curtidas</span></div>
    </header>
    {own&&editing&&<form className="rr-profile-editor" onSubmit={e=>{e.preventDefault();execute(async()=>{await api.saveProfile(viewer.id,draft);setEditing(false);},"Perfil atualizado.");}}>
     <label>Seu nome público<input required minLength={2} maxLength={60} value={draft.display_name} onChange={e=>setDraft({...draft,display_name:e.target.value})}/></label>
@@ -45,7 +45,7 @@ export default function TravelerProfile({viewer,profileId,onBack}){
     <label>Instagram (opcional)<input maxLength={30} placeholder="@usuario" value={draft.instagram} onChange={e=>setDraft({...draft,instagram:e.target.value})}/></label>
     <button className="primary-action" disabled={busy}><Check size={17}/> Salvar perfil</button>
    </form>}
-   <div className="rr-profile-section-title"><div><span className="eyebrow">MEU MAPA DE MEMÓRIAS</span><h2>Cidades por onde passei</h2><p>Cada destino reúne fotos compartilhadas pelo viajante.</p></div>{own&&<button className="small-action" onClick={()=>setAddingCity(v=>!v)}><Plus size={16}/> Cidade</button>}</div>
+   <div className="rr-profile-section-title"><div><span className="eyebrow">ÁLBUM DE VIAGENS</span><h2>Destinos visitados</h2><p>As cidades e as fotos que o viajante compartilhou.</p></div>{own&&<button type="button" className="rr-profile-plus" onClick={()=>setAddingCity(v=>!v)} title="Adicionar destino" aria-label="Adicionar destino" aria-expanded={addingCity}><Plus size={20}/></button>}</div>
    {own&&addingCity&&<form className="rr-profile-city-form" onSubmit={e=>{e.preventDefault();execute(()=>api.addProfileCity(viewer.id,cityName,stateName),"Destino adicionado.");setCityName("");setStateName("");setAddingCity(false);}}>
     <label>Cidade<input required maxLength={100} value={cityName} onChange={e=>setCityName(e.target.value)} placeholder="Salvador"/></label>
     <label>Estado<input maxLength={60} value={stateName} onChange={e=>setStateName(e.target.value)} placeholder="Bahia"/></label>
@@ -71,6 +71,22 @@ export default function TravelerProfile({viewer,profileId,onBack}){
      </article>;
    })}
    </div>
+   <div className="rr-profile-section-title rr-profile-recommendation-heading">
+      <div><span className="eyebrow">DICAS PARA OUTROS VIAJANTES</span><h2>Indicações</h2><p>Os lugares que {own?"você compartilhou":"este viajante compartilhou"} na Comunidade.</p></div>
+      {own&&<button type="button" className="small-action" onClick={onOpenCommunity}><Plus size={16}/> Indicar lugar</button>}
+   </div>
+   {recommendations.length>0?
+     <div className="rr-profile-recommendations">{recommendations.map(place=>
+       <button type="button" className="rr-profile-recommendation" key={place.id} onClick={()=>onOpenRecommendation?.(place.id)}>
+         {place.image_url?<img src={place.image_url} alt="" loading="lazy"/>:<span className="rr-profile-recommendation-icon"><MapPin size={23}/></span>}
+         <span className="rr-profile-recommendation-text">
+           <small>{place.category==="Comida"?"Alimentação":place.category} · {place.city}</small>
+           <strong>{place.name}</strong>
+           <span>{place.note}</span>
+         </span>
+         <ChevronRight size={18} aria-hidden="true"/>
+       </button>)}</div>
+     :<div className="rr-profile-empty"><Compass size={26}/><p>{own?"Você ainda não indicou nenhum lugar. Compartilhe sua primeira dica na Comunidade.":"Este viajante ainda não publicou indicações."}</p>{own&&<button type="button" className="small-action" onClick={onOpenCommunity}>Ir à Comunidade</button>}</div>}
    {own&&<p className="rr-profile-limits">Você pode compartilhar até 6 fotos por cidade e 15 fotos de viagem no total, além da foto de perfil. Fotos públicas recebem apenas curtidas; comentários ficam nas indicações da Comunidade.</p>}
   </>}
  </section>;
