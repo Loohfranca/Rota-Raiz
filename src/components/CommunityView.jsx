@@ -250,6 +250,7 @@ export default function CommunityView({ onRoute, onSavePlace, user, api = liveCo
           <RecommendationForm
             user={user}
             initial={form.initial}
+            editing={!!form.editId}
             onSave={publish}
           />
         </Sheet>
@@ -257,7 +258,7 @@ export default function CommunityView({ onRoute, onSavePlace, user, api = liveCo
     </div>
   );
 }
-function RecommendationForm({ user, initial, onSave }) {
+function RecommendationForm({ user, initial, editing, onSave }) {
   const [photo,setPhoto]=useState(null);
   const [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
@@ -367,7 +368,7 @@ function RecommendationForm({ user, initial, onSave }) {
         </p>
       )}
       <button className="primary-action" disabled={busy}>
-        {busy ? "Publicando…" : "Publicar na comunidade"}
+        {busy ? "Salvando…" : (editing ? "Salvar alterações" : "Publicar na comunidade")}
       </button>
     </form>
   );
