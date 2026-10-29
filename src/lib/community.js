@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { optimizeGalleryImage } from "./travelerProfiles";
 export const COMMUNITY_CATEGORIES = [
   "Alimentação",
   "Praia",
@@ -138,22 +139,6 @@ export async function deleteComment(commentId) {
   const {error}=await supabase.from("community_comments").delete().eq("id",commentId);
   if(error)throw new Error("Não foi possível excluir seu comentário.");
 }
-async function optimizeImage(file) {
-  if(!["image/jpeg","image/png","image/webp"].includes(file.type))throw new Error("Envie JPG, PNG ou WebP.");
-  if(file.size>3*1024*1024)throw new Error("A imagem deve ter até 3 MB.");
-  // Limitar resolução no navegador para economizar armazenamento e transferência.
-  const img=await createImageBitmap(file);
-  try {
-    const scale=Math.min(1,1400/Math.max(img.width,img.height));
-    const canvas=document.createElement("canvas");
-    canvas.width=Math.max(1,Math.round(img.width*scale));
-    canvas.height=Math.max(1,Math.round(img.height*scale));
-    canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);
-    const blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/webp",.80));
-    if(!blob) throw new Error("Não foi possível preparar a foto.");
-    return blob;
-  } finally { img.close?.(); }
-}
 function oldPhotoPath(url) {
   const marker="/storage/v1/object/public/community-photos/";
   if(typeof url!=="string"||!url.includes(marker))return null;
@@ -161,7 +146,7 @@ function oldPhotoPath(url) {
 }
 export async function uploadRecommendationPhoto(user,id,file,previousUrl="") {
   if(!supabase||!user?.id)throw new Error("Entre na conta para enviar uma foto.");
-  const blob=await optimizeImage(file);
+  const blob=await optimizeGalleryImage(file);
   const {data:room,error:roomError}=await supabase.rpc("rr_storage_room",{p_uid:user.id});
   if(roomError)throw new Error("Não foi possível verificar o limite de fotos.");
   if(!room)throw new Error("Limite preventivo de fotos atingido (20 por conta ou 700 MB no total). Procure a administração.");
