@@ -5313,3 +5313,35 @@
 .rr-profile-batch-actions .primary-action{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 14px;}
 @media(min-width:1000px){.rr-profile-cities{grid-template-columns:repeat(3,minmax(0,1fr));}}
 @media(max-width:620px){.rr-profile-cities{grid-template-columns:1fr;}.rr-profile-instagram-image{aspect-ratio:4/5;}.rr-profile-photo-location{font-size:20px;}}
+
+/* Miniaturas compactas, como o grid do Instagram. Foto grande apenas ao tocar. */
+.rr-profile-cities{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,240px),1fr));gap:12px;align-items:start;}
+.rr-profile-city{border-radius:15px;min-width:0;}
+.rr-profile-city-header{padding:10px 11px 9px;}
+.rr-profile-city-header h3{font-size:15px;margin:0 0 2px;}
+.rr-profile-city-header p{font-size:11px;}
+.rr-profile-thumbnail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;padding:0 8px 8px;}
+.rr-profile-thumbnail{display:block;position:relative;overflow:hidden;aspect-ratio:1/1;background:var(--surface-container-high);min-width:0;padding:0;border:0;border-radius:7px;text-align:left;}
+.rr-profile-thumbnail>img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .2s;}
+.rr-profile-thumbnail:hover>img{transform:scale(1.04);}
+.rr-profile-thumbnail::after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.58),transparent 40%,transparent 60%,rgba(0,0,0,.36));pointer-events:none;}
+.rr-profile-thumbnail-name{position:absolute;z-index:1;top:8px;left:7px;right:5px;display:flex;align-items:center;gap:4px;color:white;font-size:11px;font-weight:750;text-shadow:0 1px 4px rgba(0,0,0,.55);overflow-wrap:anywhere;line-height:1.25;}
+.rr-profile-thumbnail-name svg{flex-shrink:0;}
+.rr-profile-thumbnail-likes{position:absolute;z-index:1;right:7px;bottom:6px;color:white;font-size:11px;display:flex;align-items:center;gap:4px;}
+.rr-profile-empty-gallery{height:96px;font-size:11px;}
+.rr-profile-city .rr-profile-batch-picker{padding:8px;}
+.rr-profile-city .rr-profile-gallery-select{min-height:40px;font-size:12px;}
+.rr-profile-lightbox-backdrop{position:fixed;inset:0;z-index:1000;padding:15px;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;}
+.rr-profile-lightbox{width:min(460px,100%);max-height:calc(100dvh - 30px);display:flex;flex-direction:column;overflow:hidden;border-radius:16px;background:var(--surface-container-lowest);color:var(--on-surface);box-shadow:0 14px 55px rgba(0,0,0,.36);}
+.rr-profile-lightbox-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 12px;min-height:48px;}
+.rr-profile-lightbox-head strong{display:flex;align-items:center;gap:7px;font-size:14px;}
+.rr-profile-lightbox-close{min-width:40px;min-height:40px;display:grid;place-items:center;border-radius:50%;color:var(--on-surface);}
+.rr-profile-lightbox-photo{position:relative;min-height:0;display:flex;justify-content:center;align-items:center;background:#111;overflow:hidden;}
+.rr-profile-lightbox-photo>img{display:block;width:100%;max-height:calc(100dvh - 155px);object-fit:contain;}
+.rr-profile-lightbox-actions{padding:9px 13px;display:flex;align-items:center;gap:12px;min-height:52px;}
+.rr-profile-lightbox-actions>button{display:flex;align-items:center;gap:7px;min-height:40px;color:var(--on-surface);font-size:12px;}
+.rr-profile-lightbox-actions>button[aria-pressed="true"]{color:var(--primary);}
+.rr-profile-lightbox-actions p{flex:1;min-width:0;margin:0;font-size:12px;color:var(--on-surface-variant);overflow-wrap:anywhere;}
+.rr-profile-lightbox-trash{margin-left:auto;color:var(--on-surface-variant)!important;}
+@media(min-width:1000px){.rr-profile-cities{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));}}
+@media(max-width:620px){.rr-profile-cities{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}.rr-profile-city-header h3{font-size:13px;}.rr-profile-city-header{padding:8px;}.rr-profile-thumbnail-grid{gap:3px;padding:0 5px 5px;}.rr-profile-thumbnail-name{font-size:10px;top:5px;left:4px;}.rr-profile-thumbnail-name svg{width:10px;}.rr-profile-thumbnail-likes{font-size:10px;}.rr-profile-city .rr-profile-gallery-select{font-size:10px;}}
