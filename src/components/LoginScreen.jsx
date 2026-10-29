@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Compass, ArrowRight, ShieldCheck } from "lucide-react";
+import { ArrowRight, ShieldCheck } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
 export default function LoginScreen({ loading = false }) {
@@ -23,13 +23,13 @@ export default function LoginScreen({ loading = false }) {
   }
 
   return (
-    <main style={{ minHeight: "100dvh", display: "grid", placeItems: "center", background: "var(--surface, #f7f5ee)", padding: "28px 18px" }}>
-      <section aria-label="Entrar no Rota Raiz" style={{ width: "100%", maxWidth: 420, padding: "40px 28px", background: "var(--surface-container-lowest, #fffefa)", border: "1px solid var(--border-color, #d9ded2)", borderRadius: 28, boxShadow: "0 20px 65px rgba(36,62,50,.08)", textAlign: "center" }}>
-        <div style={{ display: "inline-grid", placeItems: "center", width: 66, height: 66, borderRadius: 20, background: "var(--secondary, #243e32)", color: "white", marginBottom: 16 }}>
-          <Compass size={33} />
+    <main className="rr-login-screen" style={{ minHeight: "100dvh", display: "grid", placeItems: "center", background: "var(--surface, #f7f5ee)", padding: "28px 18px" }}>
+      <section className="rr-login-card" aria-label="Entrar no Rota Raiz" style={{ width: "100%", maxWidth: 420, padding: "40px 28px", background: "var(--surface-container-lowest, #fffefa)", border: "1px solid var(--border-color, #d9ded2)", borderRadius: 28, boxShadow: "0 20px 65px rgba(36,62,50,.08)", textAlign: "center" }}>
+        <div className="rr-login-brand" aria-label="Rota Raiz — o caminho também é viagem">
+          <img src="/rota-mark.svg" alt="" width="66" height="97"/>
+          <div className="rr-login-wordmark">rota <span>raiz</span></div>
+          <p>o caminho também é viagem</p>
         </div>
-        <div style={{ fontFamily: "var(--font-headline, sans-serif)", fontSize: 34, fontWeight: 800, letterSpacing: "-1.4px", color: "var(--on-surface, #243e32)" }}>rota<span style={{ fontWeight: 400 }}>raiz</span></div>
-        <p style={{ margin: "3px 0 30px", color: "var(--on-surface-variant, #596458)", fontSize: 13 }}>o caminho também é viagem</p>
         <h1 style={{ fontSize: 26, lineHeight: 1.2, margin: "0 0 12px", color: "var(--on-surface, #243e32)" }}>Sua próxima viagem começa aqui.</h1>
         <p style={{ color: "var(--on-surface-variant, #596458)", margin: "0 0 30px", lineHeight: 1.6 }}>Descubra lugares, organize suas viagens e compartilhe os melhores caminhos.</p>
         {loading ? (
