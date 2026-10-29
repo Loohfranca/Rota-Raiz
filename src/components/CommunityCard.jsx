@@ -10,7 +10,7 @@ function Instagram({size=18}) {
     <circle cx="18" cy="6" r="1" fill="currentColor" stroke="none" />
   </svg>;
 }
-export default function CommunityCard({ item, user, stats, onRoute, onSavePlace, onRefresh, onError }) {
+export default function CommunityCard({ item, user, stats, onRoute, onSavePlace, onRefresh, onError, onEdit, onDelete }) {
   const [open,setOpen]=useState(false);
   const [liked,setLiked]=useState(false);
   const [likes,setLikes]=useState(0);
@@ -122,6 +122,7 @@ export default function CommunityCard({ item, user, stats, onRoute, onSavePlace,
           <button type="button" onClick={()=>onRoute({name:item.name+", "+item.address,address:item.address,route_by_name:true})}>Como ir <ArrowUpRight size={16}/></button>
           <button type="button" onClick={saveExperience}><Bookmark size={16}/>Salvar nas Experiências</button>
         </div>
+        {owner&&<div className="rr-social-own-actions"><button type="button" onClick={()=>{setOpen(false);onEdit?.(item);}}><Pencil size={15}/>Editar indicação</button><button type="button" onClick={()=>{setOpen(false);onDelete?.(item);}}><Trash2 size={15}/>Excluir indicação</button></div>}
         {owner&&<div className="rr-social-upload">
           <b>Fotografia do lugar</b>
           <label className="rr-social-upload-label">Selecionar foto (JPG, PNG ou WebP, até 3 MB)
