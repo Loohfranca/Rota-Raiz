@@ -4981,3 +4981,7 @@
   .rr-social-author { width:100%; max-width:none; flex-basis:100%; }
   .rr-social-bottom .rr-social-save { margin-left:auto; }
 }
+
+.rr-social-own-actions { display:flex; gap:8px; flex-wrap:wrap; }
+.rr-social-own-actions button { display:inline-flex; align-items:center; gap:6px; padding:9px 12px; min-height:39px; border:1px solid var(--border-color); border-radius:11px; font-size:12px; font-weight:600; }
+.rr-social-own-actions button:last-child { color:#994037; }
