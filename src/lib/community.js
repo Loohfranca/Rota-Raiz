@@ -171,3 +171,15 @@ export async function removeRecommendationPhoto(id,previousUrl) {
   const path=oldPhotoPath(previousUrl);
   if(path)await supabase.storage.from("community-photos").remove([path]);
 }
+
+export async function updateRecommendation(id,item) {
+  const {data,error}=await supabase.rpc("rr_update_recommendation",{p_id:id,p:item});
+  if(error)throw new Error("Não foi possível editar a indicação. Verifique os dados e tente novamente.");
+  return data;
+}
+export async function deleteRecommendation(id,imageUrl) {
+  const {error}=await supabase.rpc("rr_delete_recommendation",{p_id:id});
+  if(error)throw new Error("Não foi possível excluir a indicação.");
+  const path=oldPhotoPath(imageUrl);
+  if(path)await supabase.storage.from("community-photos").remove([path]);
+}
