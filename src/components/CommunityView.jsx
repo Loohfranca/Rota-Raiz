@@ -33,8 +33,9 @@ const icons = {
   Outros: MapPin,
 };
 const LEGACY = "rotaraiz_recommendations_v1";
-export default function CommunityView({ onRoute, onSavePlace, onViewExperiences, user, openRequest, onOpenHandled, api = liveCommunity }) {
+export default function CommunityView({ onRoute, onSavePlace, onViewExperiences, user, openRequest, onOpenHandled, onOpenProfile, api = liveCommunity }) {
   const [engagement,setEngagement] = useState({});
+  const [authors,setAuthors]=useState({});
   const [items, setItems] = useState([]),
     [loading, setLoading] = useState(true),
     [error, setError] = useState(""),
@@ -97,6 +98,12 @@ export default function CommunityView({ onRoute, onSavePlace, onViewExperiences,
         .toLocaleLowerCase()
         .includes(query.toLocaleLowerCase()),
   );
+  useEffect(()=>{
+    let active=true;
+    const ids=[...new Set(items.map(x=>x.user_id).filter(Boolean))];
+    api.getPublicAuthors(ids).then(profiles=>{if(active)setAuthors(profiles);}).catch(()=>{});
+    return()=>{active=false;};
+  },[items,api]);
   const groupedList=groupCommunityRecommendations(list);
   async function publish(item,photo) {
     const editing=!!form?.editId;
@@ -246,9 +253,12 @@ export default function CommunityView({ onRoute, onSavePlace, onViewExperiences,
         <div className="community-feed">
           {groupedList.map(group=><CommunityCard key={group[0].id} openRequest={openRequest && group.some(item=>item.id===openRequest.id)?openRequest:null} onOpenHandled={onOpenHandled} groupItems={group} user={user}
               allStats={engagement}
+              authorProfile={authors[group[0].user_id]}
+              authorProfiles={authors}
               onRoute={onRoute}
               onSavePlace={onSavePlace}
               onViewExperiences={onViewExperiences}
+              onOpenProfile={onOpenProfile}
               onRefresh={refresh}
               onError={setError}
               onEdit={item=>setForm({initial:item,editId:item.id})}

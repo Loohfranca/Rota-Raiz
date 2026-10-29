@@ -11,6 +11,8 @@ import CommunityView from "./components/CommunityView";
 import { ArrowLeft, MapPin } from "lucide-react";
 import MapView from "./components/MapView";
 import AdminView from "./components/AdminView";
+import TravelerProfile from "./components/TravelerProfile";
+import {ensureProfile} from "./lib/travelerProfiles";
 import { isSupabaseConfigured, supabase } from "./lib/supabase";
 import LoginScreen from "./components/LoginScreen";
 import ItineraryView, { SavePlaceSheet } from "./components/ItineraryView";
@@ -37,6 +39,8 @@ export default function App() {
   const [authReady, setAuthReady] = useState(false);
   const [session, setSession] = useState(null);
   const [signOutError, setSignOutError] = useState("");
+  const [profileId,setProfileId] = useState(null);
+  const [profileReturnTab,setProfileReturnTab]=useState("community");
   const [isAdmin,setIsAdmin]=useState(false);
   const [adminAlerts,setAdminAlerts]=useState(0);
   useEffect(()=>{
@@ -50,6 +54,9 @@ export default function App() {
     return()=>{current=false;clearInterval(timer);document.removeEventListener("visibilitychange",ping);};
   },[session?.user?.id]);
   const itineraries = useItineraries(session?.user?.id);
+  useEffect(()=>{if(session?.user?.id)ensureProfile().catch(e=>console.warn("Perfil ainda não configurado",e.message));},[session?.user?.id]);
+  function showProfile(id){if(!id)return;setProfileReturnTab(activeTab);setProfileId(id);setActiveTab("profile");setSelectedRoute(null);setSelectedTour(null);window.scrollTo({top:0,behavior:"instant"});}
+
   const [pendingPlace,setPendingPlace] = useState(null);
   const [experienceOpenRequest,setExperienceOpenRequest] = useState(0);
   const [theme,setTheme] = useState(()=>{try{return localStorage.getItem("rotaraiz_theme")==="dark"?"dark":"light";}catch{return "light";}});
@@ -186,6 +193,7 @@ export default function App() {
         onSignOut={signOut}
         isAdmin={isAdmin}
         adminAlerts={adminAlerts}
+        onOpenProfile={()=>showProfile(session.user.id)}
         onOpenAdmin={()=>handleTabChange("admin")}
         theme={theme}
         onThemeChange={()=>setTheme(t=>t==="dark"?"light":"dark")}
@@ -257,8 +265,10 @@ export default function App() {
           <ItineraryView store={itineraries} onOpenPlace={setSelectedTour} onRoute={goToRoutesWith} experienceOpenRequest={experienceOpenRequest} />
         ) : activeTab === "trip" ? (
           <AccountsView key={session.user.id} user={session.user} inviteToken={inviteToken} onInviteHandled={() => { clearInvite(); setInviteToken(null); }} />
+        ) : activeTab === "profile" ? (
+          <TravelerProfile key={profileId} profileId={profileId||session.user.id} viewer={session.user} onBack={()=>handleTabChange(profileReturnTab)}/>
         ) : activeTab === "community" ? (
-          <CommunityView openRequest={communityOpenRequest} onOpenHandled={()=>setCommunityOpenRequest(null)} key={session.user.id} user={session.user} onRoute={goToRoutesWith} onSavePlace={addPlaceToTrip} onViewExperiences={openExperiences} />
+          <CommunityView openRequest={communityOpenRequest} onOpenHandled={()=>setCommunityOpenRequest(null)} key={session.user.id} user={session.user} onRoute={goToRoutesWith} onSavePlace={addPlaceToTrip} onViewExperiences={openExperiences} onOpenProfile={showProfile} />
         ) : activeTab === "tours" ? null : activeTab === "admin" ? (
           isAdmin ? <AdminView onBack={() => setActiveTab("tours")} /> : <div className="travel-empty"><h2>Acesso restrito</h2><p>Você precisa de permissão administrativa.</p></div>
         ) : null}

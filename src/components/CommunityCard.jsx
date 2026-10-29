@@ -10,7 +10,7 @@ function Instagram({size=18}) {
     <circle cx="18" cy="6" r="1" fill="currentColor" stroke="none" />
   </svg>;
 }
-export default function CommunityCard({ groupItems, openRequest, onOpenHandled, user, allStats, onRoute, onSavePlace, onViewExperiences, onRefresh, onError, onEdit, onDelete }) {
+export default function CommunityCard({ groupItems, openRequest, onOpenHandled, user, allStats, onRoute, onSavePlace, onViewExperiences, onOpenProfile, authorProfiles={}, onRefresh, onError, onEdit, onDelete }) {
   const [activeIndex,setActiveIndex]=useState(0);
   const touchStart=React.useRef(null);
   const item=groupItems[activeIndex] || groupItems[0];
@@ -123,7 +123,8 @@ export default function CommunityCard({ groupItems, openRequest, onOpenHandled, 
   }
   const mapsUrl="https://www.google.com/maps/dir/?api=1&destination="+encodeURIComponent([item.name,item.address,item.city].filter(Boolean).join(", "))+"&dir_action=navigate";
   const location=item.city?.split(",")[0]||"";
-  const author=item.author_name||"Viajante";
+  const publicAuthor=authorProfiles[item.user_id];
+  const author=publicAuthor?.display_name||item.author_name||"Viajante";
   const insta=api.safeInstagram(item.instagram);
   const owner=!!user && item.user_id===user.id;
   const photo=imageUrl||"";
@@ -143,7 +144,7 @@ export default function CommunityCard({ groupItems, openRequest, onOpenHandled, 
         <ChevronRight size={19} className="rr-social-chevron"/>
       </button>
       <div className="rr-social-bottom">
-        <span className="rr-social-author"><span className="rr-social-author-icon">{item.editorial?"R":author[0]?.toUpperCase()}</span><span><b>{author}</b><small>{item.editorial?"sugestão editorial":"indicou este lugar"}</small></span></span>
+        <button type="button" className="rr-social-author rr-author-profile-link" disabled={!item.user_id} onClick={()=>onOpenProfile?.(item.user_id)}><span className="rr-social-author-icon">{publicAuthor?.avatar_url?<img className="rr-profile-mini-avatar" src={publicAuthor.avatar_url} alt=""/>:item.editorial?"R":author[0]?.toUpperCase()}</span><span><b>{author}</b><small>{item.editorial?"sugestão editorial":"Ver perfil"}</small></span></button>
         <button type="button" disabled={busy} onClick={toggleLike} aria-label={liked?"Descurtir":"Curtir"} aria-pressed={liked}><Heart size={18} fill={liked?"currentColor":"none"}/><span>{likes}</span></button>
         <button type="button" onClick={openDetail} aria-label={"Ver "+count+" comentários"}><MessageCircle size={18}/><span>{count}</span></button>
         {insta && <a href={insta} target="_blank" rel="noopener noreferrer" title="Instagram do lugar" aria-label={"Instagram de "+item.name}><Instagram size={18}/></a>}
@@ -165,7 +166,7 @@ export default function CommunityCard({ groupItems, openRequest, onOpenHandled, 
         <p className="rr-social-category">{item.category==="Comida"?"Alimentação":item.category} · {item.city}</p>
         <p className="rr-social-location"><MapPin size={15}/>{item.address}</p>
         <p className="rr-social-note">{item.note}</p>
-        <p className="rr-social-attribution">{item.editorial?"Sugestão editorial da Equipe Rota Raiz":"Indicado por "+author}</p>
+        <p className="rr-social-attribution">{item.editorial?"Sugestão editorial da Equipe Rota Raiz":<button type="button" className="rr-author-profile-link" onClick={()=>{setOpen(false);onOpenProfile?.(item.user_id);}}>Indicado por {author} · ver perfil</button>}</p>
         {item.source_url&&<a className="rr-social-source" target="_blank" rel="noopener noreferrer" href={item.source_url}>Consultar referência do lugar <ArrowUpRight size={14}/></a>}
         <div className="rr-social-detail-actions">
           <button type="button" onClick={toggleLike} aria-pressed={liked} disabled={busy}><Heart size={17} fill={liked?"currentColor":"none"}/>{likes} curtidas</button>
