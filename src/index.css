@@ -5084,3 +5084,20 @@
 }
 
 .explore-origin > summary:focus-visible, .explore-more > summary:focus-visible { outline:3px solid var(--primary); outline-offset:3px; border-radius:8px; }
+
+/* Local autocomplete: immediate, bounded suggestions, no network on typing. */
+.local-autocomplete { position:relative; min-width:0; width:100%; }
+.local-autocomplete > input { width:100%; min-width:0; min-height:48px; font-size:15px; color:var(--on-surface); }
+.local-autocomplete ul { position:absolute; left:0; right:0; top:calc(100% + 6px); z-index:40; list-style:none; margin:0; padding:5px; max-height:280px; overflow:auto; background:var(--surface-container-lowest); border:1px solid var(--border-color); border-radius:14px; box-shadow:var(--shadow); }
+.local-autocomplete li { margin:0; padding:0; }
+.local-autocomplete [role="option"] { display:flex; flex-direction:column; align-items:flex-start; justify-content:center; gap:2px; width:100%; min-height:48px; padding:10px; text-align:left; border-radius:9px; color:var(--on-surface); }
+.local-autocomplete [role="option"]:hover, .local-autocomplete [role="option"][aria-selected="true"] { background:var(--secondary-container); }
+.local-autocomplete [role="option"] strong { font-size:14px; line-height:1.35; }
+.local-autocomplete [role="option"] small { font-size:12px; line-height:1.35; color:var(--on-surface-variant); }
+.explore-city-select .local-autocomplete > input, .beach-search .local-autocomplete > input { border:0; padding:8px 0; border-radius:0; background:transparent; }
+.explore-city-select .local-autocomplete, .beach-search .local-autocomplete { flex:1; }
+.explore-city-select { position:relative; }
+.explore-city-select > svg:last-child { pointer-events:none; }
+.explore-page .discovery-controls { align-items:stretch; }
+.explore-page .beach-search { overflow:visible; }
+.brazil-discovery .local-autocomplete > input { border:1px solid var(--border-color); border-radius:14px; padding:11px 13px; background:var(--surface-container-lowest); }
