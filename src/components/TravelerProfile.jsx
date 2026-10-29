@@ -87,7 +87,6 @@ export default function TravelerProfile({viewer,profileId,onBack,onOpenRecommend
     <label>Estado<input maxLength={60} value={stateName} onChange={e=>setStateName(e.target.value)} placeholder="Bahia"/></label>
     <button className="primary-action" disabled={busy}>Adicionar destino</button>
    </form>}
-}
    {own&&<div className="rr-profile-upload-area">
      <button type="button" className="small-action rr-profile-upload-trigger" onClick={()=>setUploadOpen(v=>!v)} aria-expanded={uploadOpen}>
        <ImagePlus size={17}/> {uploadOpen?"Fechar publicação":"Adicionar fotos"}
