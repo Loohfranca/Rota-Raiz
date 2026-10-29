@@ -119,10 +119,13 @@ export async function addComment(recommendationId,body) {
   return data;
 }
 export async function editComment(commentId,body) {
-  const {data,error}=await supabase.from("community_comments").update({body:body.trim()})
-    .eq("id",commentId).select("id,user_id,author_name,body,created_at").single();
+  const {data,error}=await supabase.rpc("rr_edit_community_comment",{p_id:commentId,p_body:body.trim()});
   if(error)throw new Error("Não foi possível editar seu comentário.");
   return data;
+}
+export async function reportComment(commentId) {
+  const {error}=await supabase.rpc("rr_report_comment",{p_comment:commentId});
+  if(error)throw new Error("Não foi possível enviar a denúncia.");
 }
 export async function deleteComment(commentId) {
   const {error}=await supabase.from("community_comments").delete().eq("id",commentId);
