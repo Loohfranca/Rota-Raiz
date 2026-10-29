@@ -1,12 +1,12 @@
 {
-  "name": "Rota Raiz — Litoral Sul da Bahia",
+  "name": "Rota Raiz — o caminho também é viagem",
   "short_name": "Rota Raiz",
-  "description": "App de transporte regional raiz (vans, ônibus, balsa, canoa) e passeios no Litoral Sul da Bahia",
+  "description": "Descubra destinos, organize suas viagens e compartilhe experiências e caminhos.",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#F5EDE1",
-  "theme_color": "#C2461F",
+  "background_color": "#F7F4EE",
+  "theme_color": "#B9552C",
   "icons": [
     {
       "src": "/icon-192.svg",
