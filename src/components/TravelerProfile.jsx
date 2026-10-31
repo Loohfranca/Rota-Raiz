@@ -10,8 +10,8 @@ export default function TravelerProfile({viewer,profileId,onBack,onOpenRecommend
  const [loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState("");
  const [editing,setEditing]=useState(false),[draft,setDraft]=useState({display_name:"",bio:"",instagram:""});
  const [addingCity,setAddingCity]=useState(false),[cityName,setCityName]=useState(""),[stateName,setStateName]=useState(""),[placeName,setPlaceName]=useState("");
- const [selectedPlace,setSelectedPlace]=useState(null),[locationConfirmed,setLocationConfirmed]=useState(false);
- function selectPlace(place){setLocationConfirmed(false);setSelectedPlace(place);setPlaceName(place.name);setCityName(place.municipality||"");setStateName(place.state||"");}
+ const [selectedPlace,setSelectedPlace]=useState(null);
+ function selectPlace(place){setSelectedPlace(place);setPlaceName(place.name);setCityName(place.municipality||"");setStateName(place.state||"");}
  const [selectedPhoto,setSelectedPhoto]=useState(null);
  const [uploadOpen,setUploadOpen]=useState(false),[uploadCityId,setUploadCityId]=useState("");
  const [expandedExperience,setExpandedExperience]=useState(null),[showExperiences,setShowExperiences]=useState(false);
@@ -88,12 +88,12 @@ export default function TravelerProfile({viewer,profileId,onBack,onOpenRecommend
    </form>}
    <div className="rr-profile-section-title"><div><span className="eyebrow">MEMÓRIAS DE VIAGEM</span><h2>Experiências</h2><p>Momentos e lugares que marcaram o caminho.</p></div>{own&&<button type="button" className="rr-profile-plus" onClick={()=>setAddingCity(v=>!v)} title="Cadastrar experiência" aria-label="Cadastrar experiência" aria-expanded={addingCity}><Plus size={20}/></button>}</div>
    {own&&addingCity&&<form className="rr-profile-city-form" onSubmit={e=>{e.preventDefault();execute(async()=>{let place=selectedPlace;
-     if(place?.requires_completion){if(!locationConfirmed)throw new Error("Confirme a localização do lugar.");place=await internalPlaceSearch.completeLegacy(place.id,{municipality:cityName,state:stateName,address:place.address,instagram:place.instagram||'',location_confirmed:locationConfirmed});}
-     await api.addProfileCity(viewer.id,place?.municipality||cityName,place?.state||stateName,place?.name||placeName,place?.id);setCityName("");setStateName("");setPlaceName("");setSelectedPlace(null);setAddingCity(false);},"Experiência adicionada.");}}>
+     if(place?.requires_completion){place=await internalPlaceSearch.completeLegacy(place.id,{municipality:cityName,state:stateName,address:place.address,instagram:place.instagram||''});}
+     await api.addProfileCity(viewer.id,place?.municipality||cityName||selectedPlace?.original_location?.split(' · ')[0]||'Localização a completar',place?.state||stateName,place?.name||placeName,place?.requires_completion?null:place?.id);setCityName("");setStateName("");setPlaceName("");setSelectedPlace(null);setAddingCity(false);},"Experiência adicionada.");}}>
     <InternalPlaceSearch label="Lugar ou experiência" value={placeName} disabled={busy} onChange={text=>{setPlaceName(text);setSelectedPlace(null);}} onSelect={selectPlace} onCreate={(name,destination)=>{setPlaceName(name);setSelectedPlace(null);setCityName(destination?.municipality||"");setStateName(destination?.state||"");}}/>
-    <label>Cidade<input required maxLength={100} value={cityName} readOnly={!!selectedPlace&&!selectedPlace.requires_completion} onChange={e=>{setCityName(e.target.value);setLocationConfirmed(false);}} placeholder="Cairu"/></label>
-    <label>Estado<input maxLength={60} value={stateName} readOnly={!!selectedPlace&&!selectedPlace.requires_completion} onChange={e=>{setStateName(e.target.value);setLocationConfirmed(false);}} placeholder="Bahia"/></label>
-    {selectedPlace?.requires_completion&&<><p className="field-help">Cadastro antigo: {selectedPlace.original_location}. Complete o município e o estado; não será alterado o relato original.</p><label className="rr-legacy-location-confirm"><input type="checkbox" checked={locationConfirmed} onChange={e=>setLocationConfirmed(e.target.checked)}/> Conferi município, estado e referência deste lugar.</label></>}
+    <label>Cidade<input required={!selectedPlace?.requires_completion} maxLength={100} value={cityName} readOnly={!!selectedPlace&&!selectedPlace.requires_completion} onChange={e=>{setCityName(e.target.value);}} placeholder="Cairu"/></label>
+    <label>Estado<input maxLength={60} value={stateName} readOnly={!!selectedPlace&&!selectedPlace.requires_completion} onChange={e=>{setStateName(e.target.value);}} placeholder="Bahia"/></label>
+    {selectedPlace?.requires_completion&&<p className="field-help">Referência: {selectedPlace.address}. Município e estado podem ser completados depois.</p>}
     {!selectedPlace&&<PlaceDuplicateNotice name={placeName} address="" city={cityName} state={stateName} onSelect={selectPlace}/>}
     <button className="primary-action" disabled={busy}>Adicionar experiência</button>
    </form>}

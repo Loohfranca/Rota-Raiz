@@ -51,3 +51,11 @@ Após essa confirmação, a pesquisa retorna o lugar central e deixa de repetir 
 Rollback corretivo protegido em `supabase/rollback/legacy_place_search_completion.sql`; recusa desfazer cadastros já confirmados. A verificação em produção comprovou que `morere` e `Boipeba` retornam a indicação antiga, e que contagens/checksums dos oito lugares e doze relatos permaneceram iguais, com sete curtidas e três comentários. Não foi criada publicação ou localização de teste em produção.
 
 Validação ampliada: 23 testes, build e Chromium em 320/390/768/1440 px, nos dois formulários, incluindo seleção antiga, campos editáveis, confirmação obrigatória e envio com ID central. Sem erros JavaScript/overflow. Dados simulados no navegador; a confirmação real fica a cargo do usuário.
+
+## Remoção da confirmação obrigatória
+
+A pedido do usuário, a caixa “Conferi município, UF e endereço” e sua exigência no servidor foram removidas dos formulários de Perfil e Comunidade. Migração aditiva `20261031030550_remove_legacy_location_confirmation.sql`, sem alterações em publicações existentes.
+
+Para uma indicação antiga, endereço/referência preenchido é suficiente para continuar o fluxo de localização; município/UF incompletos não bloqueiam a publicação. Nome e relato seguem suas validações normais. Com município/UF válidos, o cadastro central ainda é reutilizado/criado. Sem esses dados, a nova experiência mantém a localidade histórica e permanece sem vínculo central, em vez de inventar um município ou cadastrar um lugar compartilhado incorreto. O álbum do Perfil segue compatível com o formato legado. Nenhuma alteração é aplicada ao relato original.
+
+O endereço vazio é rejeitado na interface e no servidor. O estado de confirmação não é enviado nem exigido. Validação: 23 testes, build e Chromium nas quatro larguras, nos dois formulários, sem checkbox, com endereço vazio bloqueado e com endereço preenchido aceito sem município/UF. Consulta de verificação em produção confirmou o caminho sem checkbox, em transação desfeita, sem criar publicação de teste.

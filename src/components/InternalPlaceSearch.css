@@ -20,5 +20,3 @@
 .rr-search-scope button { min-width:44px; min-height:44px; display:grid; place-items:center; }
 .rr-place-duplicates { grid-column:1/-1; padding:8px; background:var(--secondary-container); border-radius:14px; }
 .rr-place-duplicates button { display:block; text-align:left; width:100%; padding:10px; min-height:44px; border-top:1px solid var(--border-color); color:var(--on-surface); }
-.compact-form label.rr-legacy-location-confirm,.rr-profile-city-form label.rr-legacy-location-confirm { display:flex; align-items:center; gap:10px; min-height:44px; line-height:1.4; font-size:14px; }
-.compact-form .rr-legacy-location-confirm input[type=checkbox],.rr-profile-city-form .rr-legacy-location-confirm input[type=checkbox] { width:20px; min-width:20px; max-width:20px; height:20px; min-height:20px; flex:0 0 20px; padding:0; appearance:auto; }

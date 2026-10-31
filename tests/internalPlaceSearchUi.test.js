@@ -69,12 +69,12 @@ test('aviso de homônimo exige escolha e recupera os dados antes de preencher',a
  const ui=userEvent.setup();await ui.click(await screen.findByRole('button',{name:/Mesmo nome; confirme/}));assert.deepEqual(selected,full);
 });
 
-test('cadastro antigo encontrado exige completar município e UF e preserva a referência',async()=>{
+test('cadastro antigo publica com endereço sem exigir checkbox ou município/UF',async()=>{
  const legacy={id:'legacy-morere',kind:'legacy',name:'Moreré',category:'Praia',municipality:'Localização a completar',state:''};
  const fullLegacy={...legacy,municipality:'',address:'Ilha de Boipeba',instagram:'',requires_completion:true,original_location:'Bahia · Ilha de Boipeba'};
  let saved;render(React.createElement(Form,{user:{id:'test'},searchApi:{search:async()=>[legacy],getPlace:async()=>fullLegacy,duplicates:async()=>[]},onSave:async item=>saved=item}));
  const ui=userEvent.setup();await ui.type(screen.getByRole('combobox'),'morere');await ui.click(await screen.findByRole('option',{name:/Cadastro antigo/}));
  assert.equal(screen.getByLabelText('Cidade e estado').value,'');assert.equal(screen.getByLabelText('Cidade e estado').readOnly,false);assert.equal(screen.getByLabelText('Endereço completo').value,'Ilha de Boipeba');
- await ui.type(screen.getByLabelText('Cidade e estado'),'Cairu, BA');await ui.type(screen.getByLabelText('Sua dica'),'Meu relato');await ui.click(screen.getByRole('button',{name:'Publicar na comunidade'}));assert.equal(saved,undefined);assert.match(screen.getByRole('alert').textContent,/confirme/);
- await ui.click(screen.getByLabelText(/Conferi município/));await ui.click(screen.getByRole('button',{name:'Publicar na comunidade'}));assert.equal(saved.legacy_source_id,'legacy-morere');assert.equal(saved.municipality,'Cairu');assert.equal(saved.state,'BA');assert.equal(saved.location_confirmed,true);
+ await ui.type(screen.getByLabelText('Sua dica'),'Meu relato');assert.equal(screen.queryByRole('checkbox'),null);
+ await ui.click(screen.getByRole('button',{name:'Publicar na comunidade'}));assert.equal(saved.legacy_source_id,'legacy-morere');assert.equal(saved.address,'Ilha de Boipeba');assert.equal(saved.location_confirmed,undefined);
 });

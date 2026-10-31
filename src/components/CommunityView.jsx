@@ -287,10 +287,10 @@ export function RecommendationForm({ user, initial, editing, onSave, searchApi }
   const [draft, setDraft] = useState({name:initial?.name||"",category:initial?.category==="Comida"?"Alimentação":initial?.category||"Alimentação",
     city:initial?.city||"",address:initial?.address||"",instagram:initial?.instagram||""});
   const [selected, setSelected] = useState(initial?.place_id?{id:initial.place_id}:null), [manual, setManual] = useState(!!initial || !!editing);
-  const [legacySource,setLegacySource]=useState(null),[locationConfirmed,setLocationConfirmed]=useState(false);
-  const change = (field,value) => {setLocationConfirmed(false);setDraft(current=>({...current,[field]:value}));};
+  const [legacySource,setLegacySource]=useState(null);
+  const change = (field,value) => {setDraft(current=>({...current,[field]:value}));};
   const selectPlace = place => {
-    setLegacySource(place.requires_completion?place:null);setLocationConfirmed(false);
+    setLegacySource(place.requires_completion?place:null);
     setSelected(place.requires_completion?null:place); setManual(!!place.requires_completion);
     setDraft({name:place.name,category:place.category==="Comida"?"Alimentação":place.category==="Praias"?"Praia":COMMUNITY_CATEGORIES.includes(place.category)?place.category:"Outros",
       city:place.requires_completion?"": [place.municipality,place.state].filter(Boolean).join(", "),address:place.address||`Ponto confirmado: ${place.lat}, ${place.lng}`,instagram:place.instagram||""});
@@ -314,12 +314,11 @@ export function RecommendationForm({ user, initial, editing, onSave, searchApi }
             address: f.get("address").trim(),
             instagram: instagramUrl(f.get("instagram")),
             note: f.get("note").trim(),
-            ...(legacySource?{legacy_source_id:legacySource.id,municipality:location.city,state:location.state,location_confirmed:locationConfirmed}:{}),
+            ...(legacySource?{legacy_source_id:legacySource.id,municipality:location.city,state:location.state}:{}),
             ...(selected ? {place_id:selected.id,version:initial?.version??1} : {}),
           };
-          if (!item.name || !item.city || !item.address || !item.note)
+          if (!item.name || (!legacySource&&!item.city) || !item.address || !item.note)
             throw new Error("Preencha nome, cidade, endereço e sua dica.");
-          if(legacySource&&(!location.state||!locationConfirmed))throw new Error("Informe município e UF e confirme a localização do lugar.");
           if(initial?.place_id&&!selected)throw new Error("Selecione um lugar cadastrado para alterar esta indicação.");
           setBusy(true);
           setError("");
@@ -335,10 +334,10 @@ export function RecommendationForm({ user, initial, editing, onSave, searchApi }
         Você indica como <b>{profileName(user)}</b>.
       </p>
       <InternalPlaceSearch value={draft.name} api={searchApi} disabled={busy}
-        onChange={text=>{change("name",text);setSelected(null);setLegacySource(null);setLocationConfirmed(false);}}
-        onSelect={selectPlace} onCreate={(name,destination)=>{setDraft({name,category:"Alimentação",city:destination?[destination.municipality,destination.state].filter(Boolean).join(", "):"",address:"",instagram:""});setSelected(null);setLegacySource(null);setLocationConfirmed(false);setManual(true);}}/>
+        onChange={text=>{change("name",text);setSelected(null);setLegacySource(null);}}
+        onSelect={selectPlace} onCreate={(name,destination)=>{setDraft({name,category:"Alimentação",city:destination?[destination.municipality,destination.state].filter(Boolean).join(", "):"",address:"",instagram:""});setSelected(null);setLegacySource(null);setManual(true);}}/>
       {selected&&<p className="field-help" role="status">Lugar selecionado. Conte agora a sua experiência.</p>}
-      {legacySource&&<p className="field-help" role="status">Este lugar já aparece numa indicação antiga ({legacySource.original_location}). Complete o município e a UF antes de continuar. O relato original será preservado.</p>}
+      {legacySource&&<p className="field-help" role="status">Este lugar já aparece numa indicação antiga ({legacySource.original_location}). Confira o endereço ou referência. Município e UF podem ser completados depois.</p>}
       {(manual||selected)&&<>
       <div className="form-pair">
         <label>
@@ -355,7 +354,7 @@ export function RecommendationForm({ user, initial, editing, onSave, searchApi }
             name="city"
             value={draft.city} onChange={e=>change("city",e.target.value)} readOnly={!!selected}
             placeholder="João Pessoa, PB"
-            required
+            required={!legacySource}
             maxLength={120}
           />
         </label>
@@ -380,7 +379,6 @@ export function RecommendationForm({ user, initial, editing, onSave, searchApi }
           autoCapitalize="none"
         />
       </label>
-      {legacySource&&<label className="rr-legacy-location-confirm"><input type="checkbox" checked={locationConfirmed} onChange={e=>setLocationConfirmed(e.target.checked)}/> Conferi município, UF e endereço ou referência deste lugar.</label>}
       {manual&&!selected&&<PlaceDuplicateNotice name={draft.name} address={draft.address} city={location.city} state={location.state} onSelect={selectPlace} api={searchApi}/>}
       <label>
         Sua dica
