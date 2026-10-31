@@ -37,8 +37,8 @@ as $$
       case when upper(btrim(coalesce(p_city,''))) ~ ',[[:space:]]*[A-Z]{2}$'
         then btrim(regexp_replace(btrim(p_city),',[[:space:]]*[A-Za-z]{2}$',''))
         else btrim(coalesce(p_city,'')) end as city_base,
-      regexp_match(upper(coalesce(p_address,'')),
-        ',[[:space:]]*([^,]+)[[:space:]]*-[[:space:]]*([A-Z]{2})([,[:space:]]*[0-9]{5}-?[0-9]{3})?[[:space:]]*$') as m
+      regexp_match(coalesce(p_address,''),
+        ',[[:space:]]*([^,]+)[[:space:]]*-[[:space:]]*([A-Z]{2})([,[:space:]]*[0-9]{5}-?[0-9]{3})?[[:space:]]*$','i') as m
   ) x;
 $$;
 
