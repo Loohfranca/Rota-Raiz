@@ -2,12 +2,15 @@ import React,{useCallback,useEffect,useState} from "react";
 import {ArrowLeft,Camera,Heart,MapPin,Plus,Trash2,Pencil,Check,ExternalLink,UserRound,ImagePlus,Compass,ChevronRight,ChevronLeft,X} from "lucide-react";
 import * as api from "../lib/travelerProfiles";
 import DestinationPhotoPicker from "./DestinationPhotoPicker";
+import InternalPlaceSearch, { PlaceDuplicateNotice } from "./InternalPlaceSearch";
 export default function TravelerProfile({viewer,profileId,onBack,onOpenRecommendation,onOpenCommunity}){
  const own=viewer?.id===profileId;
  const [profile,setProfile]=useState(null),[cities,setCities]=useState([]),[photos,setPhotos]=useState([]),[recommendations,setRecommendations]=useState([]);
  const [loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState("");
  const [editing,setEditing]=useState(false),[draft,setDraft]=useState({display_name:"",bio:"",instagram:""});
  const [addingCity,setAddingCity]=useState(false),[cityName,setCityName]=useState(""),[stateName,setStateName]=useState(""),[placeName,setPlaceName]=useState("");
+ const [selectedPlace,setSelectedPlace]=useState(null);
+ function selectPlace(place){setSelectedPlace(place);setPlaceName(place.name);setCityName(place.municipality||"");setStateName(place.state||"");}
  const [selectedPhoto,setSelectedPhoto]=useState(null);
  const [uploadOpen,setUploadOpen]=useState(false),[uploadCityId,setUploadCityId]=useState("");
  const [expandedExperience,setExpandedExperience]=useState(null),[showExperiences,setShowExperiences]=useState(false);
@@ -83,10 +86,11 @@ export default function TravelerProfile({viewer,profileId,onBack,onOpenRecommend
     <button className="primary-action" disabled={busy}><Check size={17}/> Salvar perfil</button>
    </form>}
    <div className="rr-profile-section-title"><div><span className="eyebrow">MEMÓRIAS DE VIAGEM</span><h2>Experiências</h2><p>Momentos e lugares que marcaram o caminho.</p></div>{own&&<button type="button" className="rr-profile-plus" onClick={()=>setAddingCity(v=>!v)} title="Cadastrar experiência" aria-label="Cadastrar experiência" aria-expanded={addingCity}><Plus size={20}/></button>}</div>
-   {own&&addingCity&&<form className="rr-profile-city-form" onSubmit={e=>{e.preventDefault();execute(()=>api.addProfileCity(viewer.id,cityName,stateName,placeName),"Experiência adicionada.");setCityName("");setStateName("");setPlaceName("");setAddingCity(false);}}>
-    <label>Lugar ou experiência<input required maxLength={100} value={placeName} onChange={e=>setPlaceName(e.target.value)} placeholder="Praia de Moreré, Passeio de barco…"/></label>
-    <label>Cidade<input required maxLength={100} value={cityName} onChange={e=>setCityName(e.target.value)} placeholder="Cairu"/></label>
-    <label>Estado<input maxLength={60} value={stateName} onChange={e=>setStateName(e.target.value)} placeholder="Bahia"/></label>
+   {own&&addingCity&&<form className="rr-profile-city-form" onSubmit={e=>{e.preventDefault();execute(async()=>{await api.addProfileCity(viewer.id,cityName,stateName,placeName,selectedPlace?.id);setCityName("");setStateName("");setPlaceName("");setSelectedPlace(null);setAddingCity(false);},"Experiência adicionada.");}}>
+    <InternalPlaceSearch label="Lugar ou experiência" value={placeName} disabled={busy} onChange={text=>{setPlaceName(text);setSelectedPlace(null);}} onSelect={selectPlace} onCreate={(name,destination)=>{setPlaceName(name);setSelectedPlace(null);setCityName(destination?.municipality||"");setStateName(destination?.state||"");}}/>
+    <label>Cidade<input required maxLength={100} value={cityName} readOnly={!!selectedPlace} onChange={e=>setCityName(e.target.value)} placeholder="Cairu"/></label>
+    <label>Estado<input maxLength={60} value={stateName} readOnly={!!selectedPlace} onChange={e=>setStateName(e.target.value)} placeholder="Bahia"/></label>
+    {!selectedPlace&&<PlaceDuplicateNotice name={placeName} address="" city={cityName} state={stateName} onSelect={selectPlace}/>}
     <button className="primary-action" disabled={busy}>Adicionar experiência</button>
    </form>}
    {own&&<div className="rr-profile-upload-area">

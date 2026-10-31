@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import Sheet from "./Sheet";
 import CommunityCard from "./CommunityCard";
+import InternalPlaceSearch, { PlaceDuplicateNotice } from "./InternalPlaceSearch";
+import { cityAndState } from "../lib/internalPlaceSearch";
 import { groupCommunityRecommendations } from "../lib/communityGroups";
 import * as liveCommunity from "../lib/community";
 import {
@@ -281,7 +283,17 @@ export default function CommunityView({ onRoute, onSavePlace, onViewExperiences,
     </div>
   );
 }
-function RecommendationForm({ user, initial, editing, onSave }) {
+export function RecommendationForm({ user, initial, editing, onSave, searchApi }) {
+  const [draft, setDraft] = useState({name:initial?.name||"",category:initial?.category==="Comida"?"Alimentação":initial?.category||"Alimentação",
+    city:initial?.city||"",address:initial?.address||"",instagram:initial?.instagram||""});
+  const [selected, setSelected] = useState(initial?.place_id?{id:initial.place_id}:null), [manual, setManual] = useState(!!initial || !!editing);
+  const change = (field,value) => setDraft(current=>({...current,[field]:value}));
+  const selectPlace = place => {
+    setSelected(place); setManual(false);
+    setDraft({name:place.name,category:place.category==="Comida"?"Alimentação":place.category==="Praias"?"Praia":COMMUNITY_CATEGORIES.includes(place.category)?place.category:"Outros",
+      city:[place.municipality,place.state].filter(Boolean).join(", "),address:place.address||`Ponto confirmado: ${place.lat}, ${place.lng}`,instagram:place.instagram||""});
+  };
+  const location = cityAndState(draft.city);
   const [photo,setPhoto]=useState(null);
   const [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
@@ -295,14 +307,16 @@ function RecommendationForm({ user, initial, editing, onSave }) {
           const f = new FormData(e.currentTarget);
           const item = {
             name: f.get("name").trim(),
-            category: f.get("category")==="Alimentação"?"Comida":f.get("category"),
+            category: draft.category==="Alimentação"?"Comida":draft.category,
             city: f.get("city").trim(),
             address: f.get("address").trim(),
             instagram: instagramUrl(f.get("instagram")),
             note: f.get("note").trim(),
+            ...(selected ? {place_id:selected.id,version:initial?.version??1} : {}),
           };
           if (!item.name || !item.city || !item.address || !item.note)
             throw new Error("Preencha nome, cidade, endereço e sua dica.");
+          if(initial?.place_id&&!selected)throw new Error("Selecione um lugar cadastrado para alterar esta indicação.");
           setBusy(true);
           setError("");
           await onSave(item,photo);
@@ -316,20 +330,15 @@ function RecommendationForm({ user, initial, editing, onSave }) {
       <p className="community-publish-as">
         Você indica como <b>{profileName(user)}</b>.
       </p>
-      <label>
-        Nome do lugar
-        <input
-          name="name"
-          defaultValue={initial?.name}
-          required
-          maxLength={120}
-          placeholder="Qual é a sua descoberta?"
-        />
-      </label>
+      <InternalPlaceSearch value={draft.name} api={searchApi} disabled={busy}
+        onChange={text=>{change("name",text);setSelected(null);}}
+        onSelect={selectPlace} onCreate={(name,destination)=>{setDraft({name,category:"Alimentação",city:destination?[destination.municipality,destination.state].filter(Boolean).join(", "):"",address:"",instagram:""});setSelected(null);setManual(true);}}/>
+      {selected&&<p className="field-help" role="status">Lugar selecionado. Conte agora a sua experiência.</p>}
+      {(manual||selected)&&<>
       <div className="form-pair">
         <label>
           Categoria
-          <select name="category" defaultValue={initial?.category==="Comida"?"Alimentação":initial?.category}>
+          <select name="category" value={draft.category} onChange={e=>change("category",e.target.value)} disabled={!!selected}>
             {COMMUNITY_CATEGORIES.map((c) => (
               <option key={c}>{c}</option>
             ))}
@@ -339,7 +348,7 @@ function RecommendationForm({ user, initial, editing, onSave }) {
           Cidade e estado
           <input
             name="city"
-            defaultValue={initial?.city}
+            value={draft.city} onChange={e=>change("city",e.target.value)} readOnly={!!selected}
             placeholder="João Pessoa, PB"
             required
             maxLength={120}
@@ -350,7 +359,7 @@ function RecommendationForm({ user, initial, editing, onSave }) {
         Endereço completo
         <input
           name="address"
-          defaultValue={initial?.address}
+          value={draft.address} onChange={e=>change("address",e.target.value)} readOnly={!!selected}
           placeholder="Rua, número e bairro"
           required
           maxLength={300}
@@ -360,12 +369,13 @@ function RecommendationForm({ user, initial, editing, onSave }) {
         Instagram <small>opcional</small>
         <input
           name="instagram"
-          defaultValue={initial?.instagram}
+          value={draft.instagram} onChange={e=>change("instagram",e.target.value)} readOnly={!!selected}
           placeholder="@nomedolugar"
           maxLength={120}
           autoCapitalize="none"
         />
       </label>
+      {manual&&!selected&&<PlaceDuplicateNotice name={draft.name} address={draft.address} city={location.city} state={location.state} onSelect={selectPlace} api={searchApi}/>}
       <label>
         Sua dica
         <textarea
@@ -393,6 +403,7 @@ function RecommendationForm({ user, initial, editing, onSave }) {
       <button className="primary-action" disabled={busy}>
         {busy ? "Salvando…" : (editing ? "Salvar alterações" : "Publicar na comunidade")}
       </button>
+      </>}
     </form>
   );
 }

@@ -50,7 +50,7 @@ export async function getRecommendations() {
   const { data, error } = await supabase
     .from("community_recommendations")
     .select(
-      "id,name,category,city,address,instagram,note,author_name,user_id,created_at,reviewed_at,image_url,source_url,editorial,photo_credit,photo_source_url",
+      "id,name,category,city,address,instagram,note,author_name,user_id,created_at,reviewed_at,image_url,source_url,editorial,photo_credit,photo_source_url,place_id,version",
     )
     .eq("status", "approved")
     .order("created_at", { ascending: false });
@@ -70,6 +70,11 @@ export async function submitRecommendation(item) {
     throw new Error(
       "A comunidade está sem conexão. Sua indicação não foi publicada.",
     );
+  if(item.place_id){
+    const {data,error}=await supabase.rpc("rr_publish_selected_place",{p_place_id:item.place_id,p:{note:item.note}});
+    if(error)throw new Error("Não foi possível publicar sua experiência neste lugar. Os campos foram mantidos.");
+    return data;
+  }
   const { data, error } = await supabase.rpc("rr_publish_recommendation", {
     p: {
       name: item.name,
@@ -171,6 +176,11 @@ export async function removeRecommendationPhoto(id,previousUrl) {
 }
 
 export async function updateRecommendation(id,item) {
+  if(item.place_id){
+    const {data,error}=await supabase.rpc("rr_update_selected_place",{p_id:id,p_place_id:item.place_id,p_note:item.note,p_expected_version:item.version});
+    if(error)throw new Error("Não foi possível salvar. Confira a conexão e atualize a indicação antes de tentar novamente.");
+    return data;
+  }
   const {data,error}=await supabase.rpc("rr_update_recommendation",{p_id:id,p:item});
   if(error)throw new Error("Não foi possível editar a indicação. Verifique os dados e tente novamente.");
   return data;
