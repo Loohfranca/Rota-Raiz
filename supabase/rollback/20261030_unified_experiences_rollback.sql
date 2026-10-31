@@ -9,8 +9,8 @@ begin
   if exists(select 1 from public.rr_experience_photos) then raise exception 'Rollback bloqueado: existem fotografias novas.'; end if;
   if exists(select 1 from public.community_recommendations where created_at>v_applied_at or version>1 or deleted_at is not null)
     then raise exception 'Rollback bloqueado: existem experiências novas, editadas ou excluídas.'; end if;
-  if exists(select 1 from public.rr_places where created_at>v_applied_at or updated_at>v_applied_at or source_kind='user')
-    then raise exception 'Rollback bloqueado: existem lugares criados ou alterados após a migração.'; end if;
+  if exists(select 1 from public.rr_places where source_kind='user')
+    then raise exception 'Rollback bloqueado: existem lugares criados por usuários.'; end if;
   if exists(select 1 from public.rr_profile_cities where place_id is not null)
     then raise exception 'Rollback bloqueado: existem vínculos novos no Perfil.'; end if;
 end
