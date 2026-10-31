@@ -94,6 +94,10 @@ test("migração é idempotente e preserva IDs, curtidas, comentários e álbuns
     assert.equal((await db.query("select count(*)::int n from public.rr_places")).rows[0].n,2);
     const derivedCity=await db.query("select p.city,p.state from public.community_recommendations r join public.rr_places p on p.id=r.place_id where r.id=$1",[recC]);
     assert.deepEqual(derivedCity.rows[0],{city:"Porto Seguro",state:"BA"});
+    await db.query("update public.community_recommendations set note='Relato revisado' where id=$1",[recC]);
+    assert.ok((await db.query("select place_id from public.community_recommendations where id=$1",[recC])).rows[0].place_id);
+    await db.query("update public.community_recommendations set name='Praia do Satu revisada' where id=$1",[recC]);
+    assert.equal((await db.query("select place_id from public.community_recommendations where id=$1",[recC])).rows[0].place_id,null);
     const ambiguousLocality=await db.query("select place_id from public.community_recommendations where id=$1",[recD]);
     assert.equal(ambiguousLocality.rows[0].place_id,null);
 
