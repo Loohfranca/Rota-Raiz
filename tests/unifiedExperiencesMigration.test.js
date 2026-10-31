@@ -10,7 +10,7 @@ const migration = fs.readFileSync(
 
 async function fixture() {
   const db = new PGlite();
-  await db.exec(\`
+  await db.exec(`
     create role anon;
     create role authenticated;
     create schema auth;
@@ -54,7 +54,7 @@ async function fixture() {
       for select to authenticated using(status='approved');
     create policy community_comments_read on public.community_comments
       for select to authenticated using(true);
-  \`);
+  `);
   return db;
 }
 
@@ -62,19 +62,23 @@ const userA="11111111-1111-4111-8111-111111111111";
 const userB="22222222-2222-4222-8222-222222222222";
 const recA="aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const recB="bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+const recC="dddddddd-dddd-4ddd-8ddd-dddddddddddd";
+const recD="ffffffff-ffff-4fff-8fff-ffffffffffff";
 const legacy="cccccccc-cccc-4ccc-8ccc-cccccccccccc";
 
 test("migração é idempotente e preserva IDs, curtidas, comentários e álbuns antigos",async()=>{
   const db=await fixture();
   try{
     await db.query("insert into auth.users(id) values($1),($2)",[userA,userB]);
-    await db.query(\`insert into public.community_recommendations
+    await db.query(`insert into public.community_recommendations
       (id,name,category,city,address,note,user_id,author_name,status,reviewed_at)
       values
       ($1,'Café da Praça','Comida','João Pessoa, PB','Rua das Flores, 10, 58000-000','Relato A',$3,'Pessoa A','approved',now()),
       ($2,'Cafe da Praca','Comida','joao pessoa, pb','R. das Flores, 10, 58000-0000','Relato B',$4,'Pessoa B','approved',now()),
-      ('dddddddd-dddd-4ddd-8ddd-dddddddddddd','Moreré','Praia','Bahia','Ilha de Boipeba','Sem município/UF',$3,'Pessoa A','approved',now())\`,
-      [recA,recB,userA,userB]);
+      ($5,'Praia do Satu','Praia','Caraíva, BA','Praia do Satu, Caraíva, Porto Seguro - BA','Relato C',$3,'Pessoa A','approved',now()),
+      ($6,'Barra do Rio Caraíva','Praia','Caraíva, BA','Encontro do Rio Caraíva com o mar, Caraíva - BA','Relato D',$3,'Pessoa A','approved',now()),
+      ('dddddddd-dddd-4ddd-8ddd-dddddddddddd','Moreré','Praia','Bahia','Ilha de Boipeba','Sem município/UF',$3,'Pessoa A','approved',now())`,
+      [recA,recB,userA,userB,recC,recD]);
     await db.query("insert into public.community_likes(recommendation_id,user_id) values($1,$2)",[recA,userB]);
     await db.query("insert into public.community_comments(id,recommendation_id,user_id,author_name,body) values($1,$2,$3,'Pessoa B','Comentário preservado')",
       ["eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee",recA,userB]);
@@ -87,18 +91,22 @@ test("migração é idempotente e preserva IDs, curtidas, comentários e álbuns
     assert.equal(linked.rows.length,2);
     assert.ok(linked.rows[0].place_id);
     assert.equal(linked.rows[0].place_id,linked.rows[1].place_id);
-    assert.equal((await db.query("select count(*)::int n from public.rr_places")).rows[0].n,1);
+    assert.equal((await db.query("select count(*)::int n from public.rr_places")).rows[0].n,2);
+    const derivedCity=await db.query("select p.city,p.state from public.community_recommendations r join public.rr_places p on p.id=r.place_id where r.id=$1",[recC]);
+    assert.deepEqual(derivedCity.rows[0],{city:"Porto Seguro",state:"BA"});
+    const ambiguousLocality=await db.query("select place_id from public.community_recommendations where id=$1",[recD]);
+    assert.equal(ambiguousLocality.rows[0].place_id,null);
 
     const incomplete=await db.query("select place_id from public.community_recommendations where name='Moreré'");
     assert.equal(incomplete.rows[0].place_id,null);
     const oldAlbum=await db.query("select place_id from public.rr_profile_cities where id=$1",[legacy]);
     assert.equal(oldAlbum.rows[0].place_id,null);
 
-    const engagement=await db.query(\`select
+    const engagement=await db.query(`select
       (select count(*)::int from public.community_likes where recommendation_id=$1) likes,
-      (select count(*)::int from public.community_comments where recommendation_id=$1) comments\`,[recA]);
+      (select count(*)::int from public.community_comments where recommendation_id=$1) comments`,[recA]);
     assert.deepEqual(engagement.rows[0],{likes:1,comments:1});
-    assert.equal((await db.query("select count(*)::int n from public.rr_place_link_migration_map")).rows[0].n,4);
+    assert.equal((await db.query("select count(*)::int n from public.rr_place_link_migration_map")).rows[0].n,6);
   }finally{await db.close();}
 });
 
