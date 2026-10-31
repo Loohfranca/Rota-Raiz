@@ -23,6 +23,8 @@ where exists(select 1 from public.rr_place_link_migration_map m
 drop policy if exists rr_experience_photos_read_active on public.rr_experience_photos;
 drop policy if exists rr_places_read_active on public.rr_places;
 drop trigger if exists rr_experience_photos_guard on public.rr_experience_photos;
+drop trigger if exists rr_guard_experience_place_link on public.community_recommendations;
+drop function if exists public.rr_guard_experience_place_link();
 drop function if exists public.rr_guard_experience_photo();
 drop function if exists public.rr_add_experience_photos(uuid,jsonb);
 drop function if exists public.rr_set_experience_cover(uuid,uuid);
