@@ -41,6 +41,8 @@ alter table public.community_recommendations
 alter table public.rr_profile_cities drop column if exists place_id;
 drop table if exists public.rr_places;
 drop table if exists public.rr_unified_experience_migrations;
+drop function if exists public.rr_extract_place_state(text,text);
+drop function if exists public.rr_extract_place_city(text,text);
 drop function if exists public.rr_normalize_place_address(text);
 drop function if exists public.rr_normalize_place_text(text);
 
