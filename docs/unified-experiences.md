@@ -20,7 +20,7 @@ rr_places (cadastro único do lugar)
 
 ## Backfill conservador
 
-A identidade central exige nome, endereço, município e UF. A UF é extraída do sufixo da cidade ou do endereço quando há uma sigla brasileira inequívoca. Registros como "Moreré / Bahia / Ilha de Boipeba", sem município/UF confirmados, permanecem sem vínculo; não se transforma o nome de um estado em município.
+A identidade central exige nome, endereço, município e UF. A UF é extraída do sufixo da cidade ou do endereço quando há uma sigla brasileira inequívoca. Quando o endereço explicita um município diferente do nome de destino/localidade, o município explícito é usado (por exemplo, Caraíva / Porto Seguro - BA). Localidades como Caraíva, Ilha Grande e Boipeba não são tratadas automaticamente como municípios. Registros como "Moreré / Bahia / Ilha de Boipeba", sem município/UF confirmados, permanecem sem vínculo; não se transforma o nome de um estado em município.
 
 A associação exige nome, endereço, cidade e estado normalizados. Não há fusão de experiências nem aproximação difusa. Cada decisão é registrada em \`rr_place_link_migration_map\`.
 
