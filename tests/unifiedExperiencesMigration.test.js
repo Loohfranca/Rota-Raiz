@@ -77,7 +77,7 @@ test("migração é idempotente e preserva IDs, curtidas, comentários e álbuns
       ($2,'Cafe da Praca','Comida','joao pessoa, pb','R. das Flores, 10, 58000-0000','Relato B',$4,'Pessoa B','approved',now()),
       ($5,'Praia do Satu','Praia','Caraíva, BA','Praia do Satu, Caraíva, Porto Seguro - BA','Relato C',$3,'Pessoa A','approved',now()),
       ($6,'Barra do Rio Caraíva','Praia','Caraíva, BA','Encontro do Rio Caraíva com o mar, Caraíva - BA','Relato D',$3,'Pessoa A','approved',now()),
-      ('dddddddd-dddd-4ddd-8ddd-dddddddddddd','Moreré','Praia','Bahia','Ilha de Boipeba','Sem município/UF',$3,'Pessoa A','approved',now())`,
+      ('99999999-9999-4999-8999-999999999999','Moreré','Praia','Bahia','Ilha de Boipeba','Sem município/UF',$3,'Pessoa A','approved',now())`,
       [recA,recB,userA,userB,recC,recD]);
     await db.query("insert into public.community_likes(recommendation_id,user_id) values($1,$2)",[recA,userB]);
     await db.query("insert into public.community_comments(id,recommendation_id,user_id,author_name,body) values($1,$2,$3,'Pessoa B','Comentário preservado')",
