@@ -34,7 +34,7 @@ A associação exige nome, endereço, cidade e estado normalizados. Não há fus
 
 ## Aplicação
 
-Migração: \`supabase/migrations/20261030220000_unified_experiences.sql\`.
+Migração: \`supabase/migrations/20261031022251_unified_experiences_20261030.sql\`.
 
 Rollback protegido: \`supabase/rollback/20261030_unified_experiences_rollback.sql\`. O script aborta se detectar experiências/fotos novas, exclusões lógicas, lugares criados por usuários ou vínculos novos. Não usar rollback como rotina.
 
