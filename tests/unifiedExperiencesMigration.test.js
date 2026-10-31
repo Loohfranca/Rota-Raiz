@@ -116,7 +116,7 @@ test("publicação grava lugar, experiência e exatamente duas fotos em uma tran
     await db.exec(migration);
     await db.query("insert into auth.users(id) values($1),($2)",[userA,userB]);
     for(const [user,suffix] of [[userA,"a"],[userB,"b"]]){
-      await db.query("insert into storage.objects(bucket_id,name,owner,owner_id) values('community-photos',$1,$2,$2::text),('community-photos',$3,$2,$2::text)",
+      await db.query("insert into storage.objects(bucket_id,name,owner,owner_id) values('community-photos',$1,$2::uuid,$2::uuid::text),('community-photos',$3,$2::uuid,$2::uuid::text)",
         [user+"/"+suffix+"1.webp",user,user+"/"+suffix+"2.webp"]);
     }
     async function publish(user,note,suffix){
