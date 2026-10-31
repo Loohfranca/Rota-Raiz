@@ -35,3 +35,19 @@ Consulta real autenticada em transação de leitura desfeita retornou sugestões
 - Chromium local em 320/390/768/1440 px: busca de uma letra, seleção, campos compartilhados protegidos e envio preservando place_id. Sem erro JavaScript ou overflow. API simulada; não houve publicação real de teste.
 
 Advisors consultados antes/depois: alertas de funções privilegiadas autenticadas são esperados para os endpoints que validam autoria no servidor; funções de busca permanecem invoker. Avisos de configuração de Auth e tabelas privadas já existiam e não foram alterados nesta publicação.
+
+## Correção: indicações antigas sem lugar central
+
+O teste real com Moreré revelou um erro de integração: a pesquisa só consultava `rr_places`, enquanto a indicação antiga estava em `community_recommendations` com cidade “Bahia” e referência “Ilha de Boipeba”, sem vínculo central. A indicação era visível, mas a pesquisa afirmava não encontrá-la.
+
+Migração corretiva: `20261031025400_legacy_place_search_completion.sql`, alinhada ao Supabase. A pesquisa agora também consulta indicações aprovadas, não excluídas e ainda não vinculadas, por nome/categoria/localização/referência, com índice GIN e o mesmo limite de resultados. Esses resultados têm o rótulo “Cadastro antigo · Localização a completar”. Não são misturados resultados externos.
+
+Selecionar um registro incompleto recupera os dados originais, deixa município/UF para confirmação e preserva a referência existente. Nenhum município é inferido de “Bahia” ou “Boipeba”. Perfil e Comunidade permitem completar explicitamente esses dados antes de continuar. Na Comunidade, a publicação e o cadastro central ocorrem na mesma transação; no Perfil, o álbum recebe o ID do cadastro confirmado antes da gravação.
+
+A confirmação cria um lugar central com `legacy_source_id` (FK com ON DELETE SET NULL), sem alterar relato, localização histórica, fotos, curtidas ou comentários da indicação de origem. A origem pode pertencer a outra pessoa: seus dados não são editados. A nova publicação pertence à pessoa autenticada. Nome e categoria são recuperados no servidor, e município/UF/referência precisam ser confirmados. A repetição para a mesma origem reutiliza o cadastro explicitamente criado, sem sobrescrevê-lo. Homônimos de outras origens continuam separados; conflito de identidade pede escolha manual, sem fusão automática.
+
+Após essa confirmação, a pesquisa retorna o lugar central e deixa de repetir a sugestão antiga da mesma origem. A relação à origem permite uma reconciliação futura sem inventar um vínculo ou modificar a experiência histórica. Não associa automaticamente origens diferentes por semelhança.
+
+Rollback corretivo protegido em `supabase/rollback/legacy_place_search_completion.sql`; recusa desfazer cadastros já confirmados. A verificação em produção comprovou que `morere` e `Boipeba` retornam a indicação antiga, e que contagens/checksums dos oito lugares e doze relatos permaneceram iguais, com sete curtidas e três comentários. Não foi criada publicação ou localização de teste em produção.
+
+Validação ampliada: 23 testes, build e Chromium em 320/390/768/1440 px, nos dois formulários, incluindo seleção antiga, campos editáveis, confirmação obrigatória e envio com ID central. Sem erros JavaScript/overflow. Dados simulados no navegador; a confirmação real fica a cargo do usuário.

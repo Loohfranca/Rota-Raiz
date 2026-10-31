@@ -70,6 +70,11 @@ export async function submitRecommendation(item) {
     throw new Error(
       "A comunidade está sem conexão. Sua indicação não foi publicada.",
     );
+  if(item.legacy_source_id){
+    const {data,error}=await supabase.rpc("rr_publish_completed_legacy_place",{p_source:item.legacy_source_id,p:item});
+    if(error)throw new Error(error.message||"Não foi possível completar o lugar. Confira os dados.");
+    return data;
+  }
   if(item.place_id){
     const {data,error}=await supabase.rpc("rr_publish_selected_place",{p_place_id:item.place_id,p:{note:item.note}});
     if(error)throw new Error("Não foi possível publicar sua experiência neste lugar. Os campos foram mantidos.");

@@ -46,6 +46,6 @@ export async function fixture() {
     create policy community_comments_read on public.community_comments
       for select to authenticated using(true);
   `);
-  await db.exec("grant usage on schema auth to authenticated,anon");
+  await db.exec("grant usage on schema auth to authenticated,anon;grant select on public.community_recommendations to authenticated");
   return db;
 }

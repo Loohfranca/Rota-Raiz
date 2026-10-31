@@ -10,6 +10,7 @@ export function createInternalPlaceSearch(client) {
     return data;
   }
   return {
+    completeLegacy(sourceId,data) {return request("rr_complete_legacy_place",{p_source:sourceId,p:data});},
     search(query, { destinationId = null, signal } = {}) {
       if (!query.trim() && !destinationId) return Promise.resolve([]);
       return request("rr_search_places", { p_query: query.slice(0, 80), p_limit: 8, p_destination_id: destinationId }, signal);

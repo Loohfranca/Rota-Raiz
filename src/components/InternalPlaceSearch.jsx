@@ -62,7 +62,7 @@ export default function InternalPlaceSearch({ value, onChange, onSelect, onCreat
         {items.map((item, index) => <li key={`${item.kind}-${item.id}`} role="presentation">
           <button type="button" role="option" id={`${id}-option-${index}`} aria-selected={active === index} disabled={selecting}
             onMouseDown={e => e.preventDefault()} onClick={() => choose(item)}>
-            <MapPin size={17}/><span><strong>{item.name}</strong><small>{item.category} · {[item.destination !== item.name && item.destination, item.municipality, item.state].filter(Boolean).join(" · ")}</small></span>
+            <MapPin size={17}/><span><strong>{item.name}</strong><small>{item.kind==="legacy"?"Cadastro antigo · ":""}{item.category} · {[item.destination !== item.name && item.destination, item.municipality, item.state].filter(Boolean).join(" · ")}</small></span>
           </button></li>)}
       </ul>
       {!loading && !selecting && !error && !items.length && <p>Nenhum lugar cadastrado encontrado.</p>}
