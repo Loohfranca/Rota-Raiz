@@ -94,6 +94,8 @@ on public.rr_places(normalized_name,normalized_address,normalized_city,normalize
 where deleted_at is null;
 create index if not exists rr_places_active_city_idx
 on public.rr_places(normalized_city,normalized_state) where deleted_at is null;
+create index if not exists rr_places_created_by_idx on public.rr_places(created_by) where created_by is not null;
+create index if not exists rr_places_deleted_by_idx on public.rr_places(deleted_by) where deleted_by is not null;
 
 alter table public.community_recommendations
   add column if not exists place_id uuid references public.rr_places(id) on delete restrict,
@@ -146,9 +148,13 @@ before update of name,category,city,address,instagram,place_id
 on public.community_recommendations
 for each row execute function public.rr_guard_experience_place_link();
 
+revoke all on function public.rr_guard_experience_place_link() from public,anon,authenticated;
+
 create index if not exists community_recommendations_place_recent_idx
 on public.community_recommendations(place_id,visit_date desc nulls last,created_at desc)
 where deleted_at is null;
+create index if not exists community_recommendations_deleted_by_idx
+on public.community_recommendations(deleted_by) where deleted_by is not null;
 
 alter table public.rr_profile_cities
 add column if not exists place_id uuid references public.rr_places(id) on delete restrict;
@@ -169,6 +175,8 @@ create table if not exists public.rr_place_link_migration_map (
 );
 alter table public.rr_place_link_migration_map enable row level security;
 revoke all on public.rr_place_link_migration_map from anon,authenticated;
+create index if not exists rr_place_link_migration_map_place_idx
+on public.rr_place_link_migration_map(place_id) where place_id is not null;
 
 -- UF pode vir da cidade ("Cidade, RJ") ou do endereço ("... - RJ, CEP").
 -- Se não houver UF e município inequívocos, o registro antigo fica sem vínculo.
@@ -275,6 +283,10 @@ create unique index if not exists rr_experience_photos_single_cover_uq
 on public.rr_experience_photos(experience_id) where is_cover and deleted_at is null;
 create index if not exists rr_experience_photos_experience_idx
 on public.rr_experience_photos(experience_id,position) where deleted_at is null;
+create index if not exists rr_experience_photos_user_idx
+on public.rr_experience_photos(user_id);
+create index if not exists rr_experience_photos_deleted_by_idx
+on public.rr_experience_photos(deleted_by) where deleted_by is not null;
 
 create or replace function public.rr_guard_experience_photo()
 returns trigger language plpgsql security definer set search_path=''
@@ -310,6 +322,8 @@ $$;
 drop trigger if exists rr_experience_photos_guard on public.rr_experience_photos;
 create trigger rr_experience_photos_guard before insert or update
 on public.rr_experience_photos for each row execute function public.rr_guard_experience_photo();
+
+revoke all on function public.rr_guard_experience_photo() from public,anon,authenticated;
 
 -- Só registra duas imagens já enviadas ao bucket público community-photos.
 -- A operação é atômica, valida proprietário do arquivo e exige uma única capa.
