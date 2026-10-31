@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { JSDOM } from "jsdom";
 import { createServer } from "vite";
 import react from "@vitejs/plugin-react";
-let server,dom,React,render,screen,cleanup,userEvent,act,Search,Form,DuplicateNotice;
+let server,dom,React,render,screen,cleanup,userEvent,act,Search,DuplicateNotice;
 const suggestion={id:'morere',kind:'place',name:'Praia de Moreré',category:'Praia',municipality:'Cairu',state:'BA',destination:'Ilha de Boipeba'};
 const full={...suggestion,address:'Praia de Moreré, Ilha de Boipeba',instagram:'',destination:{id:'boipeba',name:'Ilha de Boipeba'}};
 const defaultApi={search:async()=>[suggestion],getPlace:async()=>full,duplicates:async()=>[]};
@@ -15,7 +15,6 @@ before(async()=>{
  React=await import('react');({render,screen,cleanup,act}=await import('@testing-library/react'));userEvent=(await import('@testing-library/user-event')).default;
  server=await createServer({configFile:false,plugins:[react()],server:{middlewareMode:true,hmr:false},appType:'custom'});
  ({default:Search,PlaceDuplicateNotice:DuplicateNotice}=await server.ssrLoadModule('/src/components/InternalPlaceSearch.jsx'));
- ({RecommendationForm:Form}=await server.ssrLoadModule('/src/components/CommunityView.jsx'));
 });
 afterEach(()=>cleanup());after(async()=>{await server.close();dom.window.close();});
 function Harness({api=defaultApi,onSelected=()=>{},onCreated=()=>{}}){const [value,setValue]=React.useState('');return React.createElement(Search,{value,onChange:setValue,onSelect:p=>{setValue(p.name);onSelected(p);},onCreate:onCreated,api});}
@@ -56,25 +55,8 @@ test('vazio e falha são distintos; cadastrar novo lugar mantém o nome digitado
  await ui.type(screen.getByRole('combobox'),'A');await screen.findByRole('alert');assert.ok(screen.getByText(/Falha de rede/));
  assert.equal(screen.queryByText('Nenhum lugar cadastrado encontrado.'),null);
 });
-test('formulário existente recebe lugar completo e publica só a experiência com seu ID',async()=>{
- let saved;render(React.createElement(Form,{user:{id:'test',user_metadata:{full_name:'Teste'}},searchApi:defaultApi,onSave:async item=>saved=item}));
- const ui=userEvent.setup();await ui.type(screen.getByRole('combobox'),'Mor');await ui.click(await screen.findByRole('option',{name:/Praia de Moreré/}));
- assert.equal(screen.getByLabelText('Endereço completo').value,full.address);assert.equal(screen.getByLabelText('Cidade e estado').value,'Cairu, BA');
- assert.equal(screen.getByLabelText('Endereço completo').readOnly,true);await ui.type(screen.getByLabelText('Sua dica'),'Minha experiência.');
- await ui.click(screen.getByRole('button',{name:'Publicar na comunidade'}));assert.equal(saved.place_id,'morere');assert.equal(saved.note,'Minha experiência.');
-});
 test('aviso de homônimo exige escolha e recupera os dados antes de preencher',async()=>{
  let selected;const api={...defaultApi,duplicates:async()=>[{...suggestion,address:'Rua de teste',possible_duplicate:false}]};
  render(React.createElement(DuplicateNotice,{name:'Praia de Moreré',address:'Outra rua',city:'Cairu',state:'BA',api,onSelect:p=>selected=p}));
  const ui=userEvent.setup();await ui.click(await screen.findByRole('button',{name:/Mesmo nome; confirme/}));assert.deepEqual(selected,full);
-});
-
-test('cadastro antigo publica com endereço sem exigir checkbox ou município/UF',async()=>{
- const legacy={id:'legacy-morere',kind:'legacy',name:'Moreré',category:'Praia',municipality:'Localização a completar',state:''};
- const fullLegacy={...legacy,municipality:'',address:'Ilha de Boipeba',instagram:'',requires_completion:true,original_location:'Bahia · Ilha de Boipeba'};
- let saved;render(React.createElement(Form,{user:{id:'test'},searchApi:{search:async()=>[legacy],getPlace:async()=>fullLegacy,duplicates:async()=>[]},onSave:async item=>saved=item}));
- const ui=userEvent.setup();await ui.type(screen.getByRole('combobox'),'morere');await ui.click(await screen.findByRole('option',{name:/Cadastro antigo/}));
- assert.equal(screen.getByLabelText('Cidade e estado').value,'');assert.equal(screen.getByLabelText('Cidade e estado').readOnly,false);assert.equal(screen.getByLabelText('Endereço completo').value,'Ilha de Boipeba');
- await ui.type(screen.getByLabelText('Sua dica'),'Meu relato');assert.equal(screen.queryByRole('checkbox'),null);
- await ui.click(screen.getByRole('button',{name:'Publicar na comunidade'}));assert.equal(saved.legacy_source_id,'legacy-morere');assert.equal(saved.address,'Ilha de Boipeba');assert.equal(saved.location_confirmed,undefined);
 });

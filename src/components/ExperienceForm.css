@@ -1,0 +1,14 @@
+.rr-experience-fields { min-width:0; border:0; padding:0; margin:8px 0; display:grid; gap:16px; }
+.rr-experience-fields legend { font-weight:700; margin-bottom:12px; color:var(--on-surface); }
+.rr-experience-fields input[readonly] { background:var(--surface-container-low); }
+.rr-experience-form .rr-location-confirm input[type=checkbox],.rr-experience-form .rr-cover-choice input[type=radio] { width:20px; min-width:20px; max-width:20px; height:20px; min-height:20px; padding:0; flex:0 0 20px; appearance:auto; accent-color:var(--secondary); }
+.rr-experience-form label.rr-location-confirm,.rr-experience-form label.rr-cover-choice { display:flex; align-items:center; gap:10px; min-height:44px; font-size:14px; line-height:1.45; }
+.rr-experience-photos { display:grid; gap:16px; grid-template-columns:repeat(2,minmax(0,1fr)); }
+.rr-experience-photo { min-width:0; display:grid; gap:10px; }
+.rr-experience-photo img { width:100%; height:150px; object-fit:cover; border-radius:12px; }
+.rr-experience-photo input[type=file] { width:100%; min-width:0; font-size:13px; padding:8px; }
+.rr-experience-optional { border-block:1px solid var(--border-color); padding:12px 0; }
+.rr-experience-optional summary { cursor:pointer; min-height:44px; align-content:center; font-weight:700; }
+.rr-experience-optional[open] label { margin-top:12px; }
+.rr-experience-place-summary { display:grid; gap:6px; padding:12px 0; border-bottom:1px solid var(--border-color); overflow-wrap:anywhere; }
+@media(max-width:420px) { .rr-experience-photos { grid-template-columns:minmax(0,1fr); } }

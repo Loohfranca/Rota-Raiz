@@ -1,52 +1,32 @@
 import React,{useCallback,useEffect,useState} from "react";
 import {ArrowLeft,Camera,Heart,MapPin,Plus,Trash2,Pencil,Check,ExternalLink,UserRound,ImagePlus,Compass,ChevronRight,ChevronLeft,X} from "lucide-react";
-import * as api from "../lib/travelerProfiles";
-import DestinationPhotoPicker from "./DestinationPhotoPicker";
-import {internalPlaceSearch} from "../lib/internalPlaceSearch";
-import InternalPlaceSearch, { PlaceDuplicateNotice } from "./InternalPlaceSearch";
-export default function TravelerProfile({viewer,profileId,onBack,onOpenRecommendation,onOpenCommunity}){
+import * as liveApi from "../lib/travelerProfiles";
+import ExperienceForm from "./ExperienceForm";
+import Sheet from "./Sheet";
+import {experiencePublication} from "../lib/liveExperiencePublication";
+export default function TravelerProfile({viewer,profileId,onBack,onOpenRecommendation,onOpenCommunity,profileApi=liveApi,publicationService,placeSearch,photoUrlFor}){
+ const api=profileApi;
  const own=viewer?.id===profileId;
  const [profile,setProfile]=useState(null),[cities,setCities]=useState([]),[photos,setPhotos]=useState([]),[recommendations,setRecommendations]=useState([]);
  const [loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState("");
  const [editing,setEditing]=useState(false),[draft,setDraft]=useState({display_name:"",bio:"",instagram:""});
- const [addingCity,setAddingCity]=useState(false),[cityName,setCityName]=useState(""),[stateName,setStateName]=useState(""),[placeName,setPlaceName]=useState("");
- const [selectedPlace,setSelectedPlace]=useState(null);
- function selectPlace(place){setSelectedPlace(place);setPlaceName(place.name);setCityName(place.municipality||"");setStateName(place.state||"");}
+ const [composer,setComposer]=useState(null);
+ const [composerLocked,setComposerLocked]=useState(false);
  const [selectedPhoto,setSelectedPhoto]=useState(null);
- const [uploadOpen,setUploadOpen]=useState(false),[uploadCityId,setUploadCityId]=useState("");
  const [expandedExperience,setExpandedExperience]=useState(null),[showExperiences,setShowExperiences]=useState(false);
  const refresh=useCallback(async()=>{
    if(!profileId)return;setError("");setLoading(true);
    try{
     if(own)await api.ensureProfile();
     const [p,c,images,places]=await Promise.all([api.getProfile(profileId),api.getProfileCities(profileId),api.getCityPhotos(profileId),api.getTravelerRecommendations(profileId)]);
-    setProfile(p);setDraft({display_name:p?.display_name||"",bio:p?.bio||"",instagram:p?.instagram||""});setCities(c);setPhotos(images);setRecommendations(places);
+    setProfile(p);setDraft({display_name:p?.display_name||"",bio:p?.bio||"",instagram:p?.instagram||""});const canonical=places.filter(item=>item.schema_version===2).map(item=>({id:'experience-'+item.id,experience_id:item.id,canonical:true,publication:item,place_name:item.name,city:item.city,state:''}));
+    setCities([...c.filter(item=>!canonical.some(exp=>exp.experience_id===item.experience_id)),...canonical]);
+    setPhotos(images.map(photo=>photo.experience_id?{...photo,city_id:'experience-'+photo.experience_id,canonical:true}:photo));setRecommendations(places);
    }catch(e){setError(e.message);}finally{setLoading(false);}
- },[profileId,own]);
+ },[profileId,own,api]);
  useEffect(()=>{refresh();},[refresh]);
  async function execute(action,success){if(busy)return;setBusy(true);setError("");setNotice("");try{await action();await refresh();setNotice(success);}catch(e){setError(e.message);}finally{setBusy(false);}}
  async function like(photo){if(busy)return;setBusy(true);try{await api.togglePhotoLike(photo.id,photo.liked,viewer.id);setPhotos(all=>all.map(p=>p.id===photo.id?{...p,liked:!p.liked,likes:p.likes+(p.liked?-1:1)}:p));}catch(e){setError(e.message);}finally{setBusy(false);}}
- async function publishCityPhotos(city,files,caption){
-  if(busy||files.length<1||files.length>2)return false;
-  const existing=photos.filter(photo=>photo.city_id===city.id).length;
-  if(existing+files.length>2||photos.length+files.length>25){
-   setError("Limite de 2 fotos por experiência ou 25 fotos por perfil. Exclua uma foto antes de publicar outra.");
-   return false;
-  }
-  setBusy(true);setError("");setNotice("");
-  const uploaded=[];
-  try{
-   for(const file of files){uploaded.push(await api.uploadProfilePhoto(viewer.id,city.id,file,caption));}
-   await refresh();
-   setNotice(files.length===1?"Foto publicada em "+(city.place_name||city.city)+".":"As duas fotos foram publicadas em "+(city.place_name||city.city)+".");
-   return true;
-  }catch(e){
-   for(const photo of uploaded){try{await api.deleteProfilePhoto(photo);}catch{/* may require manual cleanup on poor connection */}}
-   await refresh();
-   setError("Não foi possível publicar as fotos: "+e.message);
-   return false;
-  }finally{setBusy(false);}
- }
  function navigatePhoto(offset){
   if(!selectedPhoto)return;
   const gallery=photos.filter(photo=>photo.city_id===selectedPhoto.cityId);
@@ -86,42 +66,10 @@ export default function TravelerProfile({viewer,profileId,onBack,onOpenRecommend
     <label>Instagram (opcional)<input maxLength={30} placeholder="@usuario" value={draft.instagram} onChange={e=>setDraft({...draft,instagram:e.target.value})}/></label>
     <button className="primary-action" disabled={busy}><Check size={17}/> Salvar perfil</button>
    </form>}
-   <div className="rr-profile-section-title"><div><span className="eyebrow">MEMÓRIAS DE VIAGEM</span><h2>Experiências</h2><p>Momentos e lugares que marcaram o caminho.</p></div>{own&&<button type="button" className="rr-profile-plus" onClick={()=>setAddingCity(v=>!v)} title="Cadastrar experiência" aria-label="Cadastrar experiência" aria-expanded={addingCity}><Plus size={20}/></button>}</div>
-   {own&&addingCity&&<form className="rr-profile-city-form" onSubmit={e=>{e.preventDefault();execute(async()=>{let place=selectedPlace;
-     if(place?.requires_completion){place=await internalPlaceSearch.completeLegacy(place.id,{municipality:cityName,state:stateName,address:place.address,instagram:place.instagram||''});}
-     await api.addProfileCity(viewer.id,place?.municipality||cityName||selectedPlace?.original_location?.split(' · ')[0]||'Localização a completar',place?.state||stateName,place?.name||placeName,place?.requires_completion?null:place?.id);setCityName("");setStateName("");setPlaceName("");setSelectedPlace(null);setAddingCity(false);},"Experiência adicionada.");}}>
-    <InternalPlaceSearch label="Lugar ou experiência" value={placeName} disabled={busy} onChange={text=>{setPlaceName(text);setSelectedPlace(null);}} onSelect={selectPlace} onCreate={(name,destination)=>{setPlaceName(name);setSelectedPlace(null);setCityName(destination?.municipality||"");setStateName(destination?.state||"");}}/>
-    <label>Cidade<input required={!selectedPlace?.requires_completion} maxLength={100} value={cityName} readOnly={!!selectedPlace&&!selectedPlace.requires_completion} onChange={e=>{setCityName(e.target.value);}} placeholder="Cairu"/></label>
-    <label>Estado<input maxLength={60} value={stateName} readOnly={!!selectedPlace&&!selectedPlace.requires_completion} onChange={e=>{setStateName(e.target.value);}} placeholder="Bahia"/></label>
-    {selectedPlace?.requires_completion&&<p className="field-help">Referência: {selectedPlace.address}. Município e estado podem ser completados depois.</p>}
-    {!selectedPlace&&<PlaceDuplicateNotice name={placeName} address="" city={cityName} state={stateName} onSelect={selectPlace}/>}
-    <button className="primary-action" disabled={busy}>Adicionar experiência</button>
-   </form>}
-   {own&&<div className="rr-profile-upload-area">
-     <button type="button" className="small-action rr-profile-upload-trigger" onClick={()=>setUploadOpen(v=>!v)} aria-expanded={uploadOpen}>
-       <ImagePlus size={17}/> {uploadOpen?"Fechar publicação":"Adicionar fotos"}
-     </button>
-     {uploadOpen&&<div className="rr-profile-upload-panel">
-       <label className="rr-profile-upload-destination">Experiência das fotos
-         <select value={uploadCityId} onChange={e=>setUploadCityId(e.target.value)}>
-           <option value="">Selecione uma experiência</option>
-           {cities.map(city=>{
-             const used=photos.filter(photo=>photo.city_id===city.id).length;
-             return <option key={city.id} value={city.id} disabled={used>=2}>{city.place_name||city.city}{city.place_name&&city.place_name!==city.city?" · "+city.city:""} · {used}/2 fotos</option>;
-           })}
-         </select>
-       </label>
-       <p className="rr-profile-upload-hint">Cada experiência admite 2 fotos. Todas aparecem juntas na galeria, sem blocos separados.</p>
-       {uploadCityId&&(()=>{
-         const city=cities.find(c=>c.id===uploadCityId);
-         if(!city)return null;
-         const remaining=Math.min(2-photos.filter(photo=>photo.city_id===city.id).length,25-count);
-         return remaining>0?<DestinationPhotoPicker key={city.id} city={city.city} remaining={remaining} busy={busy} onPublish={(files,caption)=>publishCityPhotos(city,files,caption).then(ok=>{if(ok){setUploadOpen(false);setUploadCityId("");}return ok;})}/>:<p className="rr-profile-upload-hint">Esta experiência já tem duas fotos. Selecione outra ou exclua uma foto.</p>;
-       })()}
-       {!cities.length&&<p className="rr-profile-upload-hint">Cadastre a primeira experiência no botão + acima para publicar fotos.</p>}
-     </div>}
-   </div>}
-   {photos.length===0?<div className="rr-profile-empty"><MapPin size={26}/><p>{own?"Seu álbum está vazio. Cadastre uma experiência e adicione até duas fotos.":"Este viajante ainda não publicou fotos."}</p></div>:
+   <div className="rr-profile-section-title"><div><span className="eyebrow">MEMÓRIAS DE VIAGEM</span><h2>Experiências</h2><p>Momentos e lugares que marcaram o caminho.</p></div>{own&&<button type="button" className="rr-profile-plus" onClick={()=>setComposer({})} title="Cadastrar experiência" aria-label="Cadastrar experiência" aria-expanded={!!composer}><Plus size={20}/></button>}</div>
+   {own&&composer&&<Sheet title={composer.id?"Editar experiência":"Compartilhe uma experiência"} onClose={()=>{if(!composerLocked)setComposer(null);}}><ExperienceForm user={viewer} initial={composer.id?composer:null} service={publicationService} searchApi={placeSearch} urlFor={photoUrlFor} onLockChange={setComposerLocked} onSaved={async published=>{setComposer(null);await refresh();setNotice(published.status==='approved'&&!published.deleted_at?"Experiência salva e compartilhada na Comunidade.":"Experiência salva para revisão.");}}/></Sheet>}
+   {own&&<button type="button" className="small-action rr-profile-upload-trigger" onClick={()=>setComposer({})}><ImagePlus size={17}/>Adicionar fotos</button>}
+   {photos.length===0?<div className="rr-profile-empty"><MapPin size={26}/><p>{own?"Seu álbum está vazio. Compartilhe uma experiência com suas duas fotos.":"Este viajante ainda não publicou fotos."}</p></div>:
      <div className="rr-profile-flat-grid" aria-label="Galeria de fotos do viajante">
        {photos.map(photo=>{
          const city=cities.find(c=>c.id===photo.city_id);
@@ -139,7 +87,7 @@ export default function TravelerProfile({viewer,profileId,onBack,onOpenRecommend
      {showExperiences&&<div className="rr-profile-experiences-list">
        {cities.length===0?<p>Nenhum lugar compartilhado ainda.</p>:cities.map(place=>{
          const placePhotos=photos.filter(p=>p.city_id===place.id);
-         const related=recommendations.filter(r=>
+         const related=place.canonical?recommendations.filter(r=>r.id===place.experience_id):recommendations.filter(r=>
            [r.name,r.city].some(v=>v&&v.toLocaleLowerCase("pt-BR").includes((place.place_name||place.city).toLocaleLowerCase("pt-BR")))||
            (r.city&&r.city.toLocaleLowerCase("pt-BR")===place.city.toLocaleLowerCase("pt-BR")));
          const isOpen=expandedExperience===place.id;
@@ -148,6 +96,7 @@ export default function TravelerProfile({viewer,profileId,onBack,onOpenRecommend
              <span><strong>{place.place_name||place.city}</strong><small>{place.city}{place.state?", "+place.state:""} · {placePhotos.length} foto{placePhotos.length===1?"":"s"}</small></span>
              <ChevronRight size={17} className={isOpen?"rr-rotated":""}/>
            </button>
+           {own&&place.canonical&&<><button type="button" className="small-action" onClick={()=>setComposer(place.publication)}><Pencil size={15}/>Editar experiência</button><button type="button" className="small-action" disabled={busy} onClick={()=>{if(window.confirm("Remover esta experiência? Seu histórico será preservado."))execute(()=>(publicationService||experiencePublication).setDeleted(place.publication,true),"Experiência removida.");}}><Trash2 size={15}/>Excluir experiência</button></>}
            {isOpen&&<div className="rr-profile-experience-details">
              {placePhotos.length>0?<div className="rr-profile-experience-miniatures">{placePhotos.map(photo=><button key={photo.id} type="button" onClick={()=>setSelectedPhoto({cityId:place.id,photoId:photo.id})}><img src={photo.url} alt={photo.caption||place.place_name||place.city} loading="lazy"/></button>)}</div>:<p>Nenhuma foto publicada neste lugar.</p>}
              {related.length>0?<><strong className="rr-profile-experience-related-title">Indicações relacionadas</strong>{related.map(r=><button key={r.id} type="button" className="rr-profile-experience-related" onClick={()=>onOpenRecommendation?.(r.id)}>{r.name}<ChevronRight size={15}/></button>)}</>:<p>Sem indicações relacionadas a este lugar.</p>}
@@ -174,16 +123,16 @@ export default function TravelerProfile({viewer,profileId,onBack,onOpenRecommend
            </>}
          </div>
          <div className="rr-profile-lightbox-actions">
-           <button type="button" aria-label={photo.liked?"Descurtir foto":"Curtir foto"} aria-pressed={photo.liked} disabled={busy} onClick={()=>like(photo)}><Heart size={21} fill={photo.liked?"currentColor":"none"}/>{photo.likes} curtidas</button>
+           {!photo.canonical&&<button type="button" aria-label={photo.liked?"Descurtir foto":"Curtir foto"} aria-pressed={photo.liked} disabled={busy} onClick={()=>like(photo)}><Heart size={21} fill={photo.liked?"currentColor":"none"}/>{photo.likes} curtidas</button>}
            {photo.caption&&<p>{photo.caption}</p>}
-           {own&&<button type="button" disabled={busy} className="rr-profile-lightbox-trash" onClick={()=>{if(window.confirm("Excluir esta foto?"))execute(()=>api.deleteProfilePhoto(photo),"Foto excluída.");setSelectedPhoto(null);}} aria-label="Excluir foto"><Trash2 size={19}/></button>}
+           {own&&!photo.canonical&&<button type="button" disabled={busy} className="rr-profile-lightbox-trash" onClick={()=>{if(window.confirm("Excluir esta foto?"))execute(()=>api.deleteProfilePhoto(photo),"Foto excluída.");setSelectedPhoto(null);}} aria-label="Excluir foto"><Trash2 size={19}/></button>}
          </div>
        </section>
      </div>;
    })()}
    <div className="rr-profile-section-title rr-profile-recommendation-heading">
       <div><span className="eyebrow">DICAS PARA OUTROS VIAJANTES</span><h2>Indicações</h2><p>Os lugares que {own?"você compartilhou":"este viajante compartilhou"} na Comunidade.</p></div>
-      {own&&<button type="button" className="small-action" onClick={onOpenCommunity}><Plus size={16}/> Indicar lugar</button>}
+      {own&&<button type="button" className="small-action" onClick={()=>setComposer({})}><Plus size={16}/> Indicar lugar</button>}
    </div>
    {recommendations.length>0?
      <div className="rr-profile-recommendations">{recommendations.map(place=>
@@ -197,7 +146,7 @@ export default function TravelerProfile({viewer,profileId,onBack,onOpenRecommend
          <ChevronRight size={18} aria-hidden="true"/>
        </button>)}</div>
      :<div className="rr-profile-empty"><Compass size={26}/><p>{own?"Você ainda não indicou nenhum lugar. Compartilhe sua primeira dica na Comunidade.":"Este viajante ainda não publicou indicações."}</p>{own&&<button type="button" className="small-action" onClick={onOpenCommunity}>Ir à Comunidade</button>}</div>}
-   {own&&<p className="rr-profile-limits">Você pode compartilhar até 2 fotos por experiência e 25 fotos de viagem no total, além da foto de perfil. Fotos públicas recebem apenas curtidas; comentários ficam nas indicações da Comunidade.</p>}
+   {own&&<p className="rr-profile-limits">Novas experiências têm duas fotos e uma capa. Os limites de armazenamento da sua conta continuam valendo. Comentários ficam nas experiências da Comunidade.</p>}
   </>}
  </section>;
 }

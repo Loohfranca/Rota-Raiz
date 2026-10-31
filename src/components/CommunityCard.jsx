@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
+import {experiencePhotoUrl as apiPhotoUrl} from "../lib/liveExperiencePublication";
 import { Heart, MessageCircle, MapPin, ArrowUpRight, Bookmark, ChevronRight, ChevronLeft, Image as ImageIcon, Trash2, Send, Pencil, Check, X, ShieldAlert } from "lucide-react";
 import Sheet from "./Sheet";
-import * as api from "../lib/community";
+import * as liveApi from "../lib/community";
 
 function Instagram({size=18}) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -10,7 +11,7 @@ function Instagram({size=18}) {
     <circle cx="18" cy="6" r="1" fill="currentColor" stroke="none" />
   </svg>;
 }
-export default function CommunityCard({ groupItems, openRequest, onOpenHandled, user, allStats, onRoute, onSavePlace, onViewExperiences, onOpenProfile, authorProfiles={}, onRefresh, onError, onEdit, onDelete }) {
+export default function CommunityCard({ groupItems, api=liveApi,photoUrlFor=apiPhotoUrl, openRequest, onOpenHandled, user, allStats, onRoute, onSavePlace, onViewExperiences, onOpenProfile, authorProfiles={}, onRefresh, onError, onEdit, onDelete }) {
   const [activeIndex,setActiveIndex]=useState(0);
   const touchStart=React.useRef(null);
   const item=groupItems[activeIndex] || groupItems[0];
@@ -50,6 +51,8 @@ export default function CommunityCard({ groupItems, openRequest, onOpenHandled, 
   const [imageBusy,setImageBusy]=useState(false);
   const [saveBusy,setSaveBusy]=useState(false);
   const [saveNotice,setSaveNotice]=useState("");
+  const [photoIndex,setPhotoIndex]=useState(0);
+  useEffect(()=>setPhotoIndex(0),[item.id]);
   const [imageUrl,setImageUrl]=useState(item.image_url || "");
   useEffect(()=>{setLikes(stats?.likes||0);setCount(stats?.comments||0);setLiked(!!stats?.liked);},[stats]);
   useEffect(()=>{setImageUrl(item.image_url||"");},[item.image_url]);
@@ -125,9 +128,12 @@ export default function CommunityCard({ groupItems, openRequest, onOpenHandled, 
   const location=item.city?.split(",")[0]||"";
   const publicAuthor=authorProfiles[item.user_id];
   const author=publicAuthor?.display_name||item.author_name||"Viajante";
-  const insta=api.safeInstagram(item.instagram);
+  const insta=liveApi.safeInstagram(item.instagram);
   const owner=!!user && item.user_id===user.id;
   const photo=imageUrl||"";
+  const gallery=[...(item.photos||[])].sort((a,b)=>Number(b.is_cover)-Number(a.is_cover)||(a.position||0)-(b.position||0));
+  const galleryPhoto=gallery[photoIndex];
+  const detailPhoto=galleryPhoto?photoUrlFor(galleryPhoto.storage_path):photo;
   return <>
     <article className="rr-social-card">
       <button type="button" className="rr-social-open" onClick={openDetail} aria-label={"Abrir detalhes de "+item.name}>
@@ -160,8 +166,12 @@ export default function CommunityCard({ groupItems, openRequest, onOpenHandled, 
           <span>Indicação {activeIndex+1} de {total} · deslize para ver outras experiências</span>
           <button type="button" disabled={activeIndex===total-1} onClick={()=>changeIndication(activeIndex+1)} aria-label="Próxima indicação"><ChevronRight size={21}/></button>
         </div>}
-        {photo?<img className="rr-social-detail-photo" src={photo} alt={"Fotografia de "+item.name}/>:
+        {detailPhoto?<img className="rr-social-detail-photo" src={detailPhoto} alt={"Fotografia de "+item.name}/>:
           <div className="rr-social-detail-empty"><ImageIcon size={32}/><span>Sem foto ainda</span></div>}
+        {gallery.length>1&&<div className="rr-social-gallery-nav"><button type="button" aria-label="Foto anterior" disabled={photoIndex===0} onClick={()=>setPhotoIndex(i=>i-1)}><ChevronLeft size={18}/></button><span>Foto {photoIndex+1} de {gallery.length}</span><button type="button" aria-label="Próxima foto" disabled={photoIndex===gallery.length-1} onClick={()=>setPhotoIndex(i=>i+1)}><ChevronRight size={18}/></button></div>}
+        {item.visited_on&&<p className="field-help">Visita em {new Date(item.visited_on+'T12:00:00').toLocaleDateString('pt-BR')}</p>}
+        {(item.how_to_get?.starting_point||item.how_to_get?.transport||item.how_to_get?.route)&&<details className="rr-experience-optional"><summary>Como chegar</summary><p>{item.how_to_get.starting_point}</p><p>{item.how_to_get.transport}</p><p>{item.how_to_get.route}</p></details>}
+        {item.tips&&<details className="rr-experience-optional"><summary>Dicas adicionais</summary><p>{item.tips}</p></details>}
         {item.photo_credit && item.photo_source_url && <a className="rr-social-source" href={item.photo_source_url} target="_blank" rel="noopener noreferrer" style={{fontSize:11}}>Foto: {item.photo_credit} <ArrowUpRight size={12}/></a>}
         <p className="rr-social-category">{item.category==="Comida"?"Alimentação":item.category} · {item.city}</p>
         <p className="rr-social-location"><MapPin size={15}/>{item.address}</p>
@@ -175,7 +185,7 @@ export default function CommunityCard({ groupItems, openRequest, onOpenHandled, 
           <button type="button" onClick={saveExperience}><Bookmark size={16}/>Salvar nas Experiências</button>
         </div>
         {owner&&<div className="rr-social-own-actions"><button type="button" onClick={()=>{setOpen(false);onEdit?.(item);}}><Pencil size={15}/>Editar indicação</button><button type="button" onClick={()=>{setOpen(false);onDelete?.(item);}}><Trash2 size={15}/>Excluir indicação</button></div>}
-        {owner&&<div className="rr-social-upload">
+        {owner&&item.schema_version!==2&&<div className="rr-social-upload">
           <b>Adicione uma foto</b>
           <label className="rr-social-upload-label">Escolher da galeria · imagem original até 25 MB
             <input type="file" accept="image/*,.heic,.heif" onChange={e=>setImageFile(e.target.files?.[0]||null)}/>

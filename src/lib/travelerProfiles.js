@@ -9,16 +9,16 @@ export async function saveProfile(id,details){
 }
 export async function getTravelerRecommendations(userId) {
  const {data,error}=await supabase.from("community_recommendations")
-   .select("id,name,city,category,note,image_url,created_at")
+   .select("id,name,city,category,address,note,image_url,created_at,place_id,visit_date,schema_version,version,how_to_get,tips,photos:rr_experience_photos(storage_path,is_cover,deleted_at)")
    .eq("user_id",userId).eq("status","approved")
    .order("created_at",{ascending:false}).limit(100);
  errorOf(error,"Não foi possível carregar as indicações.");
- return data||[];
+ return (data||[]).map(row=>({...row,visited_on:row.visit_date,image_url:row.photos?.find(p=>p.is_cover&&!p.deleted_at)?.storage_path?supabase.storage.from("community-photos").getPublicUrl(row.photos.find(p=>p.is_cover&&!p.deleted_at).storage_path).data.publicUrl:row.image_url}));
 }
 export async function getProfileCities(id){const {data,error}=await supabase.from("rr_profile_cities").select("id,user_id,city,state,place_name,created_at").eq("user_id",id).order("created_at",{ascending:false});errorOf(error,"Erro ao carregar cidades.");return data||[];}
 export async function addProfileCity(userId,city,state,placeName,placeId){const {data,error}=await supabase.from("rr_profile_cities").insert({user_id:userId,city:city.trim(),state:state.trim(),place_name:(placeName||city).trim(),...(placeId?{place_id:placeId}:{})}).select().single();errorOf(error,"Não foi possível cadastrar experiência. Verifique se este lugar já foi cadastrado.");return data;}
 export async function deleteProfileCity(id){const {error}=await supabase.from("rr_profile_cities").delete().eq("id",id);errorOf(error,"Não foi possível remover a cidade.");}
-export async function getCityPhotos(userId){
+async function getLegacyCityPhotos(userId){
  const {data,error}=await supabase.from("rr_profile_photos").select("id,user_id,city_id,storage_path,caption,created_at").eq("user_id",userId).order("created_at",{ascending:false});
  errorOf(error,"Não foi possível carregar fotos.");
  const photos=data||[];
@@ -28,6 +28,12 @@ export async function getCityPhotos(userId){
  const {data:session}=await supabase.auth.getUser();const mine=session?.user?.id;
  return photos.map(p=>({...p,url:supabase.storage.from(bucket).getPublicUrl(p.storage_path).data.publicUrl,likes:likes.filter(l=>l.photo_id===p.id).length,liked:likes.some(l=>l.photo_id===p.id&&l.user_id===mine)}));
 }
+export async function getCityPhotos(userId){
+ const legacy=await getLegacyCityPhotos(userId);
+ const {data,error}=await supabase.from('rr_experience_photos').select('id,user_id,experience_id,storage_path,caption,position,is_cover,created_at').eq('user_id',userId).is('deleted_at',null).order('created_at',{ascending:false});
+ errorOf(error,'Não foi possível carregar as fotos das experiências.');
+ return [...legacy,...(data||[]).map(photo=>({...photo,url:supabase.storage.from('community-photos').getPublicUrl(photo.storage_path).data.publicUrl,likes:0,liked:false,canonical:true}))];
+}
 export async function togglePhotoLike(photoId,liked,userId){
  if(liked){const {error}=await supabase.from("rr_profile_photo_likes").delete().eq("photo_id",photoId).eq("user_id",userId);errorOf(error,"Erro ao remover curtida.");}
  else{const {error}=await supabase.from("rr_profile_photo_likes").insert({photo_id:photoId,user_id:userId});errorOf(error,"Erro ao curtir.");}
@@ -35,7 +41,7 @@ export async function togglePhotoLike(photoId,liked,userId){
 export async function optimizeGalleryImage(file){
  // A foto original pode ser grande: a cota de 1 MB é aplicada ao WebP compactado, não à foto da galeria.
  const mime=String(file.type||"").toLowerCase();
- const isImage=mime.startsWith("image/")||/\\.(jpe?g|png|webp|heic|heif|avif)$/i.test(file.name||"");
+ const isImage=mime.startsWith("image/")||/\.(jpe?g|png|webp|heic|heif|avif)$/i.test(file.name||"");
  if(!isImage)throw new Error("Escolha uma foto da galeria (JPG, PNG, WebP ou HEIC).");
  if(file.size>25*1048576)throw new Error("Esta foto tem mais de 25 MB. Selecione uma imagem menor.");
  let image=null;

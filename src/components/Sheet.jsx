@@ -16,7 +16,7 @@ export default function Sheet({ title, onClose, children, className = "" }) {
     <dialog
       ref={ref}
       className={`raiz-sheet ${className}`}
-      onCancel={onClose}
+      onCancel={event=>{event.preventDefault();onClose();}}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
