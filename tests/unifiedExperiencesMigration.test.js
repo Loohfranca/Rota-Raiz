@@ -4,7 +4,7 @@ import fs from "node:fs";
 import { PGlite } from "@electric-sql/pglite";
 
 const migration = fs.readFileSync(
-  new URL("../supabase/migrations/20261030220000_unified_experiences.sql", import.meta.url),
+  new URL("../supabase/migrations/20261031022251_unified_experiences_20261030.sql", import.meta.url),
   "utf8",
 );
 
