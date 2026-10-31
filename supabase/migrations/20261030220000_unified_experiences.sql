@@ -287,48 +287,60 @@ on public.rr_experience_photos for each row execute function public.rr_guard_exp
 create or replace function public.rr_add_experience_photos(p_experience_id uuid,p_photos jsonb)
 returns jsonb language plpgsql security definer set search_path=''
 as $$
-declare v_owner uuid; v_item jsonb; v_path text; v_cover boolean; v_position integer;
+declare v_owner uuid; v_cover_count integer;
 begin
   if auth.uid() is null then raise exception 'Entre com sua conta.'; end if;
   if coalesce(jsonb_typeof(p_photos),'null')<>'array' or coalesce(jsonb_array_length(p_photos),0)<>2 then
     raise exception 'Envie exatamente duas fotografias.';
   end if;
-  if (select count(*) from jsonb_array_elements(p_photos) x where coalesce((x->>'is_cover')::boolean,false))<>1 then
-    raise exception 'Escolha exatamente uma fotografia de capa.';
-  end if;
+
+  select count(*)::integer into v_cover_count
+  from jsonb_array_elements(p_photos) as items(photo)
+  where coalesce((items.photo->>'is_cover')::boolean,false);
+  if v_cover_count<>1 then raise exception 'Escolha exatamente uma fotografia de capa.'; end if;
+
   select r.user_id into v_owner from public.community_recommendations r
   where r.id=p_experience_id and r.deleted_at is null for update;
   if v_owner is null or v_owner is distinct from auth.uid() then
     raise exception 'Experiência não encontrada ou sem permissão.';
   end if;
-  if exists(select 1 from public.rr_experience_photos where experience_id=p_experience_id and deleted_at is null) then
+  if exists(select 1 from public.rr_experience_photos
+    where experience_id=p_experience_id and deleted_at is null) then
     raise exception 'Esta experiência já possui fotografias registradas.';
   end if;
-  for v_item in select value from jsonb_array_elements(p_photos)
-  loop
-    v_path:=btrim(coalesce(v_item->>'storage_path',''));
-    v_cover:=coalesce((v_item->>'is_cover')::boolean,false);
-    if v_path='' or v_path not like auth.uid()::text||'/%' then
-      raise exception 'Caminho de fotografia inválido.';
-    end if;
-    if length(coalesce(v_item->>'caption',''))>180 then
-      raise exception 'A legenda da fotografia excede 180 caracteres.';
-    end if;
-    if not exists(select 1 from storage.objects o
-      where o.bucket_id='community-photos' and o.name=v_path
-        and o.owner_id=auth.uid()::text and not coalesce(o.is_delete_marker,false)) then
-      raise exception 'Uma das fotografias não foi enviada pela sua conta ao armazenamento do Rota Raiz.';
-    end if;
-  end loop;
-  for v_item,v_position in
-    select value,ordinality::integer from jsonb_array_elements(p_photos) with ordinality
-  loop
-    insert into public.rr_experience_photos(experience_id,user_id,storage_path,caption,position,is_cover)
-    values(p_experience_id,auth.uid(),btrim(v_item->>'storage_path'),
-      btrim(coalesce(v_item->>'caption','')),v_position,coalesce((v_item->>'is_cover')::boolean,false));
-  end loop;
-  return (select coalesce(jsonb_agg(to_jsonb(p) order by p.position),'[]'::jsonb)
-    from public.rr_experience_photos p where p.experience_id=p_experience_id and p.deleted_at is null);
+
+  if exists(
+    select 1
+    from jsonb_array_elements(p_photos) as items(photo)
+    where
+      nullif(btrim(items.photo->>'storage_path'),'') is null
+      or btrim(items.photo->>'storage_path') not like auth.uid()::text||'/%'
+      or length(coalesce(items.photo->>'caption',''))>180
+      or not exists(
+        select 1 from storage.objects o
+        where o.bucket_id='community-photos'
+          and o.name=btrim(items.photo->>'storage_path')
+          and o.owner_id=auth.uid()::text
+          and not coalesce(o.is_delete_marker,false)
+      )
+  ) then
+    raise exception 'Confira as duas fotografias: elas devem ter sido enviadas pela sua conta ao armazenamento do Rota Raiz.';
+  end if;
+
+  insert into public.rr_experience_photos(
+    experience_id,user_id,storage_path,caption,position,is_cover
+  )
+  select
+    p_experience_id,auth.uid(),btrim(items.photo->>'storage_path'),
+    btrim(coalesce(items.photo->>'caption','')),items.ordinality::smallint,
+    coalesce((items.photo->>'is_cover')::boolean,false)
+  from jsonb_array_elements(p_photos) with ordinality as items(photo,ordinality);
+
+  return (
+    select coalesce(jsonb_agg(to_jsonb(p) order by p.position),'[]'::jsonb)
+    from public.rr_experience_photos p
+    where p.experience_id=p_experience_id and p.deleted_at is null
+  );
 end;
 $$;
 
