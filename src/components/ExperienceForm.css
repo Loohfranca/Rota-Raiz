@@ -12,3 +12,17 @@
 .rr-experience-optional[open] label { margin-top:12px; }
 .rr-experience-place-summary { display:grid; gap:6px; padding:12px 0; border-bottom:1px solid var(--border-color); overflow-wrap:anywhere; }
 @media(max-width:420px) { .rr-experience-photos { grid-template-columns:minmax(0,1fr); } }
+
+.rr-place-location { display:grid; gap:12px; min-width:0; padding-block:12px; border-block:1px solid var(--border-color); }
+.rr-place-location button { min-height:44px; max-width:100%; white-space:normal; overflow-wrap:anywhere; text-align:start; }
+.rr-place-location-map { height:240px; width:100%; min-width:0; border-radius:14px; z-index:0; }
+.rr-place-pin span { display:block; width:26px; height:26px; border:4px solid white; border-radius:50%; background:#A64425; box-shadow:0 2px 8px #243e3260; }
+.rr-place-coordinates { font-size:13px; overflow-wrap:anywhere; margin:0; }
+.rr-place-location .leaflet-control-attribution { font-size:11px; }
+
+.rr-place-location button { padding:10px 14px; border:1px solid var(--border-color); border-radius:12px; font-weight:600; color:var(--on-surface); background:var(--surface-container-low); }
+.rr-place-location button.primary-action { background:#243E32; color:#fff; }
+.rr-place-location button:focus-visible { outline:2px solid #A64425; outline-offset:3px; }
+.rr-place-location button:disabled { opacity:.55; cursor:not-allowed; }
+.rr-place-location .rr-nearby-place { font-size:14px; line-height:1.5; }
+.rr-place-location .leaflet-control-zoom a { min-width:44px; min-height:44px; line-height:44px; }

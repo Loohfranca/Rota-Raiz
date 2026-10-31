@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "oxlint",
-    "test": "node --test src/lib/communityGroups.test.js tests/unifiedExperiencesMigration.test.js tests/internalPlaceSearchDatabase.test.js tests/internalPlaceSearchRepository.test.js tests/internalPlaceSearchUi.test.js tests/sharedExperienceFormDatabase.test.js tests/experiencePublication.test.js tests/sharedExperienceFormUi.test.js",
+    "test": "node --test src/lib/communityGroups.test.js tests/unifiedExperiencesMigration.test.js tests/internalPlaceSearchDatabase.test.js tests/internalPlaceSearchRepository.test.js tests/internalPlaceSearchUi.test.js tests/sharedExperienceFormDatabase.test.js tests/experiencePublication.test.js tests/sharedExperienceFormUi.test.js tests/placeLocation.test.js tests/placeLocationUi.test.js tests/nearbyPlacesDatabase.test.js",
     "preview": "vite preview"
   },
   "dependencies": {

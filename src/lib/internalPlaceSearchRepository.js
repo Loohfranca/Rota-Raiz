@@ -10,6 +10,7 @@ export function createInternalPlaceSearch(client) {
     return data;
   }
   return {
+    nearby({lat,lng},signal) {return request("rr_nearby_places",{p_lat:lat,p_lng:lng},signal);},
     completeLegacy(sourceId,data) {return request("rr_complete_legacy_place",{p_source:sourceId,p:data});},
     search(query, { destinationId = null, signal } = {}) {
       if (!query.trim() && !destinationId) return Promise.resolve([]);

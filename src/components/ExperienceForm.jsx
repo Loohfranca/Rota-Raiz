@@ -1,4 +1,5 @@
 import React,{useEffect,useState} from "react";
+import PlaceLocationPicker from "./PlaceLocationPicker";
 import InternalPlaceSearch,{PlaceDuplicateNotice} from "./InternalPlaceSearch";
 import {experiencePublication,experiencePhotoUrl} from "../lib/liveExperiencePublication";
 import {EXPERIENCE_CATEGORIES,STATES,placeDraft,localToday,validateExperienceDraft} from "../lib/experienceFormModel.js";
@@ -72,6 +73,8 @@ export default function ExperienceForm({user,initial=null,onSaved=()=>{},onLockC
   {!legacy&&(selected||manual)&&<fieldset disabled={locked} className="rr-experience-fields">
    <legend>{selected?'Dados do lugar':'Cadastrar novo lugar'}</legend>
    {selected&&<p className="field-help">{selected.requires_completion?"Confira o endereço ou referência. Município e UF podem ser completados depois.":"Os dados compartilhados estão protegidos. Complete apenas o que estiver faltando."}</p>}
+   {manual&&<PlaceLocationPicker disabled={locked} api={searchApi||internalPlaceSearch} onSelect={selectPlace} onConfirm={location=>{setPlace(p=>({...p,...location}));setLocationMode(location.address?'address':'point');}}/>}
+   {manual&&place.lat!==''&&place.lng!==''&&<p className="rr-place-coordinates">Ponto do lugar: {Number(place.lat).toFixed(6)}, {Number(place.lng).toFixed(6)}</p>}
    <label>Nome do lugar<input required minLength={2} maxLength={120} value={place.name} readOnly={!editable('name')} onChange={e=>{update('name',e.target.value);if(manual)setName(e.target.value);}}/></label>
    <label>Categoria<select required value={place.category} disabled={!editable('category')} onChange={e=>update('category',e.target.value)}><option value="">Selecione</option>{EXPERIENCE_CATEGORIES.map(c=><option key={c} value={c}>{c==='Comida'?'Alimentação':c}</option>)}</select></label>
    <div className="form-pair"><label>Cidade<input required={!selected?.requires_completion} minLength={2} maxLength={120} readOnly={!editable('municipality')} value={place.municipality} onChange={e=>update('municipality',e.target.value)}/></label>
