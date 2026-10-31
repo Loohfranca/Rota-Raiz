@@ -117,6 +117,35 @@ begin
 end
 $$;
 
+create or replace function public.rr_guard_experience_place_link()
+returns trigger language plpgsql security definer set search_path=''
+as $$
+declare v_place public.rr_places;
+begin
+  if new.place_id is null then return new; end if;
+  select * into v_place from public.rr_places
+  where id=new.place_id and deleted_at is null;
+  if v_place.id is null
+    or public.rr_normalize_place_text(new.name)<>v_place.normalized_name
+    or new.category<>v_place.category
+    or public.rr_normalize_place_address(new.address)<>v_place.normalized_address
+    or public.rr_normalize_place_text(public.rr_extract_place_city(new.city,new.address))<>v_place.normalized_city
+    or public.rr_normalize_place_text(public.rr_extract_place_state(new.city,new.address))<>v_place.normalized_state
+    or coalesce(new.instagram,'')<>v_place.instagram then
+    -- Edição legada pode alterar os dados do lugar sem conhecer o cadastro central.
+    -- Desvincula em vez de manter uma associação incorreta ou alterar o lugar de todos.
+    new.place_id:=null;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists rr_guard_experience_place_link on public.community_recommendations;
+create trigger rr_guard_experience_place_link
+before update of name,category,city,address,instagram,place_id
+on public.community_recommendations
+for each row execute function public.rr_guard_experience_place_link();
+
 create index if not exists community_recommendations_place_recent_idx
 on public.community_recommendations(place_id,visit_date desc nulls last,created_at desc)
 where deleted_at is null;
