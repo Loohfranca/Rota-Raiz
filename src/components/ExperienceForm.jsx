@@ -1,3 +1,4 @@
+import {MapPin, Camera, PenLine, Eye, Check, ImagePlus, ArrowRight, UserRound} from "lucide-react";
 import React,{useEffect,useRef,useState} from "react";
 import PlaceLocationPicker from "./PlaceLocationPicker";
 import InternalPlaceSearch,{PlaceDuplicateNotice} from "./InternalPlaceSearch";
@@ -7,7 +8,7 @@ import {internalPlaceSearch} from "../lib/internalPlaceSearch";
 import "./ExperienceForm.css";
 
 const memoryDrafts=new Map();
-const steps=["Lugar","Fotos","Relato","Prévia"];
+const steps=[["Lugar",MapPin],["Fotos",Camera],["Relato",PenLine],["Prévia",Eye]];
 const successMessages=["Uma descoberta a mais no mapa.","Sua dica já pode inspirar outra viagem.","Mais um lugar ganhou uma história.","Uma boa memória virou dica.","Mais uma parada para descobrir.","Sua história agora faz parte do caminho.","Seu relato já está na comunidade.","Uma nova perspectiva sobre esse lugar.","Mais uma dica para a próxima viagem.","Sua experiência ficou registrada.","Uma descoberta compartilhada vale por duas.","Seu relato ajuda quem vai depois.","Mais um lugar para guardar na memória.","A comunidade ganhou uma nova dica.","Sua história já pode ser encontrada.","Um pedaço da sua viagem ficou aqui.","Seu olhar sobre o lugar agora está no mapa.","Uma nova história para quem adora explorar.","Mais uma experiência para compartilhar.","Sua dica já está disponível para outros viajantes."];
 function loadDraft(key){
  if(!key)return null;
@@ -30,8 +31,11 @@ function PhotoSlot({photo,index,cover,onChange,onCover,disabled,urlFor}){
   setPreview(photo?.storage_path?urlFor(photo.storage_path):'');
  },[photo,urlFor]);
  return <div className="rr-experience-photo">
-  {preview&&<img src={preview} alt={`Prévia da foto ${index+1}`}/>}
-  <label>Foto {index+1}<input type="file" accept="image/*,.heic,.heif" disabled={disabled} onChange={e=>{const file=e.target.files?.[0];if(file)onChange({file,caption:photo?.caption||''});}}/></label>
+  <label className="rr-photo-picker">
+   {preview?<img src={preview} alt={`Prévia da foto ${index+1}`}/>:<ImagePlus size={28} aria-hidden="true"/>}
+   <span>{preview?`Trocar foto ${index+1}`:`Adicionar foto ${index+1}`}</span>
+   <input aria-label={`Foto ${index+1}`} type="file" accept="image/*,.heic,.heif" disabled={disabled} onChange={e=>{const file=e.target.files?.[0];if(file)onChange({file,caption:photo?.caption||''});}}/>
+  </label>
   <label className="rr-cover-choice"><input type="radio" name="experience-cover" value={index} checked={cover===index} disabled={disabled} onChange={()=>onCover(index)}/> Usar foto {index+1} como capa</label>
  </div>;
 }
@@ -111,18 +115,17 @@ export default function ExperienceForm({guided=false,user,initial=null,onSaved=(
  }
  if(loading)return <p role="status">Carregando sua experiência…</p>;
  return <form className="compact-form rr-experience-form" onSubmit={submit} noValidate={wizard}>
-  <p className="field-help">Você compartilha como <b>{user?.user_metadata?.full_name||user?.user_metadata?.name||'Viajante'}</b>.</p>
+  <p className="rr-publish-author"><UserRound size={15} aria-hidden="true"/> Publicando como <b>{user?.user_metadata?.full_name||user?.user_metadata?.name||'Viajante'}</b></p>
   {wizard&&<div className="rr-publish-progress">
-   <ol aria-label="Etapas da publicação">{steps.map((label,i)=><li key={label} aria-current={i===step?"step":undefined} data-complete={i<step}>{i+1}. {label}</li>)}</ol>
+   <ol aria-label="Etapas da publicação">{steps.map(([label,Icon],i)=><li key={label} aria-current={i===step?"step":undefined} data-complete={i<step}><span>{i<step?<Check size={18} aria-hidden="true"/>:<Icon size={18} aria-hidden="true"/>}</span>{label}</li>)}</ol>
    <h3 tabIndex={-1} ref={heading}>{["Escolha o lugar","Mostre o que você viu","Conte como foi","Revise antes de publicar"][step]}</h3>
    {draft&&step===0&&<p className="field-help">Seu rascunho foi recuperado.{!photos.some(Boolean)&&" Se já havia escolhido fotos, selecione-as novamente."}</p>}
   </div>}
   <div className="rr-publish-stage" data-step="place" hidden={wizard&&step!==0}>
   {!initial?.id&&!selected&&<section className="rr-discovery-start" aria-label="Comece pela localização">
-   <h3>1. Onde fica a sua descoberta?</h3>
-   <p className="field-help">Está no lugar agora? Use o GPS e confira o ponto. Depois, escolha um lugar próximo ou cadastre o seu.</p>
+   {!wizard&&<h3>Onde fica a sua descoberta?</h3>}
    <PlaceLocationPicker disabled={locked} api={searchApi||internalPlaceSearch} onSelect={selectPlace} onConfirm={location=>{setPlace(p=>({...p,...location}));setManual(true);setLocationMode(location.address?'address':'point');}}/>
-   <p className="rr-location-alternative">Não está no lugar? Pesquise pelo nome abaixo.</p>
+   <p className="rr-location-alternative"><span>ou encontre pelo nome</span></p>
   </section>}
   {legacy?<div className="rr-experience-place-summary"><strong>{initial.name}</strong><span>{initial.address} · {initial.city}</span><p>Suas fotos e informações anteriores serão mantidas.</p></div>:
    <InternalPlaceSearch label="Pesquisar lugar" value={name} disabled={locked} api={searchApi}
@@ -163,7 +166,7 @@ export default function ExperienceForm({guided=false,user,initial=null,onSaved=(
    <label>Dicas adicionais <small>opcional</small><textarea maxLength={500} rows={2} value={tips} onChange={e=>setTips(e.target.value)}/></label>
   </fieldset>}
   {wizard&&step===3&&<section className="rr-publish-stage rr-publish-preview" aria-label="Prévia da indicação">
-   <CoverPreview photo={photos[cover]}/>
+   <div className="rr-publish-cover"><CoverPreview photo={photos[cover]}/><span><Camera size={14}/> Foto de capa</span></div>
    <h4>{place.name||name}</h4>
    <p>{[place.municipality,place.state].filter(Boolean).join(", ")} · {visitedOn.split("-").reverse().join("/")}</p>
    {note.length>180?<><p>{note.slice(0,180)}…</p><details><summary>Ler mais</summary><p>{note}</p></details></>:<p>{note}</p>}
@@ -174,7 +177,7 @@ export default function ExperienceForm({guided=false,user,initial=null,onSaved=(
   {error&&<p role="alert" className="form-error">{error}</p>}
   {(wizard||legacy||selected||manual)&&<div className="rr-publish-actions">
    {wizard&&step>0&&!pending&&<button type="button" className="small-action" disabled={locked} onClick={()=>goStep(step-1)}>Voltar</button>}
-   <button type="submit" className="primary-action" disabled={busy||loading}>{busy?'Salvando…':pending?'Conferir envio':wizard&&step<3?'Continuar':initial?.id?'Salvar alterações':'Publicar experiência'}</button>
+   <button type="submit" className="primary-action" disabled={busy||loading}>{busy?'Salvando…':pending?'Conferir envio':wizard&&step<3?'Continuar':initial?.id?'Salvar alterações':'Publicar experiência'}{wizard&&step<3&&<ArrowRight size={17} aria-hidden="true"/>}</button>
   </div>}
  </form>;
 }

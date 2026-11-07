@@ -1,3 +1,4 @@
+import {LocateFixed, ChevronRight} from "lucide-react";
 import React,{lazy,Suspense,useEffect,useRef,useState} from 'react';
 import {currentPosition,reverseSuggestion} from '../lib/placeLocation.js';
 import {reversePlacePoint} from '../lib/geocode.js';
@@ -21,8 +22,8 @@ export default function PlaceLocationPicker({disabled,onConfirm,onSelect,api=int
  async function choose(id){const token=++revision.current;setBusy('select');setError('');try{const place=await api.getPlace(id);if(!place)throw new Error("Este lugar não está mais disponível.");if(token===revision.current){onSelect(place);setPoint(null);}}catch(e){if(token===revision.current)setError(e.message);}finally{if(token===revision.current)setBusy('');}}
  const valid=fields&&fields.municipality.trim().length>=2&&STATES.includes(fields.state)&&(fields.address.trim()||fields.location_reference.trim());
  return <section className="rr-place-location" aria-label="Localização do lugar">
-  <button type="button" disabled={disabled||!!busy} onClick={gps}>Usar minha localização atual</button>
-  <p className="field-help">O GPS localiza o ponto, não identifica o estabelecimento. Mapa e consulta de endereço enviam o ponto aos respectivos provedores. Você confirma antes de associá-lo ao lugar.</p>
+  <button type="button" className="rr-gps-tile" disabled={disabled||!!busy} onClick={gps}><span className="rr-gps-icon"><LocateFixed size={23} aria-hidden="true"/></span><strong>Usar minha localização atual</strong><ChevronRight size={17} aria-hidden="true"/></button>
+  <details className="rr-gps-help"><summary>Como o GPS funciona</summary><p className="field-help">O mapa e a consulta de endereço enviam o ponto aos respectivos provedores. Você confirma o local antes de associá-lo ao lugar.</p></details>
   {busy&&<p role="status">{busy==='gps'?'Obtendo GPS…':'Consultando localização…'}</p>}
   {error&&<p role="alert">{error}</p>}
   {point&&<><p className="field-help">Arraste o mapa ou o marcador para corrigir o ponto. Você também pode clicar no mapa ou usar as setas do teclado.</p>
