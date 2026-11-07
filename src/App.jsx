@@ -71,7 +71,7 @@ export default function App() {
     if(itineraries.error){setSavePlaceError(itineraries.error);return false;}
     if(itineraries.plans.length===1) {
       const plan=itineraries.plans[0];
-      try {if(!plan.visits.some(v=>v.placeId===String(place.id)))await itineraries.save({...plan,visits:[...plan.visits,placeVisit(place)]});itineraries.select(plan.id);setItineraryNotice(`${place.title} está em ${plan.title}, em Minhas viagens.`);return true;}catch(e){setSavePlaceError(e.message);return false;}
+      try {if(!plan.visits.some(v=>v.placeId===String(place.id)))await itineraries.save({...plan,visits:[...plan.visits,placeVisit(place)]});itineraries.select(plan.id);setItineraryNotice(`${place.title} está em ${plan.title}, em Minhas viagens.`);openExperiences();return true;}catch(e){setSavePlaceError(e.message);return false;}
     }
     return new Promise(resolve=>setPendingPlace({place,resolve}));
   }
@@ -262,7 +262,7 @@ export default function App() {
             />
           </>
         ) : activeTab === "itinerary" ? (
-          <ItineraryView store={itineraries} onOpenPlace={setSelectedTour} onRoute={goToRoutesWith} experienceOpenRequest={experienceOpenRequest} />
+          <ItineraryView store={itineraries} onOpenPlace={setSelectedTour} onRoute={goToRoutesWith} experienceOpenRequest={experienceOpenRequest} onSavePlace={addPlaceToTrip} />
         ) : activeTab === "trip" ? (
           <AccountsView key={session.user.id} user={session.user} inviteToken={inviteToken} onInviteHandled={() => { clearInvite(); setInviteToken(null); }} />
         ) : activeTab === "profile" ? (
@@ -278,12 +278,11 @@ export default function App() {
               onOpenCommunity={openCommunityPlace}
               onRecommend={()=>{setCommunityOpenRequest({compose:true});handleTabChange("community");}}
               visible={!selectedTour && !selectedRoute}
-              onSelectTour={setSelectedTour}
             />
           </div>
         )}
       </main>
-      {pendingPlace && !itineraries.loading && <SavePlaceSheet place={pendingPlace.place} store={itineraries} onClose={()=>{pendingPlace.resolve(false);setPendingPlace(null);}} onComplete={title=>{setItineraryNotice(`${pendingPlace.place.title} está em ${title}, em Minhas viagens.`);pendingPlace.resolve(true);setPendingPlace(null);}} />}
+      {pendingPlace && !itineraries.loading && <SavePlaceSheet place={pendingPlace.place} store={itineraries} onClose={()=>{pendingPlace.resolve(false);setPendingPlace(null);}} onComplete={title=>{setItineraryNotice(`${pendingPlace.place.title} está em ${title}, em Minhas viagens.`);pendingPlace.resolve(true);setPendingPlace(null);openExperiences();}} />}
 
       <BottomNav
         activeTab={activeTab === "map" ? mapReturnTab : activeTab}

@@ -1,14 +1,16 @@
 import React,{useState,useEffect} from 'react';
 import { Plus,Plane,MapPin,ArrowRight,Check,MessageSquare,Pencil,Trash2,Download,Bookmark,CalendarDays } from 'lucide-react';
 import Sheet from './Sheet';
+import {getSavedTours,removeSavedTourOffline} from '../lib/supabase';
 import { AIRPORTS } from '../data/travelNetwork';
 import { BEACHES } from '../data/beachCatalog';
 import { TRANSPORTS,ZONES,legTiming,durationLabel,orderedLegs,displayLocal,placeVisit,validateItinerary } from '../lib/itinerary';
 const EXPERIENCE_TYPES=['Praia','Restaurante','Passeio','Hospedagem','Outro'];
 const emptySegment=()=>({from:'',to:'',departure:'',arrival:'',fromZone:'America/Sao_Paulo',toZone:'America/Sao_Paulo'});
-export default function ItineraryView({store,onOpenPlace,onRoute,experienceOpenRequest=0}) {
+export default function ItineraryView({store,onOpenPlace,onRoute,onSavePlace,experienceOpenRequest=0}) {
   const [sheet,setSheet]=useState(null),[error,setError]=useState(''),[exporting,setExporting]=useState(false),[deleted,setDeleted]=useState(null),[view,setView]=useState('transport');
   useEffect(()=>{if(experienceOpenRequest>0)setView('experiences');},[experienceOpenRequest]);
+  const [oldSaved,setOldSaved]=useState(getSavedTours),[moving,setMoving]=useState(false);
   const [removedVisit,setRemovedVisit]=useState('');
   const plan=store.plans.find(p=>p.id===store.activeId);
   async function save(next) { try{await store.save(next);setError('');return true;}catch(e){setError(e.message);return false;} }
@@ -20,7 +22,7 @@ export default function ItineraryView({store,onOpenPlace,onRoute,experienceOpenR
     {store.loading&&<p role="status">Carregando seu roteiro…</p>}
     {(store.error||error)&&<p role="alert" className="form-error">{store.error||error}</p>}
     <div className="itinerary-tools">{store.plans.length>0&&<label className="trip-select">Sua viagem<select value={store.activeId} onChange={e=>{store.select(e.target.value);setError('');}}>{store.plans.map(p=><option key={p.id} value={p.id}>{p.title}</option>)}</select></label>}<button className="small-action" disabled={store.busy||store.loading} onClick={store.refresh}>Atualizar</button></div>
-    {!store.loading&&!plan&&<section className="travel-empty"><Plane size={30}/><h2>Seu caminho começa aqui.</h2><p>Crie uma viagem para organizar os trechos e reunir os lugares salvos no Explorar.</p><button className="primary-action" onClick={()=>setSheet({type:'create'})}>Criar viagem<Plus size={18}/></button></section>}
+    {!store.loading&&!plan&&<section className="travel-empty"><Plane size={30}/><h2>Seu caminho começa aqui.</h2><p>Crie uma viagem para organizar os trechos e reunir os lugares que você quer conhecer.</p><button className="primary-action" onClick={()=>setSheet({type:'create'})}>Criar viagem<Plus size={18}/></button></section>}
     {plan&&<>
       <div className="itinerary-summary"><div><h2>{plan.title}</h2><span>{plan.legs.length} trechos · {plan.visits.filter(v=>v.visited).length} lugares visitados · {plan.visits.filter(v=>!v.visited).length} para conhecer</span></div><div className="itinerary-manage-actions"><button className="small-action" aria-label="Renomear viagem" onClick={()=>setSheet({type:'rename',plan})}><Pencil size={16}/><span>Editar</span></button><button className="small-action itinerary-delete-trip" aria-label="Excluir viagem" disabled={store.busy} onClick={()=>{setError('');setSheet({type:'delete',plan});}}><Trash2 size={16}/><span>Excluir</span></button></div></div>
       <div className="itinerary-area-tabs" role="group" aria-label="Áreas da viagem"><button aria-label="Voos e trechos" aria-pressed={view==='transport'} aria-controls="itinerary-transport" onClick={()=>setView('transport')}><Plane size={18}/><span>Voos e trechos</span><b>{plan.legs.length}</b></button><button aria-label="Experiências" aria-pressed={view==='experiences'} aria-controls="itinerary-experiences" onClick={()=>setView('experiences')}><MapPin size={18}/><span>Experiências</span><b>{plan.visits.length}</b></button></div>
@@ -33,7 +35,7 @@ export default function ItineraryView({store,onOpenPlace,onRoute,experienceOpenR
         <details className="ticket-details"><summary>Ver percurso e conexões</summary>{leg.segments.map((s,index)=><div key={index}><p><b>{s.from} → {s.to}</b> · {durationLabel(time.rides[index].minutes)}</p><p>{displayLocal(s.departure)} → {displayLocal(s.arrival)}</p>{index<time.waits.length&&<p className="connection-time">Parada em {s.to}{s.to!==leg.segments[index+1].from?` / próxima saída de ${leg.segments[index+1].from}`:''}: <b>{durationLabel(time.waits[index])}</b> entre chegada e saída.</p>}</div>)}{leg.comment&&<p className="itinerary-comment">{leg.comment}</p>}</details>
         <button className="itinerary-state-action" disabled={store.busy} onClick={()=>save({...plan,legs:plan.legs.map(l=>l.id===leg.id?{...l,status:l.status==='done'?'planned':'done'}:l)})}><Check size={16}/>{leg.status==='done'?'Voltar a planejado':'Marcar como realizado'}</button>
       </article>;})}</div></section>}
-      {view==='experiences'&&<section id="itinerary-experiences" className="itinerary-section"><div className="section-heading"><div><p className="eyebrow">O QUE VOCÊ VIVEU</p><h2>Suas experiências</h2></div><button className="small-action" onClick={()=>{setError('');setSheet({type:'experience',plan});}}><Plus size={17}/><span>Adicionar</span></button></div><p className="catalog-context">Praias, restaurantes, passeios e suas lembranças. Adicione aqui ou salve um lugar no Explorar.</p>
+      {view==='experiences'&&<section id="itinerary-experiences" className="itinerary-section"><div className="section-heading"><div><p className="eyebrow">O QUE VOCÊ VIVEU</p><h2>Suas experiências</h2></div><button className="small-action" onClick={()=>{setError('');setSheet({type:'experience',plan});}}><Plus size={17}/><span>Adicionar</span></button></div><p className="catalog-context">Praias, restaurantes, passeios e suas lembranças. Adicione aqui ou salve uma indicação da Comunidade.</p>
       {!plan.visits.length&&<p className="quiet-empty">Registre o primeiro lugar que conheceu ou quer conhecer nesta viagem.</p>}
       <div className="itinerary-places">{plan.visits.map(visit=><article key={visit.id} className={`itinerary-place experience-card ${visit.visited?'experience-visited':''}`}>
         <div className="itinerary-place-heading"><span className="experience-pin"><MapPin size={19}/></span><div><h3>{visit.title}</h3><p>{visit.category ? `${visit.category}${visit.location ? ' · ' : ''}` : ''}{visit.location}</p></div><span className={`experience-status ${visit.visited?'is-visited':'is-planned'}`}>{visit.visited?<Check size={13}/>:<Bookmark size={13}/>} {visit.visited?'Visitado':'Na lista'}</span></div>
@@ -57,7 +59,19 @@ export default function ItineraryView({store,onOpenPlace,onRoute,experienceOpenR
       </article>)}</div></section>}
       <div className="itinerary-export"><button className="primary-action" disabled={exporting||store.busy} onClick={pdf}><Download size={18}/>{exporting?'Gerando PDF…':'Baixar minha viagem em PDF'}</button><p>Trechos, conexões, lugares visitados e planos, com seus comentários.</p></div>
     </>}
-    {sheet?.type==='delete'&&<Sheet title="Excluir viagem?" onClose={()=>setSheet(null)}><p>Excluir <b>{sheet.plan.title}</b> e seus trechos, visitas e comentários?</p><p className="field-help">Os gastos em Na conta e os lugares salvos no Explorar serão mantidos. Você pode desfazer a exclusão nesta tela.</p>{error&&<p role="alert" className="form-error">{error}</p>}<div className="itinerary-delete-confirm"><button className="small-action" disabled={store.busy} onClick={()=>setSheet(null)}>Cancelar</button><button className="danger-action" disabled={store.busy} onClick={async()=>{try{const removed=await store.remove(sheet.plan);setDeleted(removed);setSheet(null);setError('');}catch(e){setError(e.message);}}}><Trash2 size={17}/>{store.busy?'Excluindo…':'Excluir esta viagem'}</button></div></Sheet>}
+    {onSavePlace&&(!plan||view==='experiences')&&Object.keys(oldSaved).length>0&&<details className="itinerary-section">
+      <summary>Salvos antigos deste aparelho ({Object.keys(oldSaved).length})</summary>
+      {Object.entries(oldSaved).map(([id,place])=><div className="itinerary-place-actions" key={id}>
+        <strong>{place.title}</strong>
+        <button type="button" disabled={moving||store.busy||store.loading} onClick={async()=>{
+          setMoving(true);setError('');
+          try{if(await onSavePlace({...place,id:place.id||id}))setOldSaved(removeSavedTourOffline(id));}
+          catch(e){setError(e.message);}
+          finally{setMoving(false);}
+        }}><Plus size={16}/> Mover para uma viagem</button>
+      </div>)}
+    </details>}
+    {sheet?.type==='delete'&&<Sheet title="Excluir viagem?" onClose={()=>setSheet(null)}><p>Excluir <b>{sheet.plan.title}</b> e seus trechos, visitas e comentários?</p><p className="field-help">Os gastos em Na conta serão mantidos. Você pode desfazer a exclusão nesta tela.</p>{error&&<p role="alert" className="form-error">{error}</p>}<div className="itinerary-delete-confirm"><button className="small-action" disabled={store.busy} onClick={()=>setSheet(null)}>Cancelar</button><button className="danger-action" disabled={store.busy} onClick={async()=>{try{const removed=await store.remove(sheet.plan);setDeleted(removed);setSheet(null);setError('');}catch(e){setError(e.message);}}}><Trash2 size={17}/>{store.busy?'Excluindo…':'Excluir esta viagem'}</button></div></Sheet>}
     {(sheet?.type==='create'||sheet?.type==='rename')&&<NameSheet initial={sheet.plan?.title||''} busy={store.busy} onClose={()=>setSheet(null)} onSave={async title=>{if(sheet.type==='create')await store.create(title);else await store.save({...sheet.plan,title});setSheet(null);}}/>}
     {sheet?.type==='leg'&&<LegEditor plan={sheet.plan} leg={sheet.leg} busy={store.busy} onSave={store.save} onClose={()=>setSheet(null)}/>}
     {sheet?.type==='experience'&&<VisitEditor plan={sheet.plan} busy={store.busy} onSave={store.save} onClose={()=>setSheet(null)}/>}
@@ -101,6 +115,6 @@ function VisitEditor({plan,visit,busy,onSave,onClose}) {
     <label>{visited?'Data da visita (opcional)':'Data planejada (opcional)'}<input type="date" name="date" defaultValue={visit?.date||''}/></label>
     <label>Minha anotação <small>opcional</small><textarea name="comment" maxLength={1000} rows={4} defaultValue={visit?.comment||''} placeholder="O que vale lembrar desse lugar? Dicas, impressões ou detalhes da visita…"/></label>
     {error&&<p role="alert" className="form-error">{error}</p>}<button className="primary-action" disabled={busy}>{busy?'Salvando…':'Salvar registro'}</button>
-    {visit&&<button type="button" className="danger-action" disabled={busy} onClick={async()=>{if(!window.confirm('Remover esta experiência do roteiro? Seus salvos no Explorar serão mantidos.'))return;try{await onSave({...plan,visits:plan.visits.filter(v=>v.id!==visit.id)});onClose();}catch(err){setError(err.message);}}}><Trash2 size={16}/>Excluir experiência</button>}
+    {visit&&<button type="button" className="danger-action" disabled={busy} onClick={async()=>{if(!window.confirm('Remover esta experiência do roteiro?'))return;try{await onSave({...plan,visits:plan.visits.filter(v=>v.id!==visit.id)});onClose();}catch(err){setError(err.message);}}}><Trash2 size={16}/>Excluir experiência</button>}
   </form></Sheet>;
 }

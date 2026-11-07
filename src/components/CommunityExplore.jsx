@@ -1,11 +1,10 @@
 import React, {useEffect, useState} from "react";
-import {Bookmark, ChevronDown, LocateFixed, MapPin, Plus, Search} from "lucide-react";
+import {ChevronDown, LocateFixed, MapPin, Plus, Search} from "lucide-react";
 import CommunitySuggestions from "./CommunitySuggestions";
 import {getRecommendations} from "../lib/community";
 import {communityPlace, groupCommunityRecommendations, normalizePlaceText} from "../lib/communityGroups";
 import {currentPosition, reverseSuggestion} from "../lib/placeLocation";
 import {reversePlacePoint} from "../lib/geocode";
-import {getSavedTours, removeSavedTourOffline} from "../lib/supabase";
 import {REGIONS} from "../lib/nearby";
 import "./CommunityExplore.css";
 
@@ -54,7 +53,7 @@ function ExploreTypewriter({active}){
   return <div className="rr-explore-type"><span className="rr-explore-sr">Dicas reais de quem já esteve lá.</span><span aria-hidden="true">{line}{playing&&<i/>}</span></div>;
 }
 
-export default function CommunityExplore({onOpenCommunity,onRecommend,onSelectTour,visible=true,loadRecommendations=getRecommendations,locate=currentPosition,reverse=reversePlacePoint}) {
+export default function CommunityExplore({onOpenCommunity,onRecommend,visible=true,loadRecommendations=getRecommendations,locate=currentPosition,reverse=reversePlacePoint}) {
   const [items,setItems]=useState([]);
   const [loading,setLoading]=useState(true);
   const [error,setError]=useState(false);
@@ -66,13 +65,10 @@ export default function CommunityExplore({onOpenCommunity,onRecommend,onSelectTo
   const [category,setCategory]=useState("all");
   const [locating,setLocating]=useState(false);
   const [locationError,setLocationError]=useState("");
-  const [showSaved,setShowSaved]=useState(false);
-  const [saved,setSaved]=useState(getSavedTours);
-  const [saveError,setSaveError]=useState("");
   const cityVersion=React.useRef(0);
 
   useEffect(()=>{
-    if(!visible || showSaved)return;
+    if(!visible)return;
     let active=true,busy=false;
     async function refresh(){
       if(busy || document.hidden)return;
@@ -89,8 +85,7 @@ export default function CommunityExplore({onOpenCommunity,onRecommend,onSelectTo
     window.addEventListener("online",refresh);
     document.addEventListener("visibilitychange",refresh);
     return()=>{active=false;window.removeEventListener("focus",refresh);window.removeEventListener("online",refresh);document.removeEventListener("visibilitychange",refresh);};
-  },[visible,showSaved,loadRecommendations,reload]);
-  useEffect(()=>{if(visible)setSaved(getSavedTours());},[visible]);
+  },[visible,loadRecommendations,reload]);
 
   function chooseCity(value){
     cityVersion.current++;
@@ -124,19 +119,8 @@ export default function CommunityExplore({onOpenCommunity,onRecommend,onSelectTo
 
   return <section className="rr-explore" aria-labelledby="rr-explore-title">
     <div className="rr-explore-heading">
-      <div className="rr-explore-intro"><p className="eyebrow">INDICAÇÕES DA COMUNIDADE</p><h1 id="rr-explore-title">{showSaved?"Lugares salvos":<>Descubra <em>onde ir.</em></>}</h1>{!showSaved&&<ExploreTypewriter active={visible}/>}</div>
-      <button type="button" className="small-action" aria-pressed={showSaved} onClick={()=>setShowSaved(value=>!value)}><Bookmark size={18}/> {showSaved?"Explorar":`Salvos (${Object.keys(saved).length})`}</button>
+      <div className="rr-explore-intro"><p className="eyebrow">INDICAÇÕES DA COMUNIDADE</p><h1 id="rr-explore-title">Descubra <em>onde ir.</em></h1><ExploreTypewriter active={visible}/></div>
     </div>
-    {showSaved?<div className="rr-explore-saved">
-      {saveError&&<p role="alert">{saveError}</p>}
-      {Object.values(saved).length===0&&<p>Nenhum passeio salvo neste aparelho.</p>}
-      {Object.entries(saved).map(([savedId,place])=><article key={savedId}>
-        <button type="button" onClick={()=>onSelectTour(place)}>{place.title}</button>
-        <button type="button" className="small-action" aria-label={`Remover ${place.title} dos salvos`} onClick={()=>{
-          try{setSaved(removeSavedTourOffline(savedId));setSaveError("");}catch{setSaveError("Não foi possível atualizar os salvos neste aparelho.");}
-        }}><Bookmark size={17}/> Remover</button>
-      </article>)}
-    </div>:<>
       <div className="rr-explore-location">
         <button type="button" className="rr-explore-city-trigger" aria-expanded={cityEditor} aria-controls="rr-explore-city-editor" onClick={()=>setCityEditor(value=>!value)}><MapPin size={19} aria-hidden="true"/><strong>{city||"Todas as cidades"}</strong><span>Alterar cidade</span><ChevronDown size={16} aria-hidden="true"/></button>
         <div id="rr-explore-city-editor" hidden={!cityEditor}>
@@ -166,6 +150,5 @@ export default function CommunityExplore({onOpenCommunity,onRecommend,onSelectTo
         {cityGroups.length?<button type="button" className="small-action" onClick={()=>{setQuery("");setCategory("all");}}>Limpar filtros</button>:<button type="button" className="small-action" onClick={onRecommend}><Plus size={17}/> Indicar lugar</button>}
         {!cityGroups.length&&!!publishedCities.length&&<div className="rr-explore-other"><p>Outras cidades com indicações</p>{publishedCities.slice(0,5).map(name=><button type="button" key={name} className="small-action" onClick={()=>chooseCity(name)}>{name}</button>)}</div>}
       </div>}
-    </>}
   </section>;
 }

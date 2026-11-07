@@ -10,7 +10,6 @@ import {
 import { hasCoordinates } from "../lib/walking";
 import AccessGuide from "./AccessGuide";
 import PhotoGallery from "./PhotoGallery";
-import { getSavedTours, toggleSaveTourOffline } from "../lib/supabase";
 export default function TourDetailView({
   tour,
   home,
@@ -19,22 +18,18 @@ export default function TourDetailView({
   onSwitchToRoute,
   onSaveTour,
 }) {
-  const [saved, setSaved] = useState(() => !!getSavedTours()[tour?.id]),
-    [error, setError] = useState("");
+  const [error, setError] = useState("");
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
   }, [tour?.id]);
   const [saving,setSaving] = useState(false);
   if (!tour) return null;
-  const toggle = async () => {
-    if(saving)return;setSaving(true);
-    try {
-      if(!saved && onSaveTour && !(await onSaveTour(tour))) return;
-      setSaved(toggleSaveTourOffline(tour.id, { ...tour, savedOrigin: home }));
-      setError("");
-    } catch {
-      setError("Não foi possível salvar neste aparelho.");
-    } finally {setSaving(false);}
+  const saveToTrip = async () => {
+    if(saving || !onSaveTour)return;
+    setSaving(true);setError("");
+    try { await onSaveTour(tour); }
+    catch { setError("Não foi possível salvar na viagem."); }
+    finally {setSaving(false);}
   };
   return (
     <div className="tour-detail">
@@ -43,16 +38,9 @@ export default function TourDetailView({
           <ArrowLeft size={18} />
           Voltar aos lugares
         </button>
-        <button
-          className={`button button-secondary ${saved ? "is-saved" : ""}`}
-          disabled={saving}
-          onClick={toggle}
-          aria-pressed={saved}
-        >
-          <Bookmark size={17} fill={saved ? "currentColor" : "none"} />
-          {saved ? "Passeio salvo" : "Salvar passeio"}
-        </button>
-        {saved && onSaveTour && <button className="small-action" onClick={()=>onSaveTour(tour)}>Adicionar à viagem</button>}
+        {onSaveTour&&<button type="button" className="button button-secondary" disabled={saving} onClick={saveToTrip}>
+          <Bookmark size={17}/> {saving?"Salvando…":"Salvar na viagem"}
+        </button>}
       </div>
       <PhotoGallery
         key={tour.id}
