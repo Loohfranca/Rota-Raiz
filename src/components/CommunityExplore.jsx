@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {Bookmark, LocateFixed, MapPin, Plus, Search} from "lucide-react";
+import {Bookmark, ChevronDown, LocateFixed, MapPin, Plus, Search} from "lucide-react";
 import CommunitySuggestions from "./CommunitySuggestions";
 import {getRecommendations} from "../lib/community";
 import {communityPlace, groupCommunityRecommendations, normalizePlaceText} from "../lib/communityGroups";
@@ -19,6 +19,40 @@ function matchesCity(value, selection){
   return !stateCode(value) || !stateCode(selection) || stateCode(value)===stateCode(selection);
 }
 const categoryOf=category=>/comida|alimentação|bar|restaurante/i.test(category)?"food":category==="Praia"?"beaches":category==="Hospedagem"?"stays":"outings";
+
+const discoveryLines=["Um café fora do roteiro.","Uma praia para ir sem pressa.","Um lugar que alguém viveu."];
+function ExploreTypewriter({active}){
+  const [line,setLine]=useState(discoveryLines[0]);
+  const [playing,setPlaying]=useState(false);
+  useEffect(()=>{
+    if(!active)return;
+    const motion=window.matchMedia("(prefers-reduced-motion: reduce)");
+    let timer;
+    function start(){
+      clearTimeout(timer);
+      setLine(discoveryLines[0]);
+      setPlaying(!motion.matches);
+      if(motion.matches)return;
+      let index=0,length=discoveryLines[0].length,erasing=true;
+      function tick(){
+        if(erasing && length===0){
+          index++;
+          if(index===discoveryLines.length){setLine(discoveryLines[0]);setPlaying(false);return;}
+          erasing=false;
+        }
+        const phrase=discoveryLines[index];
+        length+=erasing?-1:1;
+        setLine(phrase.slice(0,length));
+        if(!erasing&&length===phrase.length){erasing=true;timer=setTimeout(tick,2600);}
+        else timer=setTimeout(tick,erasing?24:48);
+      }
+      timer=setTimeout(tick,2600);
+    }
+    start();motion.addEventListener("change",start);
+    return()=>{clearTimeout(timer);motion.removeEventListener("change",start);};
+  },[active]);
+  return <div className="rr-explore-type"><span className="rr-explore-sr">Dicas reais de quem já esteve lá.</span><span aria-hidden="true">{line}{playing&&<i/>}</span></div>;
+}
 
 export default function CommunityExplore({onOpenCommunity,onRecommend,onSelectTour,visible=true,loadRecommendations=getRecommendations,locate=currentPosition,reverse=reversePlacePoint}) {
   const [items,setItems]=useState([]);
@@ -90,7 +124,7 @@ export default function CommunityExplore({onOpenCommunity,onRecommend,onSelectTo
 
   return <section className="rr-explore" aria-labelledby="rr-explore-title">
     <div className="rr-explore-heading">
-      <div><p className="eyebrow">INDICAÇÕES DA COMUNIDADE</p><h1 id="rr-explore-title">{showSaved?"Lugares salvos":"Descubra onde ir"}</h1></div>
+      <div className="rr-explore-intro"><p className="eyebrow">INDICAÇÕES DA COMUNIDADE</p><h1 id="rr-explore-title">{showSaved?"Lugares salvos":<>Descubra <em>onde ir.</em></>}</h1>{!showSaved&&<ExploreTypewriter active={visible}/>}</div>
       <button type="button" className="small-action" aria-pressed={showSaved} onClick={()=>setShowSaved(value=>!value)}><Bookmark size={18}/> {showSaved?"Explorar":`Salvos (${Object.keys(saved).length})`}</button>
     </div>
     {showSaved?<div className="rr-explore-saved">
@@ -104,10 +138,9 @@ export default function CommunityExplore({onOpenCommunity,onRecommend,onSelectTo
       </article>)}
     </div>:<>
       <div className="rr-explore-location">
-        <div className="rr-explore-location-top"><span><MapPin size={19}/><strong>{city||"Todas as cidades"}</strong></span><button type="button" className="rr-explore-text-action" aria-expanded={cityEditor} onClick={()=>setCityEditor(value=>!value)}>{cityEditor?"Fechar":"Alterar cidade"}</button></div>
-        <div className="rr-explore-location-top">
+        <button type="button" className="rr-explore-city-trigger" aria-expanded={cityEditor} aria-controls="rr-explore-city-editor" onClick={()=>setCityEditor(value=>!value)}><MapPin size={19} aria-hidden="true"/><strong>{city||"Todas as cidades"}</strong><span>Alterar cidade</span><ChevronDown size={16} aria-hidden="true"/></button>
+        <div id="rr-explore-city-editor" hidden={!cityEditor}>
           <button type="button" className="small-action" disabled={locating} onClick={useLocation}><LocateFixed size={17}/>{locating?"Localizando…":"Usar minha localização"}</button>
-        </div>
         {cityEditor&&<form onSubmit={event=>{event.preventDefault();chooseCity(draft);}}>
           <label htmlFor="rr-explore-city">Cidade ou destino</label>
           <div><input id="rr-explore-city" list="rr-explore-cities" value={draft} onChange={event=>setDraft(event.target.value)} placeholder="Ex.: Salvador" maxLength={120}/>
@@ -117,6 +150,7 @@ export default function CommunityExplore({onOpenCommunity,onRecommend,onSelectTo
         </form>}
         {cityEditor&&city&&<button type="button" className="rr-explore-text-action" onClick={()=>chooseCity("")}>Ver todas as cidades</button>}
         {locationError&&<p role="status">{locationError}</p>}
+        </div>
       </div>
       <div className="rr-explore-tools">
         <label><Search size={18}/><input aria-label="Buscar nas indicações" placeholder="Buscar um lugar ou uma dica" value={query} onChange={event=>setQuery(event.target.value)}/></label>
