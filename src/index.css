@@ -5861,3 +5861,10 @@ button.primary-action,
  .accounts-page .travel-empty > .legacy-empty-action {width:100%;max-width:290px;}
  .accounts-page .travel-empty > .legacy-empty-action{margin-top:16px;}
 }
+
+.rr-place-sheet > header { align-items:flex-start; }
+.rr-place-sheet .rr-sheet-title { flex:1; min-width:0; overflow-wrap:anywhere; }
+.rr-place-sheet .rr-sheet-title > p { margin:3px 0; }
+.rr-place-sheet .rr-sheet-title .rr-social-gallery-nav { margin-top:6px; }
+.rr-place-sheet .rr-social-gallery-nav button { min-width:44px; min-height:44px; }
+.rr-social-experience-swipe, [data-photo-gallery] { touch-action:pan-y pinch-zoom; }

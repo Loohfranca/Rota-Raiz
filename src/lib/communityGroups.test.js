@@ -15,3 +15,13 @@ test("Não junta homônimos com ruas diferentes ou cidades diferentes",()=>{
   const c={name:"Bar do Sol",city:"Porto Seguro, BA",address:"Rua das Flores, 15, Salvador - BA, 40100-100"};
   assert.equal(groupCommunityRecommendations([a,b,c]).length,3);
 });
+
+test("O vínculo canônico prevalece sobre texto; contagem e ordem são por experiência publicada",()=>{
+  const older={id:"old",place_id:"praia-a",name:"Praia",visited_on:"2025-02-01",created_at:"2026-06-01"};
+  const newer={id:"new",place_id:"praia-a",name:"Praia renomeada",visited_on:"2025-03-01",created_at:"2026-05-01",photos:[{},{}]};
+  const undated={id:"undated",place_id:"praia-a",created_at:"2026-07-01"};
+  const groups=groupCommunityRecommendations([older,newer,newer,undated,
+    {...older,id:"other",place_id:"praia-b"},{...older,id:"pending",status:"pending"},
+    {...older,id:"deleted",deleted_at:"2026-07-01"}]);
+  assert.deepEqual(groups.map(g=>g.map(x=>x.id)),[["new","old","undated"],["other"]]);
+});

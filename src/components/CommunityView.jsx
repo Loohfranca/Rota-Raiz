@@ -17,7 +17,7 @@ import Sheet from "./Sheet";
 import CommunityCard from "./CommunityCard";
 import ExperienceForm from "./ExperienceForm";
 import {experiencePublication} from "../lib/liveExperiencePublication";
-import { groupCommunityRecommendations } from "../lib/communityGroups";
+import { communityPlace, groupCommunityRecommendations, normalizePlaceText, placeGroupKey } from "../lib/communityGroups";
 import * as liveCommunity from "../lib/community";
 import {
   profileName,
@@ -90,24 +90,29 @@ export default function CommunityView({ onRoute, onSavePlace, onViewExperiences,
   },[items,user?.id,api]);
   useEffect(()=>{
     if(!openRequest || loading || error)return;
-    if(!items.some(item=>item.id===openRequest.id)){
+    if(items.some(item=>item.id===openRequest.id)){setQuery("");setCategory("Todos");}
+    else{
       setNotice("Essa indicação não está mais disponível. Veja outras dicas da comunidade.");onOpenHandled?.();
     }
   },[openRequest,loading,error,items,onOpenHandled]);
-  const list = items.filter(
-    (i) =>
-      (category === "Todos" || i.category === category || (category==="Alimentação" && i.category==="Comida")) &&
-      `${i.name} ${i.city} ${i.address} ${i.author_name || ""}`
-        .toLocaleLowerCase()
-        .includes(query.toLocaleLowerCase()),
-  );
   useEffect(()=>{
     let active=true;
     const ids=[...new Set(items.map(x=>x.user_id).filter(Boolean))];
     api.getPublicAuthors(ids).then(profiles=>{if(active)setAuthors(profiles);}).catch(()=>{});
     return()=>{active=false;};
   },[items,api]);
-  const groupedList=groupCommunityRecommendations(list);
+  const groups=groupCommunityRecommendations(items);
+  const search=normalizePlaceText(query);
+  const groupedList=groups.filter(group=>{
+    const place=communityPlace(group[0]);
+    const matchesCategory=category==="Todos" || place.category===category || (category==="Alimentação" && place.category==="Comida");
+    return matchesCategory && group.some(item=>normalizePlaceText(
+      [place.name,place.city,place.address,place.destination,item.name,item.city,item.address,item.author_name,authors[item.user_id]?.display_name].filter(Boolean).join(" ")
+    ).includes(search));
+  });
+  const requestedGroup=openRequest && groups.find(group=>group.some(item=>item.id===openRequest.id));
+  const displayedGroups=requestedGroup && !groupedList.includes(requestedGroup) ? [...groupedList,requestedGroup] : groupedList;
+  const indicationCount=displayedGroups.reduce((total,group)=>total+group.length,0);
   async function publish(published) {
     const visible=published.status==='approved'&&!published.deleted_at;
     setItems(current=>visible?[published,...current.filter(item=>item.id!==published.id)]:current.filter(item=>item.id!==published.id));
@@ -212,12 +217,12 @@ export default function CommunityView({ onRoute, onSavePlace, onViewExperiences,
         <span>
           {loading
             ? "Carregando…"
-            : `${groupedList.length} ${groupedList.length === 1 ? "lugar" : "lugares"} · ${list.length} ${list.length === 1 ? "indicação" : "indicações"}`}
+            : `${displayedGroups.length} ${displayedGroups.length === 1 ? "lugar" : "lugares"} · ${indicationCount} ${indicationCount === 1 ? "indicação" : "indicações"}`}
         </span>
       </div>
       {loading ? (
         <p role="status">Buscando as últimas descobertas…</p>
-      ) : !list.length ? (
+      ) : !displayedGroups.length ? (
         <section className="community-empty">
           <Users size={29} />
           <h2>
@@ -236,7 +241,7 @@ export default function CommunityView({ onRoute, onSavePlace, onViewExperiences,
         </section>
       ) : (
         <div className="community-feed">
-          {groupedList.map(group=><CommunityCard key={group[0].id} openRequest={openRequest && group.some(item=>item.id===openRequest.id)?openRequest:null} onOpenHandled={onOpenHandled} groupItems={group} user={user}
+          {displayedGroups.map(group=><CommunityCard key={placeGroupKey(group[0])} openRequest={openRequest && group.some(item=>item.id===openRequest.id)?openRequest:null} onOpenHandled={onOpenHandled} groupItems={group} user={user}
               api={api} photoUrlFor={photoUrlFor}
               allStats={engagement}
               authorProfile={authors[group[0].user_id]}

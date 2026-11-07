@@ -47,14 +47,19 @@ export async function getPublicAuthors(ids) {
 
 export async function getRecommendations() {
   if (!supabase) return { items: [], available: false };
-  const { data, error } = await supabase
-    .from("community_recommendations")
-    .select(
-      "id,name,category,city,address,instagram,note,author_name,user_id,created_at,reviewed_at,image_url,source_url,editorial,photo_credit,photo_source_url,place_id,version,schema_version,visit_date,how_to_get,tips,photos:rr_experience_photos(id,storage_path,caption,position,is_cover,deleted_at)",
-    )
-    .eq("status", "approved")
-    .order("created_at", { ascending: false });
-  if (error) return { items: [], available: false };
+  const data=[];
+  const pageSize=200;
+  for(let offset=0;;offset+=pageSize){
+    const page=await supabase.from("community_recommendations")
+      .select("id,name,category,city,address,instagram,note,author_name,user_id,created_at,reviewed_at,image_url,source_url,editorial,photo_credit,photo_source_url,place_id,version,schema_version,visit_date,how_to_get,tips,place:rr_places!place_id(name,category,city,state,address,location_reference,instagram,destination:rr_destinations(name)),photos:rr_experience_photos(id,storage_path,caption,position,is_cover,deleted_at)")
+      .eq("status","approved").is("deleted_at",null)
+      .order("created_at",{ascending:false}).order("id",{ascending:false})
+      .range(offset,offset+pageSize-1);
+    if(page.error) return {items:[],available:false};
+    const rows=page.data||[];
+    data.push(...rows);
+    if(rows.length<pageSize) break;
+  }
   return {
     items: (data || []).map(row=>({...row,visited_on:row.visit_date,photos:(row.photos||[]).filter(p=>!p.deleted_at),image_url:row.photos?.find(p=>p.is_cover&&!p.deleted_at)?.storage_path?supabase.storage.from("community-photos").getPublicUrl(row.photos.find(p=>p.is_cover&&!p.deleted_at).storage_path).data.publicUrl:row.image_url})).filter(
       (i) =>

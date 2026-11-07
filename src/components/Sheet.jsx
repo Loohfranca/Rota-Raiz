@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { X } from "lucide-react";
-export default function Sheet({ title, onClose, children, className = "" }) {
+export default function Sheet({ title, headerDetails, onClose, children, className = "" }) {
   const ref = useRef(null);
   useEffect(() => {
     const dialog = ref.current;
@@ -23,7 +23,7 @@ export default function Sheet({ title, onClose, children, className = "" }) {
       aria-labelledby="sheet-title"
     >
       <header>
-        <h2 id="sheet-title">{title}</h2>
+        {headerDetails?<div className="rr-sheet-title"><h2 id="sheet-title">{title}</h2>{headerDetails}</div>:<h2 id="sheet-title">{title}</h2>}
         <button className="icon-button" onClick={onClose} aria-label="Fechar">
           <X size={21} />
         </button>
