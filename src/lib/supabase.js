@@ -222,18 +222,26 @@ export const getSavedTours = () => {
   try { return JSON.parse(localStorage.getItem('rotaraiz_tour_details') || '{}'); } catch { return {}; }
 };
 
-export const toggleSaveTourOffline = (tourId, tour) => {
-  const { tours } = getOfflineStorage();
-  let updated;
-  if (tours.includes(tourId)) {
-    updated = tours.filter(id => id !== tourId);
-  } else {
-    updated = [...tours, tourId];
-  }
-  const details = getSavedTours();
-  if (updated.includes(tourId) && tour) details[tourId] = { ...tour, savedAt: new Date().toISOString() };
-  else delete details[tourId];
+function writeSavedTours(details) {
   localStorage.setItem('rotaraiz_tour_details', JSON.stringify(details));
-  localStorage.setItem('rotaraiz_saved_tours', JSON.stringify(updated));
-  return updated.includes(tourId);
+  localStorage.setItem('rotaraiz_saved_tours', JSON.stringify(Object.keys(details)));
+}
+
+export const removeSavedTourOffline = (savedId) => {
+  const details = getSavedTours();
+  delete details[savedId];
+  writeSavedTours(details);
+  return details;
+};
+
+export const toggleSaveTourOffline = (tourId, tour) => {
+  const details = getSavedTours();
+  if (Object.hasOwn(details, tourId)) {
+    removeSavedTourOffline(tourId);
+    return false;
+  }
+  if (!tour) return false;
+  details[tourId] = { ...tour, savedAt: new Date().toISOString() };
+  writeSavedTours(details);
+  return true;
 };

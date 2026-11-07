@@ -5,7 +5,7 @@ import {getRecommendations} from "../lib/community";
 import {communityPlace, groupCommunityRecommendations, normalizePlaceText} from "../lib/communityGroups";
 import {currentPosition, reverseSuggestion} from "../lib/placeLocation";
 import {reversePlacePoint} from "../lib/geocode";
-import {getSavedTours, toggleSaveTourOffline} from "../lib/supabase";
+import {getSavedTours, removeSavedTourOffline} from "../lib/supabase";
 import {REGIONS} from "../lib/nearby";
 import "./CommunityExplore.css";
 
@@ -96,11 +96,11 @@ export default function CommunityExplore({onOpenCommunity,onRecommend,onSelectTo
     {showSaved?<div className="rr-explore-saved">
       {saveError&&<p role="alert">{saveError}</p>}
       {Object.values(saved).length===0&&<p>Nenhum passeio salvo neste aparelho.</p>}
-      {Object.values(saved).map(place=><article key={place.id}>
+      {Object.entries(saved).map(([savedId,place])=><article key={savedId}>
         <button type="button" onClick={()=>onSelectTour(place)}>{place.title}</button>
         <button type="button" className="small-action" aria-label={`Remover ${place.title} dos salvos`} onClick={()=>{
-          try{toggleSaveTourOffline(place.id);setSaved(getSavedTours());setSaveError("");}catch{setSaveError("Não foi possível atualizar os salvos neste aparelho.");}
-        }}><Bookmark size={17} fill="currentColor"/></button>
+          try{setSaved(removeSavedTourOffline(savedId));setSaveError("");}catch{setSaveError("Não foi possível atualizar os salvos neste aparelho.");}
+        }}><Bookmark size={17}/> Remover</button>
       </article>)}
     </div>:<>
       <div className="rr-explore-location">
