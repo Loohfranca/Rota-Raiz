@@ -9,12 +9,14 @@ const emptySegment=()=>({from:'',to:'',departure:'',arrival:'',fromZone:'America
 export default function ItineraryView({store,onOpenPlace,onRoute,experienceOpenRequest=0}) {
   const [sheet,setSheet]=useState(null),[error,setError]=useState(''),[exporting,setExporting]=useState(false),[deleted,setDeleted]=useState(null),[view,setView]=useState('transport');
   useEffect(()=>{if(experienceOpenRequest>0)setView('experiences');},[experienceOpenRequest]);
+  const [removedVisit,setRemovedVisit]=useState('');
   const plan=store.plans.find(p=>p.id===store.activeId);
   async function save(next) { try{await store.save(next);setError('');return true;}catch(e){setError(e.message);return false;} }
   async function pdf() {setExporting(true);try{const {downloadItineraryPdf}=await import('../lib/itineraryPdf');downloadItineraryPdf(plan);setError('');}catch(e){setError(e.message||'Não foi possível gerar o PDF.');}finally{setExporting(false);} }
   return <div className="itinerary-page">
     <header className="travel-heading itinerary-header"><div><span className="eyebrow">SEU CADERNO DE CAMINHO</span><h1>Minhas viagens</h1><p>Do primeiro embarque aos lugares que ficam na memória.</p></div><button className="small-action itinerary-new-trip" disabled={store.loading||store.busy} onClick={()=>{setError('');setSheet({type:'create'});}}><Plus size={18}/><span>Nova viagem</span></button></header>
     {deleted&&<p className="itinerary-deleted-notice" role="status">Viagem excluída. <button disabled={store.busy} onClick={async()=>{try{await store.restore(deleted);setDeleted(null);setError('');}catch(e){setError(e.message);}}}>Desfazer exclusão</button></p>}
+    {removedVisit&&<p role="status" className="itinerary-deleted-notice">{removedVisit} foi removido do roteiro.</p>}
     {store.loading&&<p role="status">Carregando seu roteiro…</p>}
     {(store.error||error)&&<p role="alert" className="form-error">{store.error||error}</p>}
     <div className="itinerary-tools">{store.plans.length>0&&<label className="trip-select">Sua viagem<select value={store.activeId} onChange={e=>{store.select(e.target.value);setError('');}}>{store.plans.map(p=><option key={p.id} value={p.id}>{p.title}</option>)}</select></label>}<button className="small-action" disabled={store.busy||store.loading} onClick={store.refresh}>Atualizar</button></div>
@@ -45,6 +47,11 @@ export default function ItineraryView({store,onOpenPlace,onRoute,experienceOpenR
           <div className="experience-quick-actions">
             <button type="button" className="experience-note-button" aria-label={`Editar experiência e anotação de ${visit.title}`} onClick={()=>{setError('');setSheet({type:'visit',plan,visit});}}><Pencil size={16}/>{visit.comment?'Editar lembrança':'Adicionar anotação'}</button>
             <button type="button" onClick={()=>onRoute(visit.address||`${visit.title}, ${visit.location}`)}><ArrowRight size={16}/> Como chegar</button>
+            <button type="button" disabled={store.busy} aria-label={`Remover ${visit.title} do roteiro`} onClick={async()=>{
+              if(!window.confirm(`Remover “${visit.title}” deste roteiro?`))return;
+              setRemovedVisit('');
+              if(await save({...plan,visits:plan.visits.filter(item=>item.id!==visit.id)}))setRemovedVisit(visit.title);
+            }}><Trash2 size={16}/> Remover</button>
           </div>
         </div>
       </article>)}</div></section>}
