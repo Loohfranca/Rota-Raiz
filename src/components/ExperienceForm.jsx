@@ -66,14 +66,19 @@ export default function ExperienceForm({user,initial=null,onSaved=()=>{},onLockC
  if(loading)return <p role="status">Carregando sua experiência…</p>;
  return <form className="compact-form rr-experience-form" onSubmit={submit}>
   <p className="field-help">Você compartilha como <b>{user?.user_metadata?.full_name||user?.user_metadata?.name||'Viajante'}</b>.</p>
+  {!initial?.id&&!selected&&<section className="rr-discovery-start" aria-label="Comece pela localização">
+   <h3>1. Onde fica a sua descoberta?</h3>
+   <p className="field-help">Está no lugar agora? Use o GPS e confira o ponto. Depois, escolha um lugar próximo ou cadastre o seu.</p>
+   <PlaceLocationPicker disabled={locked} api={searchApi||internalPlaceSearch} onSelect={selectPlace} onConfirm={location=>{setPlace(p=>({...p,...location}));setManual(true);setLocationMode(location.address?'address':'point');}}/>
+   <p className="rr-location-alternative">Não está no lugar? Pesquise pelo nome abaixo.</p>
+  </section>}
   {legacy?<div className="rr-experience-place-summary"><strong>{initial.name}</strong><span>{initial.address} · {initial.city}</span><p>Suas fotos e informações anteriores serão mantidas.</p></div>:
    <InternalPlaceSearch label="Pesquisar lugar" value={name} disabled={locked} api={searchApi}
     onChange={text=>{setName(text);setSelected(null);setManual(false);}}
     onSelect={selectPlace} onCreate={(text,destination)=>{setName(text);setManual(true);setSelected(null);setPlace({...placeDraft(initial?.id?{}:initial||{}),name:text,municipality:destination?.municipality||placeDraft(initial||{}).municipality||'',state:destination?.state||placeDraft(initial||{}).state||'',destination_id:destination?.id||'',destination_name:destination?.name||''});setLocationMode('address');}}/>}
   {!legacy&&(selected||manual)&&<fieldset disabled={locked} className="rr-experience-fields">
-   <legend>{selected?'Dados do lugar':'Cadastrar novo lugar'}</legend>
+   <legend>{selected?'Lugar selecionado':'2. Complete os dados do lugar'}</legend>
    {selected&&<p className="field-help">{selected.requires_completion?"Confira o endereço ou referência. Município e UF podem ser completados depois.":"Os dados compartilhados estão protegidos. Complete apenas o que estiver faltando."}</p>}
-   {manual&&<PlaceLocationPicker disabled={locked} api={searchApi||internalPlaceSearch} onSelect={selectPlace} onConfirm={location=>{setPlace(p=>({...p,...location}));setLocationMode(location.address?'address':'point');}}/>}
    {manual&&place.lat!==''&&place.lng!==''&&<p className="rr-place-coordinates">Ponto do lugar: {Number(place.lat).toFixed(6)}, {Number(place.lng).toFixed(6)}</p>}
    <label>Nome do lugar<input required minLength={2} maxLength={120} value={place.name} readOnly={!editable('name')} onChange={e=>{update('name',e.target.value);if(manual)setName(e.target.value);}}/></label>
    <label>Categoria<select required value={place.category} disabled={!editable('category')} onChange={e=>update('category',e.target.value)}><option value="">Selecione</option>{EXPERIENCE_CATEGORIES.map(c=><option key={c} value={c}>{c==='Comida'?'Alimentação':c}</option>)}</select></label>

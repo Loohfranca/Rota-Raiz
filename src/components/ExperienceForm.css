@@ -15,7 +15,7 @@
 
 .rr-place-location { display:grid; gap:12px; min-width:0; padding-block:12px; border-block:1px solid var(--border-color); }
 .rr-place-location button { min-height:44px; max-width:100%; white-space:normal; overflow-wrap:anywhere; text-align:start; }
-.rr-place-location-map { height:240px; width:100%; min-width:0; border-radius:14px; z-index:0; }
+.rr-place-location .rr-place-location-map { height:240px; width:100%; min-width:0; border-radius:14px; z-index:0; }
 .rr-place-pin span { display:block; width:26px; height:26px; border:4px solid white; border-radius:50%; background:#A64425; box-shadow:0 2px 8px #243e3260; }
 .rr-place-coordinates { font-size:13px; overflow-wrap:anywhere; margin:0; }
 .rr-place-location .leaflet-control-attribution { font-size:11px; }
@@ -26,3 +26,9 @@
 .rr-place-location button:disabled { opacity:.55; cursor:not-allowed; }
 .rr-place-location .rr-nearby-place { font-size:14px; line-height:1.5; }
 .rr-place-location .leaflet-control-zoom a { min-width:44px; min-height:44px; line-height:44px; }
+
+.rr-discovery-start { display:grid; gap:10px; min-width:0; }
+.rr-discovery-start h3 { font-size:18px; line-height:1.35; margin:0; font-weight:700; }
+.rr-discovery-start .rr-place-location { border:0; padding:0; gap:10px; }
+.rr-discovery-start .rr-place-location > .field-help { font-size:12px; }
+.rr-location-alternative { margin:8px 0 0; padding-top:14px; border-top:1px solid var(--border-color); font-size:14px; font-weight:600; }
