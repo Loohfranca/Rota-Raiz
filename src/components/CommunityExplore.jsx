@@ -19,7 +19,7 @@ function matchesCity(value, selection){
 }
 const categoryOf=category=>/comida|alimentação|bar|restaurante/i.test(category)?"food":category==="Praia"?"beaches":category==="Hospedagem"?"stays":"outings";
 
-const discoveryLines=["Um café fora do roteiro.","Uma praia para ir sem pressa.","Um lugar que alguém viveu."];
+const discoveryLines=["Um lugar que vale conhecer.","Uma dica de quem já foi.","Sua próxima descoberta começa aqui."];
 function ExploreTypewriter({active}){
   const [line,setLine]=useState(discoveryLines[0]);
   const [playing,setPlaying]=useState(false);
@@ -50,7 +50,7 @@ function ExploreTypewriter({active}){
     start();motion.addEventListener("change",start);
     return()=>{clearTimeout(timer);motion.removeEventListener("change",start);};
   },[active]);
-  return <div className="rr-explore-type"><span className="rr-explore-sr">Dicas reais de quem já esteve lá.</span><span aria-hidden="true">{line}{playing&&<i/>}</span></div>;
+  return <div className="rr-explore-type"><span className="rr-explore-sr">Lugares recomendados por viajantes.</span><span aria-hidden="true">{line}{playing&&<i/>}</span></div>;
 }
 
 export default function CommunityExplore({onOpenCommunity,onRecommend,visible=true,loadRecommendations=getRecommendations,locate=currentPosition,reverse=reversePlacePoint}) {
@@ -119,30 +119,47 @@ export default function CommunityExplore({onOpenCommunity,onRecommend,visible=tr
 
   return <section className="rr-explore" aria-labelledby="rr-explore-title">
     <div className="rr-explore-heading">
-      <div className="rr-explore-intro"><p className="eyebrow">INDICAÇÕES DA COMUNIDADE</p><h1 id="rr-explore-title">Descubra <em>onde ir.</em></h1><ExploreTypewriter active={visible}/></div>
+      <div className="rr-explore-intro">
+        <p className="eyebrow">DE VIAJANTE PARA VIAJANTE</p>
+        <h1 id="rr-explore-title">Descubra <em>onde ir.</em></h1>
+        <ExploreTypewriter active={visible}/>
+      </div>
     </div>
+    <div className="rr-explore-tools">
+      <label className="rr-explore-search">
+        <Search size={19} aria-hidden="true"/>
+        <input aria-label="Buscar nas indicações" placeholder="Busque lugares, cidades ou dicas" value={query} onChange={event=>setQuery(event.target.value)}/>
+      </label>
       <div className="rr-explore-location">
-        <button type="button" className="rr-explore-city-trigger" aria-expanded={cityEditor} aria-controls="rr-explore-city-editor" onClick={()=>setCityEditor(value=>!value)}><MapPin size={19} aria-hidden="true"/><strong>{city||"Todas as cidades"}</strong><span>Alterar cidade</span><ChevronDown size={16} aria-hidden="true"/></button>
+        <button type="button" className="rr-explore-city-trigger" aria-expanded={cityEditor} aria-controls="rr-explore-city-editor" onClick={()=>setCityEditor(value=>!value)}>
+          <MapPin size={18} aria-hidden="true"/><strong>{city||"Todas as cidades"}</strong><span>Alterar</span><ChevronDown size={16} aria-hidden="true"/>
+        </button>
         <div id="rr-explore-city-editor" hidden={!cityEditor}>
-          <button type="button" className="small-action" disabled={locating} onClick={useLocation}><LocateFixed size={17}/>{locating?"Localizando…":"Usar minha localização"}</button>
-        {cityEditor&&<form onSubmit={event=>{event.preventDefault();chooseCity(draft);}}>
-          <label htmlFor="rr-explore-city">Cidade ou destino</label>
-          <div><input id="rr-explore-city" list="rr-explore-cities" value={draft} onChange={event=>setDraft(event.target.value)} placeholder="Ex.: Salvador" maxLength={120}/>
-            <datalist id="rr-explore-cities">{cityOptions.map(name=><option key={name} value={name}/>)}</datalist>
-            <button className="small-action" type="submit">Buscar</button>
-          </div>
-        </form>}
-        {cityEditor&&city&&<button type="button" className="rr-explore-text-action" onClick={()=>chooseCity("")}>Ver todas as cidades</button>}
-        {locationError&&<p role="status">{locationError}</p>}
+          {cityEditor&&<>
+            <button type="button" className="small-action" disabled={locating} onClick={useLocation}><LocateFixed size={17}/>{locating?"Localizando…":"Usar minha localização"}</button>
+            <form onSubmit={event=>{event.preventDefault();chooseCity(draft);}}>
+              <label htmlFor="rr-explore-city">Cidade ou destino</label>
+              <div><input id="rr-explore-city" list="rr-explore-cities" value={draft} onChange={event=>setDraft(event.target.value)} placeholder="Ex.: Salvador" maxLength={120}/>
+                <datalist id="rr-explore-cities">{cityOptions.map(name=><option key={name} value={name}/>)}</datalist>
+                <button className="small-action" type="submit">Buscar</button>
+              </div>
+            </form>
+            {city&&<button type="button" className="rr-explore-text-action" onClick={()=>chooseCity("")}>Ver todas as cidades</button>}
+            {locationError&&<p role="status">{locationError}</p>}
+          </>}
         </div>
       </div>
-      <div className="rr-explore-tools">
-        <label><Search size={18}/><input aria-label="Buscar nas indicações" placeholder="Buscar um lugar ou uma dica" value={query} onChange={event=>setQuery(event.target.value)}/></label>
-        <div className="explore-category-filters" role="group" aria-label="Tipos de lugar">{filters.map(([id,label])=><button type="button" key={id} aria-pressed={category===id} onClick={()=>setCategory(id)}>{label}</button>)}</div>
+      <div className="explore-category-filters" role="group" aria-label="Tipos de lugar">
+        {filters.map(([id,label])=><button type="button" key={id} aria-pressed={category===id} onClick={()=>setCategory(id)}>{label}</button>)}
       </div>
-      <div className="rr-explore-results-title"><h2>{city?`Indicações em ${city}`:"Indicações da comunidade"}</h2><button type="button" className="small-action" onClick={onRecommend}><Plus size={17}/> Indicar lugar</button></div>
+    </div>
+    <div className="rr-explore-results-title">
+      <div className="rr-explore-results-copy"><h2>{city?`Experiências em ${city}`:"Explore experiências reais"}</h2>
+        {!loading&&!error&&<span className="rr-explore-count" aria-live="polite">{results.length} {results.length===1?"lugar":"lugares"} · {indicationCount} {indicationCount===1?"indicação":"indicações"}</span>}
+      </div>
+      <button type="button" className="small-action rr-explore-recommend" onClick={onRecommend}><Plus size={17}/> Indicar</button>
+    </div>
       {loading?<p role="status">Buscando indicações…</p>:error?<div className="rr-explore-empty" role="status"><p>Não foi possível atualizar as indicações.</p><button type="button" className="small-action" onClick={()=>{setLoading(true);setReload(value=>value+1);}}>Tentar novamente</button></div>:null}
-      {!loading&&!error&&<p className="catalog-count" aria-live="polite">{results.length} {results.length===1?"lugar":"lugares"} · {indicationCount} {indicationCount===1?"indicação":"indicações"}</p>}
       {!!results.length&&<CommunitySuggestions groups={results} onOpen={onOpenCommunity} showHeading={false}/>}
       {!loading&&!error&&!results.length&&<div className="rr-explore-empty">
         <h3>{cityGroups.length?"Nenhuma indicação com esses filtros.":city?`Ainda não há indicações em ${city}.`:"Ainda não há indicações publicadas."}</h3>
