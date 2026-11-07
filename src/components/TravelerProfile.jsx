@@ -21,7 +21,7 @@ export default function TravelerProfile({viewer,profileId,onBack,onOpenRecommend
     const [p,c,images,places]=await Promise.all([api.getProfile(profileId),api.getProfileCities(profileId),api.getCityPhotos(profileId),api.getTravelerRecommendations(profileId)]);
     setProfile(p);setDraft({display_name:p?.display_name||"",bio:p?.bio||"",instagram:p?.instagram||""});const canonical=places.filter(item=>item.schema_version===2).map(item=>({id:'experience-'+item.id,experience_id:item.id,canonical:true,publication:item,place_name:item.name,city:item.city,state:''}));
     setCities([...c.filter(item=>!canonical.some(exp=>exp.experience_id===item.experience_id)),...canonical]);
-    setPhotos(images.map(photo=>photo.experience_id?{...photo,city_id:'experience-'+photo.experience_id,canonical:true}:photo));setRecommendations(places);
+    setPhotos(images.filter(photo=>!photo.experience_id||canonical.some(exp=>exp.experience_id===photo.experience_id)).map(photo=>photo.experience_id?{...photo,city_id:'experience-'+photo.experience_id,canonical:true}:photo));setRecommendations(places);
    }catch(e){setError(e.message);}finally{setLoading(false);}
  },[profileId,own,api]);
  useEffect(()=>{refresh();},[refresh]);
@@ -67,7 +67,7 @@ export default function TravelerProfile({viewer,profileId,onBack,onOpenRecommend
     <button className="primary-action" disabled={busy}><Check size={17}/> Salvar perfil</button>
    </form>}
    <div className="rr-profile-section-title"><div><span className="eyebrow">MEMÓRIAS DE VIAGEM</span><h2>Experiências</h2><p>Momentos e lugares que marcaram o caminho.</p></div>{own&&<button type="button" className="rr-profile-plus" onClick={()=>setComposer({})} title="Cadastrar experiência" aria-label="Cadastrar experiência" aria-expanded={!!composer}><Plus size={20}/></button>}</div>
-   {own&&composer&&<Sheet title={composer.id?"Editar experiência":"Compartilhe uma experiência"} onClose={()=>{if(!composerLocked)setComposer(null);}}><ExperienceForm user={viewer} initial={composer.id?composer:null} service={publicationService} searchApi={placeSearch} urlFor={photoUrlFor} onLockChange={setComposerLocked} onSaved={async published=>{setComposer(null);await refresh();setNotice(published.status==='approved'&&!published.deleted_at?"Experiência salva e compartilhada na Comunidade.":"Experiência salva para revisão.");}}/></Sheet>}
+   {own&&composer&&<Sheet title={composer.id?"Editar experiência":"Compartilhe uma experiência"} onClose={()=>{if(!composerLocked)setComposer(null);}}><ExperienceForm guided user={viewer} initial={composer.id?composer:null} service={publicationService} searchApi={placeSearch} urlFor={photoUrlFor} onLockChange={setComposerLocked} onSaved={async (published,message)=>{setComposer(null);await refresh();setNotice(published.status==='approved'&&!published.deleted_at?(message||"Experiência salva e compartilhada na Comunidade."):"Experiência salva para revisão.");}}/></Sheet>}
    {own&&<button type="button" className="small-action rr-profile-upload-trigger" onClick={()=>setComposer({})}><ImagePlus size={17}/>Adicionar fotos</button>}
    {photos.length===0?<div className="rr-profile-empty"><MapPin size={26}/><p>{own?"Seu álbum está vazio. Compartilhe uma experiência com suas duas fotos.":"Este viajante ainda não publicou fotos."}</p></div>:
      <div className="rr-profile-flat-grid" aria-label="Galeria de fotos do viajante">
@@ -111,6 +111,7 @@ export default function TravelerProfile({viewer,profileId,onBack,onOpenRecommend
      const idx=gallery.findIndex(p=>p.id===selectedPhoto.photoId);
      const photo=gallery[idx];
      if(!photo)return null;
+     const recommendation=photo.experience_id&&recommendations.find(item=>item.id===photo.experience_id);
      return <div className="rr-profile-lightbox-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)setSelectedPhoto(null);}}>
        <section role="dialog" aria-modal="true" aria-label={"Galeria de "+(city?.place_name||city?.city||"experiência")} className="rr-profile-lightbox">
          <div className="rr-profile-lightbox-head"><strong><MapPin size={16}/>{city?.place_name||city?.city}{city?.city&&city.place_name!==city.city?", "+city.city:""}</strong><button type="button" className="rr-profile-lightbox-close" onClick={()=>setSelectedPhoto(null)} aria-label="Fechar foto"><X size={20}/></button></div>
@@ -125,6 +126,7 @@ export default function TravelerProfile({viewer,profileId,onBack,onOpenRecommend
          <div className="rr-profile-lightbox-actions">
            {!photo.canonical&&<button type="button" aria-label={photo.liked?"Descurtir foto":"Curtir foto"} aria-pressed={photo.liked} disabled={busy} onClick={()=>like(photo)}><Heart size={21} fill={photo.liked?"currentColor":"none"}/>{photo.likes} curtidas</button>}
            {photo.caption&&<p>{photo.caption}</p>}
+           {recommendation&&onOpenRecommendation&&<button type="button" className="small-action" onClick={()=>{setSelectedPhoto(null);onOpenRecommendation(recommendation.id);}}>Ver indicação <ChevronRight size={17}/></button>}
            {own&&!photo.canonical&&<button type="button" disabled={busy} className="rr-profile-lightbox-trash" onClick={()=>{if(window.confirm("Excluir esta foto?"))execute(()=>api.deleteProfilePhoto(photo),"Foto excluída.");setSelectedPhoto(null);}} aria-label="Excluir foto"><Trash2 size={19}/></button>}
          </div>
        </section>

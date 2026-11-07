@@ -12,3 +12,58 @@ test('cadastro antigo incompleto libera somente os campos ausentes',async()=>{co
 test('edição canônica carrega duas fotos, mantém capa e salva com a versão atual',async()=>{let saved;const row={id:'existing',schema_version:2,version:9,place_id:full.id,place:full,note:'Relato anterior',visited_on:'2026-10-01',photos:[{storage_path:'a/1.webp',is_cover:true},{storage_path:'a/2.webp',is_cover:false}],how_to_get:{transport:'A pé'},tips:'Dica'};render(React.createElement(Form,{initial:row,searchApi,urlFor:p=>'https://example.org/'+p,service:{get:async()=>row,save:async d=>{saved=d;return row;}}}));await screen.findByLabelText('Data da visita');const ui=userEvent.setup();await ui.click(screen.getByLabelText('Usar foto 2 como capa'));await ui.click(screen.getByRole('button',{name:'Salvar alterações'}));assert.equal(saved.version,9);assert.equal(saved.coverIndex,1);assert.equal(saved.photos[0].storage_path,'a/1.webp');});
 test('legado mantém fotos e data ausente; utiliza o mesmo formulário para editar o relato',async()=>{let saved;render(React.createElement(Form,{initial:{id:'legacy',schema_version:1,version:1,name:'Lugar antigo',note:'Relato anterior'},service:{save:async d=>{saved=d;return{id:'legacy'};}}}));assert.equal(screen.queryByLabelText('Data da visita'),null);assert.equal(screen.queryByLabelText('Foto 1'),null);const ui=userEvent.setup();await ui.click(screen.getByRole('button',{name:'Salvar alterações'}));assert.equal(saved.legacy,true);assert.equal(saved.id,'legacy');});
 test('envio ambíguo bloqueia edição e oferece conferência em vez de uma nova publicação',async()=>{let retries=0;render(React.createElement(Form,{searchApi,service:{save:async()=>{throw Object.assign(new Error('Confira o envio'),{pending:true});},retry:async()=>{retries++;return{id:'saved'};}}}));const ui=userEvent.setup();await choose(ui);await fillExperience(ui);await ui.click(screen.getByRole('button',{name:'Publicar experiência'}));await screen.findByRole('button',{name:'Conferir envio'});assert.equal(screen.getByLabelText('Data da visita').closest('fieldset').disabled,true);await ui.click(screen.getByRole('button',{name:'Conferir envio'}));assert.equal(retries,1);});
+
+test('publicação guiada preserva rascunho entre aberturas e só envia após a prévia',async()=>{
+ let saved;
+ const service={save:async data=>{saved=data;return{id:data.id,status:'approved'};}};
+ const props={guided:true,user:{id:'guided-test'},searchApi,service};
+ const ui=userEvent.setup();
+ const first=render(React.createElement(Form,props));
+ await choose(ui);
+ await ui.click(screen.getByRole('button',{name:'Continuar'}));
+ await ui.upload(screen.getByLabelText('Foto 1'),new dom.window.File(['one'],'one.png',{type:'image/png'}));
+ await ui.upload(screen.getByLabelText('Foto 2'),new dom.window.File(['two'],'two.png',{type:'image/png'}));
+ await ui.click(screen.getByLabelText('Usar foto 1 como capa'));
+ await ui.click(screen.getByRole('button',{name:'Continuar'}));
+ fireEvent.change(screen.getByLabelText('Data da visita'),{target:{value:'2026-10-01'}});
+ await ui.type(screen.getByLabelText(/Relato da experiência/),'Uma visita tranquila.');
+ first.unmount();
+ render(React.createElement(Form,props));
+ await screen.findByText('Seu rascunho foi recuperado.');
+ for(let i=0;i<3;i++)await ui.click(screen.getByRole('button',{name:'Continuar'}));
+ assert.equal(saved,undefined);
+ assert.ok(screen.getByRole('region',{name:'Prévia da indicação'}));
+ assert.match(screen.getByRole('region',{name:'Prévia da indicação'}).textContent,/Uma visita tranquila/);
+ await ui.click(screen.getByRole('button',{name:'Publicar experiência'}));
+ assert.equal(saved.placeId,'morere');
+ assert.equal(saved.coverIndex,0);
+ assert.equal(saved.photos.length,2);
+ assert.equal(sessionStorage.getItem('rr_publication_draft:guided-test'),null);
+});
+
+test('a galeria do Perfil navega somente pelas fotos da experiência e abre sua indicação exata',async()=>{
+ const Profile=(await server.ssrLoadModule('/src/components/TravelerProfile.jsx')).default;
+ const opened=[];
+ const row={id:'experience-a',schema_version:2,name:'Praia de Teste',city:'Cairu'};
+ const profileApi={
+  getProfile:async()=>({display_name:'Viajante de teste'}),
+  getProfileCities:async()=>[],
+  getTravelerRecommendations:async()=>[row],
+  getCityPhotos:async()=>[
+   {id:'one',experience_id:row.id,url:'/one.webp',likes:0,caption:'Primeira'},
+   {id:'two',experience_id:row.id,url:'/two.webp',likes:0,caption:'Segunda'},
+   {id:'orphan',experience_id:'excluded',url:'/hidden.webp',likes:0,caption:'Removida'},
+  ],
+ };
+ render(React.createElement(Profile,{viewer:{id:'viewer'},profileId:'owner',profileApi,onOpenRecommendation:id=>opened.push(id)}));
+ const ui=userEvent.setup();
+ const tiles=await screen.findAllByRole('button',{name:'Abrir foto de Praia de Teste'});
+ assert.equal(tiles.length,2);
+ assert.equal(screen.queryByAltText('Removida'),null);
+ await ui.click(tiles[0]);
+ await ui.click(screen.getByRole('button',{name:'Próxima foto'}));
+ assert.ok(screen.getByText('2/2'));
+ await ui.click(screen.getByRole('button',{name:'Ver indicação'}));
+ assert.deepEqual(opened,[row.id]);
+ assert.equal(screen.queryByRole('dialog'),null);
+});

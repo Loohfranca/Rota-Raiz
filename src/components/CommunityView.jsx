@@ -115,11 +115,11 @@ export default function CommunityView({ onRoute, onSavePlace, onViewExperiences,
   const requestedGroup=openRequest && groups.find(group=>group.some(item=>item.id===openRequest.id));
   const displayedGroups=requestedGroup && !groupedList.includes(requestedGroup) ? [...groupedList,requestedGroup] : groupedList;
   const indicationCount=displayedGroups.reduce((total,group)=>total+group.length,0);
-  async function publish(published) {
+  async function publish(published,message) {
     const visible=published.status==='approved'&&!published.deleted_at;
     setItems(current=>visible?[published,...current.filter(item=>item.id!==published.id)]:current.filter(item=>item.id!==published.id));
     if(form?.legacyId){const next=legacy.filter(item=>item.id!==form.legacyId);setLegacy(next);try{localStorage.setItem(LEGACY,JSON.stringify(next));}catch{}}
-    setForm(null);setNotice(visible?'Experiência salva e compartilhada na Comunidade.':'Experiência salva para revisão.');
+    setForm(null);setNotice(visible?(message||'Experiência salva e compartilhada na Comunidade.'):'Experiência salva para revisão.');
   }
   async function deleteOwn(item) {
     if(!window.confirm("Remover esta experiência da Comunidade? O histórico será preservado."))return;
@@ -263,7 +263,7 @@ export default function CommunityView({ onRoute, onSavePlace, onViewExperiences,
       </p>
       {form && (
         <Sheet title={form.editId?"Editar indicação":"Compartilhe uma descoberta"} onClose={()=>{if(!formLocked)setForm(null);}}>
-          <ExperienceForm user={user} initial={form.editId?form.initial:form.legacyId?{...form.initial,id:undefined}:null} onSaved={publish} onLockChange={setFormLocked} service={publicationService} searchApi={placeSearch} urlFor={photoUrlFor}/>
+          <ExperienceForm guided user={user} initial={form.editId?form.initial:form.legacyId?{...form.initial,id:undefined}:null} onSaved={publish} onLockChange={setFormLocked} service={publicationService} searchApi={placeSearch} urlFor={photoUrlFor}/>
         </Sheet>
       )}
     </div>

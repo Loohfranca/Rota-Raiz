@@ -1,4 +1,4 @@
-import React,{useEffect,useState} from "react";
+import React,{useEffect,useRef,useState} from "react";
 import PlaceLocationPicker from "./PlaceLocationPicker";
 import InternalPlaceSearch,{PlaceDuplicateNotice} from "./InternalPlaceSearch";
 import {experiencePublication,experiencePhotoUrl} from "../lib/liveExperiencePublication";
@@ -6,6 +6,23 @@ import {EXPERIENCE_CATEGORIES,STATES,placeDraft,localToday,validateExperienceDra
 import {internalPlaceSearch} from "../lib/internalPlaceSearch";
 import "./ExperienceForm.css";
 
+const memoryDrafts=new Map();
+const steps=["Lugar","Fotos","Relato","Prévia"];
+const successMessages=["Uma descoberta a mais no mapa.","Sua dica já pode inspirar outra viagem.","Mais um lugar ganhou uma história.","Uma boa memória virou dica.","Mais uma parada para descobrir.","Sua história agora faz parte do caminho.","Seu relato já está na comunidade.","Uma nova perspectiva sobre esse lugar.","Mais uma dica para a próxima viagem.","Sua experiência ficou registrada.","Uma descoberta compartilhada vale por duas.","Seu relato ajuda quem vai depois.","Mais um lugar para guardar na memória.","A comunidade ganhou uma nova dica.","Sua história já pode ser encontrada.","Um pedaço da sua viagem ficou aqui.","Seu olhar sobre o lugar agora está no mapa.","Uma nova história para quem adora explorar.","Mais uma experiência para compartilhar.","Sua dica já está disponível para outros viajantes."];
+function loadDraft(key){
+ if(!key)return null;
+ if(memoryDrafts.has(key))return memoryDrafts.get(key);
+ try{return JSON.parse(sessionStorage.getItem(key)||"null");}catch{return null;}
+}
+function CoverPreview({photo}){
+ const [src,setSrc]=useState("");
+ useEffect(()=>{
+  if(!photo?.file)return;
+  const url=URL.createObjectURL(photo.file);setSrc(url);
+  return()=>URL.revokeObjectURL(url);
+ },[photo]);
+ return src?<img src={src} alt="Capa da indicação"/>:null;
+}
 function PhotoSlot({photo,index,cover,onChange,onCover,disabled,urlFor}){
  const [preview,setPreview]=useState('');
  useEffect(()=>{
@@ -22,14 +39,25 @@ function Coordinates({place,selected,update}){
  return <div className="form-pair"><label>Latitude<input type="number" step="any" min={-90} max={90} required value={place.lat} readOnly={!!selected&&selected.lat!=null} onChange={e=>update('lat',e.target.value)}/></label>
   <label>Longitude<input type="number" step="any" min={-180} max={180} required value={place.lng} readOnly={!!selected&&selected.lng!=null} onChange={e=>update('lng',e.target.value)}/></label></div>;
 }
-export default function ExperienceForm({user,initial=null,onSaved=()=>{},onLockChange=()=>{},service=experiencePublication,searchApi,urlFor=experiencePhotoUrl}){
- const [id]=useState(()=>initial?.id||crypto.randomUUID());
+export default function ExperienceForm({guided=false,user,initial=null,onSaved=()=>{},onLockChange=()=>{},service=experiencePublication,searchApi,urlFor=experiencePhotoUrl}){
+ const wizard=guided&&!initial;
+ const draftKey=wizard&&user?.id?`rr_publication_draft:${user.id}`:null;
+ const [draft]=useState(()=>loadDraft(draftKey));
+ const [step,setStep]=useState(0);
+ const heading=useRef(null);
+ const [id]=useState(()=>initial?.id||draft?.id||crypto.randomUUID());
  const legacy=!!initial?.id&&initial.schema_version!==2;
- const [selected,setSelected]=useState(null),[manual,setManual]=useState(false),[name,setName]=useState(initial?.name||'');
- const [place,setPlace]=useState(()=>placeDraft(initial||{})),[locationMode,setLocationMode]=useState('address');
- const [note,setNote]=useState(initial?.note||''),[visitedOn,setVisitedOn]=useState(initial?.visited_on||'');
- const [photos,setPhotos]=useState([null,null]),[cover,setCover]=useState(null);
- const [how,setHow]=useState(initial?.how_to_get||{}),[tips,setTips]=useState(initial?.tips||'');
+ const [selected,setSelected]=useState(draft?.selected||null),[manual,setManual]=useState(!!draft?.manual),[name,setName]=useState(initial?.name||draft?.name||'');
+ const [place,setPlace]=useState(()=>draft?.place||placeDraft(initial||{})),[locationMode,setLocationMode]=useState(draft?.locationMode||'address');
+ const [note,setNote]=useState(initial?.note||draft?.note||''),[visitedOn,setVisitedOn]=useState(initial?.visited_on||draft?.visitedOn||'');
+ const [photos,setPhotos]=useState(draft?.photos||[null,null]),[cover,setCover]=useState(draft?.cover??null);
+ const [how,setHow]=useState(initial?.how_to_get||draft?.how||{}),[tips,setTips]=useState(initial?.tips||draft?.tips||'');
+ useEffect(()=>{
+  if(!draftKey||(!selected&&!manual&&!name&&!note))return;
+  const data={id,selected,manual,name,place,locationMode,note,visitedOn,how,tips};
+  memoryDrafts.set(draftKey,{...data,photos,cover});
+  try{sessionStorage.setItem(draftKey,JSON.stringify(data));}catch{}
+ },[draftKey,id,selected,manual,name,place,locationMode,note,visitedOn,how,tips,photos,cover]);
  const [version,setVersion]=useState(initial?.version??null);
  const [loading,setLoading]=useState(!!initial?.id&&!legacy),[busy,setBusy]=useState(false),[pending,setPending]=useState(false),[error,setError]=useState('');
  function selectPlace(full){setSelected(full);setPlace(placeDraft(full));setName(full.name||full.title);setManual(false);setLocationMode(full.address?'address':'point');}
@@ -49,8 +77,24 @@ export default function ExperienceForm({user,initial=null,onSaved=()=>{},onLockC
  const editable=field=>!selected||missing.includes(field)||!placeDraft(selected)[field];
  const needsConfirmation=false;
  const update=(field,value)=>setPlace(p=>({...p,[field]:value}));
+ function goStep(next){
+  setError("");setStep(next);
+  window.requestAnimationFrame?.(()=>heading.current?.focus());
+ }
+ function advance(form){
+  if(step===0&&!selected&&!manual){setError("Selecione ou cadastre o lugar para continuar.");return;}
+  if(step===1&&(!photos.every(photo=>photo?.file)||![0,1].includes(cover))){
+   setError("Escolha duas fotos e marque uma como capa.");return;
+  }
+  if(step===2&&!note.trim()){setError("Conte um pouco da sua experiência.");return;}
+  const panel=form.querySelector("[data-step]:not([hidden])");
+  for(const field of panel?.querySelectorAll("input,select,textarea")||[]){
+   if(!field.reportValidity())return;
+  }
+  goStep(step+1);
+ }
  async function submit(e){
-  e.preventDefault();if(busy||loading)return;setBusy(true);setError('');onLockChange(true);let keepLocked=false;
+  e.preventDefault();if(busy||loading)return;if(wizard&&step<3&&!pending){advance(e.currentTarget);return;}setBusy(true);setError('');onLockChange(true);let keepLocked=false;
   try{
    let result;
    if(pending)result=await service.retry(id);
@@ -60,12 +104,20 @@ export default function ExperienceForm({user,initial=null,onSaved=()=>{},onLockC
     if(!legacy&&!selected&&!manual)throw new Error('Pesquise e escolha o lugar antes de continuar.');
     validateExperienceDraft(data);result=await service.save(data);
    }
-   setPending(false);await onSaved(result);
+   if(draftKey){memoryDrafts.delete(draftKey);try{sessionStorage.removeItem(draftKey);}catch{}}
+   setPending(false);
+   await onSaved(result,wizard&&result.status==="approved"&&!result.deleted_at?successMessages[Math.floor(Math.random()*successMessages.length)]:null);
   }catch(err){setError(err.message);setPending(!!err.pending);keepLocked=!!err.pending;}finally{setBusy(false);onLockChange(keepLocked);}
  }
  if(loading)return <p role="status">Carregando sua experiência…</p>;
- return <form className="compact-form rr-experience-form" onSubmit={submit}>
+ return <form className="compact-form rr-experience-form" onSubmit={submit} noValidate={wizard}>
   <p className="field-help">Você compartilha como <b>{user?.user_metadata?.full_name||user?.user_metadata?.name||'Viajante'}</b>.</p>
+  {wizard&&<div className="rr-publish-progress">
+   <ol aria-label="Etapas da publicação">{steps.map((label,i)=><li key={label} aria-current={i===step?"step":undefined} data-complete={i<step}>{i+1}. {label}</li>)}</ol>
+   <h3 tabIndex={-1} ref={heading}>{["Escolha o lugar","Mostre o que você viu","Conte como foi","Revise antes de publicar"][step]}</h3>
+   {draft&&step===0&&<p className="field-help">Seu rascunho foi recuperado.{!photos.some(Boolean)&&" Se já havia escolhido fotos, selecione-as novamente."}</p>}
+  </div>}
+  <div className="rr-publish-stage" data-step="place" hidden={wizard&&step!==0}>
   {!initial?.id&&!selected&&<section className="rr-discovery-start" aria-label="Comece pela localização">
    <h3>1. Onde fica a sua descoberta?</h3>
    <p className="field-help">Está no lugar agora? Use o GPS e confira o ponto. Depois, escolha um lugar próximo ou cadastre o seu.</p>
@@ -93,11 +145,16 @@ export default function ExperienceForm({user,initial=null,onSaved=()=>{},onLockC
    <label>Instagram <small>opcional{selected?.instagram?' · já cadastrado':''}</small><input maxLength={120} value={place.instagram} readOnly={!!selected?.instagram} placeholder="@nomedolugar" onChange={e=>update('instagram',e.target.value)}/></label>
    {(manual||selected?.requires_completion)&&<PlaceDuplicateNotice name={place.name} address={place.address} city={place.municipality} state={place.state} onSelect={selectPlace} api={searchApi}/>}
   </fieldset>}
-  {(legacy||selected||manual)&&<fieldset disabled={locked} className="rr-experience-fields">
+  </div>
+  {(legacy||selected||manual)&&<fieldset className="rr-experience-fields rr-publish-stage" disabled={locked} data-step="photos" hidden={wizard&&step!==1}>
+   {!legacy&&<legend>Fotos e capa</legend>}
+   {!legacy&&<><p className="field-help">Duas fotos da sua visita. Escolha uma delas como capa.</p><div className="rr-experience-photos">{[0,1].map(index=><PhotoSlot key={index} index={index} photo={photos[index]} cover={cover} disabled={locked} urlFor={urlFor} onCover={setCover} onChange={photo=>setPhotos(current=>current.map((item,i)=>i===index?photo:item))}/>)}</div></>}
+  </fieldset>}
+  {(legacy||selected||manual)&&<fieldset data-step="story" hidden={wizard&&step!==2} disabled={locked} className="rr-experience-fields rr-publish-stage">
    <legend>Sua experiência</legend>
    {!legacy&&<label>Data da visita<input type="date" required max={localToday()} value={visitedOn} onChange={e=>setVisitedOn(e.target.value)}/></label>}
    <label>Relato da experiência<textarea required maxLength={500} rows={4} value={note} onChange={e=>setNote(e.target.value)}/><small>{note.length}/500 caracteres</small></label>
-   {!legacy&&<><p className="field-help">Duas fotos da sua visita. Escolha uma delas como capa.</p><div className="rr-experience-photos">{[0,1].map(index=><PhotoSlot key={index} index={index} photo={photos[index]} cover={cover} disabled={locked} urlFor={urlFor} onCover={setCover} onChange={photo=>setPhotos(current=>current.map((item,i)=>i===index?photo:item))}/>)}</div></>}
+
    <details className="rr-experience-optional"><summary>Como chegar <small>opcional</small></summary>
     <label>Ponto de partida<input maxLength={160} value={how.starting_point||''} onChange={e=>setHow(h=>({...h,starting_point:e.target.value}))}/></label>
     <label>Transporte<input maxLength={120} placeholder="Canoa e caminhada, por exemplo" value={how.transport||''} onChange={e=>setHow(h=>({...h,transport:e.target.value}))}/></label>
@@ -105,7 +162,19 @@ export default function ExperienceForm({user,initial=null,onSaved=()=>{},onLockC
    </details>
    <label>Dicas adicionais <small>opcional</small><textarea maxLength={500} rows={2} value={tips} onChange={e=>setTips(e.target.value)}/></label>
   </fieldset>}
+  {wizard&&step===3&&<section className="rr-publish-stage rr-publish-preview" aria-label="Prévia da indicação">
+   <CoverPreview photo={photos[cover]}/>
+   <h4>{place.name||name}</h4>
+   <p>{[place.municipality,place.state].filter(Boolean).join(", ")} · {visitedOn.split("-").reverse().join("/")}</p>
+   {note.length>180?<><p>{note.slice(0,180)}…</p><details><summary>Ler mais</summary><p>{note}</p></details></>:<p>{note}</p>}
+   {Object.values(how).some(Boolean)&&<details><summary>Como chegar</summary>{Object.values(how).filter(Boolean).map((line,i)=><p key={i}>{line}</p>)}</details>}
+   {tips&&<p>{tips}</p>}
+  </section>}
+  {busy&&<p role="status" aria-live="polite">Salvando sua experiência…</p>}
   {error&&<p role="alert" className="form-error">{error}</p>}
-  {(legacy||selected||manual)&&<button type="submit" className="primary-action" disabled={busy||loading}>{busy?'Salvando…':pending?'Conferir envio':initial?.id?'Salvar alterações':'Publicar experiência'}</button>}
+  {(wizard||legacy||selected||manual)&&<div className="rr-publish-actions">
+   {wizard&&step>0&&!pending&&<button type="button" className="small-action" disabled={locked} onClick={()=>goStep(step-1)}>Voltar</button>}
+   <button type="submit" className="primary-action" disabled={busy||loading}>{busy?'Salvando…':pending?'Conferir envio':wizard&&step<3?'Continuar':initial?.id?'Salvar alterações':'Publicar experiência'}</button>
+  </div>}
  </form>;
 }
