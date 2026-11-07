@@ -3,7 +3,7 @@ import Navbar from "./components/Navbar";
 import BottomNav from "./components/BottomNav";
 import RoutesView from "./components/RoutesView";
 import RouteDetailView from "./components/RouteDetailView";
-import ToursView from "./components/ToursView";
+import CommunityExplore from "./components/CommunityExplore";
 import TourDetailView from "./components/TourDetailView";
 import AccountsView from "./components/AccountsView";
 import { captureInvite, clearInvite } from "./lib/sharedTrips";
@@ -274,24 +274,10 @@ export default function App() {
         ) : null}
         {activeTab === "tours" && (
           <div hidden={!!selectedTour || !!selectedRoute}>
-            <button
-              className="small-action contextual-map"
-              onClick={() => {
-                setMapReturnTab("tours");
-                setMapDestination(null);
-                setSelectedRouteLegsForMap(null);
-                setActiveTab("map");
-              }}
-            >
-              <MapPin size={17} /> Lugares e embarques no mapa
-            </button>
-            <ToursView
+            <CommunityExplore
               onOpenCommunity={openCommunityPlace}
-              onRoute={goToRoutesWith}
+              onRecommend={()=>{setCommunityOpenRequest({compose:true});handleTabChange("community");}}
               visible={!selectedTour && !selectedRoute}
-              home={home}
-              onChangeHome={changeHome}
-              onSaveTour={addPlaceToTrip}
               onSelectTour={setSelectedTour}
             />
           </div>

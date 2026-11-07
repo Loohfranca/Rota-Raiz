@@ -1,0 +1,23 @@
+.rr-explore { width:min(100%, 960px); margin-inline:auto; padding:24px 0 40px; display:grid; gap:18px; }
+.rr-explore-heading,.rr-explore-location-top,.rr-explore-results-title { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+.rr-explore h1 { margin:4px 0 0; font-size:clamp(27px,4vw,40px); line-height:1.15; }
+.rr-explore h2 { margin:0; font-size:clamp(19px,3vw,25px); overflow-wrap:anywhere; }
+.rr-explore .small-action { min-height:44px; display:inline-flex; align-items:center; gap:7px; width:auto; margin:0; }
+.rr-explore-location,.rr-explore-empty,.rr-explore-saved article { padding:16px; border:1px solid var(--border-color); background:var(--surface-container-lowest); border-radius:16px; }
+.rr-explore-location { display:grid; gap:12px; }
+.rr-explore-location-top > span { display:flex; align-items:center; gap:8px; overflow-wrap:anywhere; min-width:0; }
+.rr-explore-location-top svg { flex-shrink:0; }
+.rr-explore-location form label { display:block; font-weight:600; margin-bottom:6px; }
+.rr-explore-location form > div,.rr-explore-tools label { display:flex; gap:8px; align-items:center; }
+.rr-explore input { min-width:0; width:100%; min-height:44px; padding:8px 12px; border:1px solid var(--border-color); background:var(--surface-container-lowest); border-radius:10px; color:var(--on-surface); font-size:16px; }
+.rr-explore-tools { display:grid; gap:10px; }
+.rr-explore-text-action { justify-self:start; min-height:44px; text-decoration:underline; }
+.rr-explore-empty p { margin:8px 0 12px; }
+.rr-explore-other .small-action { margin:0 6px 6px 0; }
+.rr-explore-saved { display:grid; gap:10px; }
+.rr-explore-saved article { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+.rr-explore .explore-community-results { margin:0; }
+.rr-explore .explore-community-grid { gap:12px; }
+.rr-explore .explore-community-place { min-width:0; }
+.rr-explore .explore-community-copy { overflow-wrap:anywhere; }
+.rr-explore .explore-category-filters button { min-height:44px; }

@@ -89,7 +89,9 @@ export default function CommunityView({ onRoute, onSavePlace, onViewExperiences,
     api.getEngagement(user.id).then(setEngagement).catch(()=>{});
   },[items,user?.id,api]);
   useEffect(()=>{
-    if(!openRequest || loading || error)return;
+    if(!openRequest)return;
+    if(openRequest.compose){setForm({});onOpenHandled?.();return;}
+    if(loading || error)return;
     if(items.some(item=>item.id===openRequest.id)){setQuery("");setCategory("Todos");}
     else{
       setNotice("Essa indicação não está mais disponível. Veja outras dicas da comunidade.");onOpenHandled?.();
