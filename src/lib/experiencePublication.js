@@ -60,7 +60,13 @@ export function createExperiencePublication(client, { optimize, uuid = () => cry
           if(blobs[i]){
             path=`${auth.user.id}/${uuid()}.webp`;
             const {error}=await client.storage.from('community-photos').upload(path,blobs[i],{contentType:'image/webp',upsert:false});
-            if(error)throw new Error("Não foi possível enviar as duas fotos. Verifique sua conexão e o limite da galeria.");
+            if(error){
+              const detail=String(error?.message||"").toLowerCase();
+              const tooLarge=error?.statusCode===413 || error?.status===413 || /too large|exceeded|payload too large|entity too large|file size|tamanho|limite de tamanho/.test(detail);
+              throw new Error(tooLarge
+                ? "O armazenamento recusou a foto compactada por tamanho. Tente novamente; se persistir, informe o suporte."
+                : "A foto não foi enviada. Verifique a conexão e tente novamente. Nenhuma publicação foi criada.");
+            }
             uploaded.push(path);
           }
           photos.push({storage_path:path,caption:draft.photos[i].caption||''});

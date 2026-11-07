@@ -45,6 +45,20 @@ export async function getPublicAuthors(ids) {
  return Object.fromEntries((data||[]).map(x=>[x.user_id,x]));
 }
 
+// Imagem editorial temporária, não atribuída à pessoa que escreveu a indicação.
+// Ao enviar fotos próprias, a capa do viajante prevalece automaticamente.
+const MORERE_REFERENCE={
+  image_url:"https://upload.wikimedia.org/wikipedia/commons/2/2d/Praia_de_Morer%C3%A9_em_Boipeba.JPG",
+  photo_credit:"Waltson Campos · CC BY-SA 3.0 (imagem de referência)",
+  photo_source_url:"https://commons.wikimedia.org/wiki/File:Praia_de_Morer%C3%A9_em_Boipeba.JPG"
+};
+export function withMorereReferencePhoto(row){
+ const title=String(row?.name||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
+ const region=String([row?.address,row?.city,row?.place?.destination?.name].filter(Boolean).join(" ")).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+ if(row?.image_url || !["morere","praia de morere"].includes(title) || !region.includes("boipeba"))return row;
+ return {...row,...MORERE_REFERENCE};
+}
+
 export async function getRecommendations() {
   if (!supabase) return { items: [], available: false };
   const data=[];
@@ -61,7 +75,7 @@ export async function getRecommendations() {
     if(rows.length<pageSize) break;
   }
   return {
-    items: (data || []).map(row=>({...row,visited_on:row.visit_date,photos:(row.photos||[]).filter(p=>!p.deleted_at),image_url:row.photos?.find(p=>p.is_cover&&!p.deleted_at)?.storage_path?supabase.storage.from("community-photos").getPublicUrl(row.photos.find(p=>p.is_cover&&!p.deleted_at).storage_path).data.publicUrl:row.image_url})).filter(
+    items: (data || []).map(row=>withMorereReferencePhoto({...row,visited_on:row.visit_date,photos:(row.photos||[]).filter(p=>!p.deleted_at),image_url:row.photos?.find(p=>p.is_cover&&!p.deleted_at)?.storage_path?supabase.storage.from("community-photos").getPublicUrl(row.photos.find(p=>p.is_cover&&!p.deleted_at).storage_path).data.publicUrl:row.image_url})).filter(
       (i) =>
         validRecommendation(i) &&
         i.reviewed_at &&
