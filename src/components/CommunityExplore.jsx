@@ -74,7 +74,7 @@ export default function CommunityExplore({onOpenCommunity,onRecommend,onSelectTo
     }catch{if(version===cityVersion.current){setLocationError("Não foi possível identificar sua cidade. Escolha uma cidade abaixo.");setCityEditor(true);}}
     finally{setLocating(false);}
   }
-  const groups=groupCommunityRecommendations(items.filter(item=>!item.editorial));
+  const groups=groupCommunityRecommendations(items);
   const cityGroups=groups.filter(([item])=>{
     const place=communityPlace(item);
     return matchesCity(place.city,city) || (!!city && fold(place.destination)===fold(city));
@@ -84,12 +84,13 @@ export default function CommunityExplore({onOpenCommunity,onRecommend,onSelectTo
     return (category==="all" || categoryOf(place.category)===category) &&
       group.some(item=>fold([place.name,place.city,place.destination,item.note,item.author_name].join(" ")).includes(fold(query)));
   });
+  const indicationCount=results.reduce((sum,group)=>sum+group.length,0);
   const publishedCities=[...new Set(groups.map(([item])=>communityPlace(item).city).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"pt-BR"));
   const cityOptions=[...new Set([...publishedCities,...REGIONS.map(region=>region.name)])];
 
   return <section className="rr-explore" aria-labelledby="rr-explore-title">
     <div className="rr-explore-heading">
-      <div><p className="eyebrow">INDICAÇÕES DE VIAJANTES</p><h1 id="rr-explore-title">{showSaved?"Lugares salvos":"Descubra onde ir"}</h1></div>
+      <div><p className="eyebrow">INDICAÇÕES DA COMUNIDADE</p><h1 id="rr-explore-title">{showSaved?"Lugares salvos":"Descubra onde ir"}</h1></div>
       <button type="button" className="small-action" aria-pressed={showSaved} onClick={()=>setShowSaved(value=>!value)}><Bookmark size={18}/> {showSaved?"Explorar":`Salvos (${Object.keys(saved).length})`}</button>
     </div>
     {showSaved?<div className="rr-explore-saved">
@@ -123,9 +124,10 @@ export default function CommunityExplore({onOpenCommunity,onRecommend,onSelectTo
       </div>
       <div className="rr-explore-results-title"><h2>{city?`Indicações em ${city}`:"Indicações da comunidade"}</h2><button type="button" className="small-action" onClick={onRecommend}><Plus size={17}/> Indicar lugar</button></div>
       {loading?<p role="status">Buscando indicações…</p>:error?<div className="rr-explore-empty" role="status"><p>Não foi possível atualizar as indicações.</p><button type="button" className="small-action" onClick={()=>{setLoading(true);setReload(value=>value+1);}}>Tentar novamente</button></div>:null}
+      {!loading&&!error&&<p className="catalog-count" aria-live="polite">{results.length} {results.length===1?"lugar":"lugares"} · {indicationCount} {indicationCount===1?"indicação":"indicações"}</p>}
       {!!results.length&&<CommunitySuggestions groups={results} onOpen={onOpenCommunity} showHeading={false}/>}
       {!loading&&!error&&!results.length&&<div className="rr-explore-empty">
-        <h3>{cityGroups.length?"Nenhuma indicação com esses filtros.":city?`Ainda não há indicações em ${city}.`:"Ainda não há indicações de viajantes."}</h3>
+        <h3>{cityGroups.length?"Nenhuma indicação com esses filtros.":city?`Ainda não há indicações em ${city}.`:"Ainda não há indicações publicadas."}</h3>
         <p>{cityGroups.length?"Experimente outro termo ou tipo de lugar.":"Conhece um lugar que vale a visita? Compartilhe com a comunidade."}</p>
         {cityGroups.length?<button type="button" className="small-action" onClick={()=>{setQuery("");setCategory("all");}}>Limpar filtros</button>:<button type="button" className="small-action" onClick={onRecommend}><Plus size={17}/> Indicar lugar</button>}
         {!cityGroups.length&&!!publishedCities.length&&<div className="rr-explore-other"><p>Outras cidades com indicações</p>{publishedCities.slice(0,5).map(name=><button type="button" key={name} className="small-action" onClick={()=>chooseCity(name)}>{name}</button>)}</div>}
