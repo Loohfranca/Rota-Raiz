@@ -39,44 +39,55 @@ export async function togglePhotoLike(photoId,liked,userId){
  else{const {error}=await supabase.from("rr_profile_photo_likes").insert({photo_id:photoId,user_id:userId});errorOf(error,"Erro ao curtir.");}
 }
 export async function optimizeGalleryImage(file){
- // A foto original pode ser grande: a cota de 1 MB é aplicada ao WebP compactado, não à foto da galeria.
- const mime=String(file.type||"").toLowerCase();
- const isImage=mime.startsWith("image/")||/\.(jpe?g|png|webp|heic|heif|avif)$/i.test(file.name||"");
+ // Aceita fotos de alta resolução do celular; a cota do servidor vale para o WebP final.
+ const mime=String(file?.type||"").toLowerCase();
+ const isImage=mime.startsWith("image/")||/\.(jpe?g|png|webp|heic|heif|avif)$/i.test(file?.name||"");
  if(!isImage)throw new Error("Escolha uma foto da galeria (JPG, PNG, WebP ou HEIC).");
- if(file.size>25*1048576)throw new Error("Esta foto tem mais de 25 MB. Selecione uma imagem menor.");
- let image=null;
- let imageUrl=null;
+ if(!file?.size)throw new Error("Esta foto está vazia. Escolha outra imagem.");
+ // Proteção contra arquivos enormes, sem bloquear fotografias normais de câmeras modernas.
+ if(file.size>100*1048576)throw new Error("Esta imagem passa de 100 MB. Exporte-a como JPG para publicar.");
+ let image=null, imageUrl=null;
  try{
   if(typeof createImageBitmap==="function"){
-   try{image=await createImageBitmap(file);}catch{/* alguns celulares só decodificam via elemento img */}
+   try{image=await createImageBitmap(file,{imageOrientation:"from-image"});}
+   catch{/* alguns navegadores móveis exigem o elemento img */}
   }
   if(!image){
    imageUrl=URL.createObjectURL(file);
    image=await new Promise((resolve,reject)=>{
     const img=new Image();
     img.onload=()=>resolve(img);
-    img.onerror=()=>reject(new Error("Não foi possível ler esta foto. Se for HEIC, tente compartilhá-la como JPG pela galeria."));
+    img.onerror=()=>reject(new Error("Seu navegador não conseguiu abrir esta foto. Se for HEIC, exporte como JPG e tente novamente."));
     img.src=imageUrl;
    });
   }
-  const scale=Math.min(1,1200/Math.max(image.width,image.height));
+  const width=image.width||image.naturalWidth,height=image.height||image.naturalHeight;
+  if(!width||!height)throw new Error("Não foi possível ler as dimensões da fotografia.");
   const canvas=document.createElement("canvas");
-  canvas.width=Math.max(1,Math.round(image.width*scale));
-  canvas.height=Math.max(1,Math.round(image.height*scale));
-  const ctx=canvas.getContext("2d");
+  const ctx=canvas.getContext("2d",{alpha:false});
   if(!ctx)throw new Error("Não foi possível preparar a foto neste dispositivo.");
-  ctx.drawImage(image,0,0,canvas.width,canvas.height);
-  let quality=.78,blob;
-  do{
-   blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/webp",quality));
-   quality-=.12;
-  }while(blob?.size>950000&&quality>.20);
-  if(!blob||blob.type!=="image/webp"||blob.size>1048576)throw new Error("Não foi possível compactar esta foto. Escolha outra imagem.");
-  return blob;
+  // Tentativas progressivas: evita rejeitar foto detalhada após uma única compressão.
+  let maxSide=1600;
+  for(let attempt=0;attempt<5;attempt++){
+   const scale=Math.min(1,maxSide/Math.max(width,height));
+   canvas.width=Math.max(1,Math.round(width*scale));
+   canvas.height=Math.max(1,Math.round(height*scale));
+   ctx.drawImage(image,0,0,canvas.width,canvas.height);
+   for(const quality of [.82,.68,.54,.4,.28]){
+    const blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/webp",quality));
+    if(!blob)continue;
+    if(blob.type==="image/webp"&&blob.size<=950000)return blob;
+   }
+   maxSide=Math.round(maxSide*.75);
+  }
+  throw new Error("Não foi possível reduzir esta foto para envio. Exporte-a como JPG e tente novamente.");
  }catch(e){
-  if(e instanceof Error&&e.message.startsWith("Não foi possível"))throw e;
-  throw new Error("Esta foto não pôde ser aberta pelo navegador. Tente uma foto JPG ou PNG da galeria.");
- }finally{image?.close?.();if(imageUrl)URL.revokeObjectURL(imageUrl);}
+  if(e instanceof Error&&(/^(Não foi possível|Seu navegador|Esta imagem)/.test(e.message)))throw e;
+  throw new Error("Esta foto não pôde ser processada no celular. Tente uma versão JPG ou PNG da galeria.");
+ }finally{
+  image?.close?.();
+  if(imageUrl)URL.revokeObjectURL(imageUrl);
+ }
 }
 export async function uploadProfilePhoto(userId,cityId,file,caption=""){
  const blob=await optimizeGalleryImage(file);const path=userId+"/"+crypto.randomUUID()+".webp";
